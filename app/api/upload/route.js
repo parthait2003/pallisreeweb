@@ -32,7 +32,7 @@ export async function POST(req) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       const params = {
-        Bucket: process.env.DO_SPACES_BUCKET,
+        Bucket: 'pallisree',
         Key: imageName,
         Body: buffer,
         ACL: 'public-read',
