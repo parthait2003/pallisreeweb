@@ -31,16 +31,7 @@ import { FaSearch } from "react-icons/fa";
 
 const MySwal = withReactContent(Swal);
 
-const showMessage8 = () => {
-  MySwal.fire({
-    title: "You can upload only one file or remove the last uploaded file",
-    toast: true,
-    position: "bottom-start",
-    showConfirmButton: false,
-    timer: 5000,
-    showCloseButton: true,
-  });
-};
+
 
 const initialRowData = [
   {
