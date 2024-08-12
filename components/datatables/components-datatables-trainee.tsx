@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/Navigation";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useState, Fragment, useRef } from "react";
 import sortBy from "lodash/sortBy";
@@ -10,8 +10,6 @@ import IconPlus from "../icon/icon-plus";
 import IconXCircle from "@/components/icon/icon-x-circle";
 import IconPencil from "@/components/icon/icon-pencil";
 import IconBince from "@/components/icon/icon-bookmark";
-import IconAadhaar from "@/components/icon/icon-aadhaar";
-import IconDOB from "@/components/icon/icon-dob";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/flatpickr.css";
 import { useSelector } from "react-redux";
@@ -88,7 +86,7 @@ const Genders = ["Female", "Male"];
 
 const Sports = ["Cricket", "Football"];
 
-const truncateAddress = (address) => {
+const truncateAddress = (address: any) => {
   const words = address.split(" ");
   return words.length > 2 ? `${words.slice(0, 2).join(" ")}...` : address;
 };
@@ -101,8 +99,10 @@ const ComponentsDatatablesTrainee = () => {
   const [message, setMessage] = useState("");
   const isRtl =
     useSelector((state: IRootState) => state.themeConfig.rtlClass) === "rtl";
-  const [date1, setDate1] = useState("2022-07-05");
+  const [date1, setDate1] = useState<any>("2022-07-05");
   const [modal1, setModal1] = useState(false);
+
+  const fileInputRef = useRef(null);
   const [page, setPage] = useState(1);
   const PAGE_SIZES = [10, 20, 30, 50, 100, 500, 1000];
   const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
@@ -127,6 +127,7 @@ const ComponentsDatatablesTrainee = () => {
   const [sportstypeFilter, setSportstypeFilter] = useState("");
   const [extraPracticeFilter, setExtraPracticeFilter] = useState("");
   const [bloodGroupFilter, setBloodGroupFilter] = useState("");
+
   const [showCsvUpload, setShowCsvUpload] = useState(false);
   const [csvFile, setCsvFile] = useState(null);
   const [selectedTrainees, setSelectedTrainees] = useState([]);
@@ -138,14 +139,9 @@ const ComponentsDatatablesTrainee = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [traineeDetails, setTraineeDetails] = useState(null);
   const [feesDetails, setFeesDetails] = useState(null);
-  const [eventType, setEventType] = useState("Tournament"); // New state for dropdown
-  const [campName, setCampName] = useState("");
-  const [campType, setCampType] = useState("");
-  const [campDate, setCampDate] = useState(null);
-  const [time, setTime] = useState("");
   const router = useRouter();
 
-  const handleViewClick = (id) => {
+  const handleViewClick = (id: string) => {
     router.push(`/viewtrainee/${id}`);
   };
 
@@ -237,7 +233,7 @@ const ComponentsDatatablesTrainee = () => {
     extraPractice: string;
   }
 
-  const handleDeleteClick = (value) => {
+  const handleDeleteClick = (value: any) => {
     setModal2(true);
     setDeleteid(value);
   };
@@ -250,7 +246,7 @@ const ComponentsDatatablesTrainee = () => {
       }
       const data = await response.json();
 
-      const formattedTrainee = data.studentforms.map((trainee) => ({
+      const formattedTrainee = data.studentforms.map((trainee: Trainee) => ({
         id: trainee._id,
         image: trainee.image,
         sportstype: trainee.sportstype,
@@ -301,7 +297,7 @@ const ComponentsDatatablesTrainee = () => {
   }, [page, pageSize, initialRecords]);
 
   useEffect(() => {
-    const filteredRecords = initialRecords.filter((item) => {
+    const filteredRecords = initialRecords.filter((item: any) => {
       const itemDate = dayjs(item.date).format("YYYY-MM-DD");
       const isInDateRange =
         (!startDate || dayjs(itemDate).isAfter(startDate)) &&
@@ -367,7 +363,7 @@ const ComponentsDatatablesTrainee = () => {
     bloodGroupFilter,
   ]);
 
-  const handleAddCustomerClick = (e) => {
+  const handleAddCustomerClick = (e: any) => {
     e.stopPropagation();
     setShowAddCustomer(!showAddCustomer);
   };
@@ -379,7 +375,7 @@ const ComponentsDatatablesTrainee = () => {
     setRecordsData(finalData.slice((page - 1) * pageSize, page * pageSize));
   }, [sortStatus, page, pageSize, initialRecords]);
 
-  const formatDate = (date) => {
+  const formatDate = (date: any) => {
     if (date) {
       return dayjs(date).format("DD/MM/YYYY");
     }
@@ -430,11 +426,11 @@ const ComponentsDatatablesTrainee = () => {
     setModal1(true);
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFile(e.target.files[0]);
 
     const selectedFiles = e.target.files;
-    const newFiles = Array.from(selectedFiles);
+    const newFiles = Array.from(selectedFiles!);
 
     if (files.length + newFiles.length > 1) {
       showMessage8();
@@ -444,15 +440,15 @@ const ComponentsDatatablesTrainee = () => {
     }
   };
 
-  const handleDocumentChange = (e) => {
+  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDocumentFile(e.target.files[0]);
   };
 
-  const handleAdharChange = (e) => {
+  const handleAdharChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAdharFile(e.target.files[0]);
   };
 
-  const handleDateChange = (date) => {
+  const handleDateChange = (date: any) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
       date: date[0] ? date[0].toISOString().split("T")[0] : "",
@@ -471,32 +467,32 @@ const ComponentsDatatablesTrainee = () => {
     });
   };
 
-  const removeFile = (index) => {
+  const removeFile = (index: number) => {
     const updatedFiles = [...files];
     updatedFiles.splice(index, 1);
     setFiles(updatedFiles);
     setHiddenFileName("");
   };
 
-  const exportTable = (type) => {
-    let columns = col;
+  const exportTable = (type: any) => {
+    let columns: any = col;
     let records = initialRecords;
     let filename = "table";
 
-    let newVariable;
+    let newVariable: any;
     newVariable = window.navigator;
 
     if (type === "csv") {
       let coldelimiter = ";";
       let linedelimiter = "\n";
       let result = columns
-        .map((d) => {
+        .map((d: any) => {
           return capitalize(d);
         })
         .join(coldelimiter);
       result += linedelimiter;
-      records.map((item) => {
-        columns.map((d, index) => {
+      records.map((item: any) => {
+        columns.map((d: any, index: any) => {
           if (index > 0) {
             result += coldelimiter;
           }
@@ -523,13 +519,13 @@ const ComponentsDatatablesTrainee = () => {
     }
   };
 
-  const capitalize = (text) => {
+  const capitalize = (text: any) => {
     return text
       .replace("_", " ")
       .replace("-", " ")
       .toLowerCase()
       .split(" ")
-      .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+      .map((s: any) => s.charAt(0).toUpperCase() + s.substring(1))
       .join(" ");
   };
 
@@ -552,7 +548,7 @@ const ComponentsDatatablesTrainee = () => {
     extraPractice: "Yes",
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
 
     setFormData((formData) => ({
@@ -669,7 +665,7 @@ const ComponentsDatatablesTrainee = () => {
     }
   };
 
-  const handleUpdateClick = async (value) => {
+  const handleUpdateClick = async (value: any) => {
     try {
       const res = await fetch(`/api/studentform/${value}`, {
         method: "GET",
@@ -678,6 +674,7 @@ const ComponentsDatatablesTrainee = () => {
         throw new Error(`Failed to fetch data for ID: ${value}`);
       }
       const data = await res.json();
+      console.log("image name" + data.student.image);
       if (data && data.student) {
         setFormData({
           id: data.student._id || "",
@@ -798,7 +795,6 @@ const ComponentsDatatablesTrainee = () => {
     WinPrint.print();
     WinPrint.close();
   };
-
   const handleRemoveImage = () => {
     setFile(null);
     setFormData((prevFormData) => ({
@@ -806,7 +802,6 @@ const ComponentsDatatablesTrainee = () => {
       image: null,
     }));
   };
-
   const handleRemoveDocument = () => {
     setDocumentFile(null);
     setFormData((prevFormData) => ({
@@ -822,7 +817,6 @@ const ComponentsDatatablesTrainee = () => {
       adhar: null,
     }));
   };
-
   const handleGeneratePDF = () => {
     const doc = new jsPDF();
     const startY = 90;
@@ -855,13 +849,9 @@ const ComponentsDatatablesTrainee = () => {
       return `${day}/${month}/${year}`;
     };
 
-    const formatTime = (time) => {
-      const [hour, minute] = time.split(":");
-      const hourInt = parseInt(hour, 10);
-      const ampm = hourInt >= 12 ? "pm" : "am";
-      const formattedHour = hourInt % 12 || 12; // Convert to 12-hour format
-      return `${formattedHour}:${minute} ${ampm}`;
-    };
+    const tournamentDate = new Date(
+      "Fri Jul 19 2024 00:00:00 GMT+0530 (India Standard Time)"
+    );
 
     const logoUrl = "/assets/images/logo.png";
     const logoImg = new Image();
@@ -876,20 +866,10 @@ const ComponentsDatatablesTrainee = () => {
       const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
       doc.text(additionalText, 105, 35, { align: "center" });
 
-      doc.setFontSize(10);
-      if (eventType === "Tournament") {
-        doc.text("Tournament: " + tournamentName, 15, 70);
-        doc.text("Ground: " + groundName, 15, 75);
-        doc.text("Date: " + formatDate(tournamentDate), 15, 80);
-        doc.text("Reporting Time: " + formatTime(time), 15, 85);
-        doc.text("Note: " + note, 15, 90);
-      } else if (eventType === "Camp") {
-        doc.text("Camp: " + campName, 15, 70);
-        doc.text("Camp Type: " + campType, 15, 75);
-        doc.text("Date: " + formatDate(campDate), 15, 80);
-        doc.text("Reporting Time: " + formatTime(time), 15, 85);
-        doc.text("Note: " + note, 15, 90);
-      }
+      doc.text("Tournament: " + tournamentName, 10, 70);
+      doc.text("Ground: " + groundName, 10, 75);
+      doc.text("Date: " + formatDate(tournamentDate), 10, 80);
+      doc.text("Note: " + note, 10, 85);
 
       const rows = selectedTrainees.map((id, index) => {
         const trainee = initialRecords.find((t) => t.id === id);
@@ -1585,7 +1565,7 @@ const ComponentsDatatablesTrainee = () => {
 
               render: (row) => (
                 <div className="mx-auto flex w-max items-center gap-4">
-                  <Tippy content="Birth Certificate">
+                  <Tippy content="Certificate">
                     <button
                       type="button"
                       onClick={() => {
@@ -1594,9 +1574,9 @@ const ComponentsDatatablesTrainee = () => {
                           "_blank"
                         );
                       }}
-                      className="btn"
+                      className="btn btn-primary"
                     >
-                      <IconDOB />
+                      <IconBince />
                     </button>
                   </Tippy>
                 </div>
@@ -1619,9 +1599,9 @@ const ComponentsDatatablesTrainee = () => {
                           "_blank"
                         );
                       }}
-                      className="btn"
+                      className="btn btn-primary"
                     >
-                      <IconAadhaar />
+                      <IconBince />
                     </button>
                   </Tippy>
                 </div>
@@ -1849,7 +1829,7 @@ const ComponentsDatatablesTrainee = () => {
                 as={Fragment}
                 enter="ease-out duration-300"
                 enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100"
+                enterTo="opacity-100 scale-100"
                 leave="ease-in duration-200"
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
@@ -1877,115 +1857,35 @@ const ComponentsDatatablesTrainee = () => {
                   </div>
                   <div className="p-5" id="printableContent">
                     <div className="mb-4">
-                      <label htmlFor="eventType">Event Type</label>
-                      <select
-                        id="eventType"
-                        className="form-select"
-                        value={eventType}
-                        onChange={(e) => setEventType(e.target.value)}
-                      >
-                        <option value="Tournament">Tournament</option>
-                        <option value="Camp">Camp</option>
-                      </select>
+                      <label htmlFor="tournamentName">Tournament Name</label>
+                      <input
+                        id="tournamentName"
+                        type="text"
+                        className="form-input"
+                        value={tournamentName}
+                        onChange={(e) => setTournamentName(e.target.value)}
+                      />
                     </div>
-
-                    {eventType === "Tournament" && (
-                      <>
-                        <div className="mb-4">
-                          <label htmlFor="tournamentName">
-                            Tournament Name
-                          </label>
-                          <input
-                            id="tournamentName"
-                            type="text"
-                            className="form-input"
-                            value={tournamentName}
-                            onChange={(e) => setTournamentName(e.target.value)}
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="groundName">Ground Name</label>
-                          <input
-                            id="groundName"
-                            type="text"
-                            className="form-input"
-                            value={groundName}
-                            onChange={(e) => setGroundName(e.target.value)}
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="tournamentDate">
-                            Tournament Date
-                          </label>
-                          <DatePicker
-                            id="tournamentDate"
-                            selected={tournamentDate}
-                            onChange={(date) => setTournamentDate(date)}
-                            dateFormat="dd/MM/yyyy"
-                            className="form-input"
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="time">Time</label>
-                          <input
-                            id="time"
-                            type="time"
-                            className="form-input"
-                            value={time}
-                            onChange={(e) => setTime(e.target.value)}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {eventType === "Camp" && (
-                      <>
-                        <div className="mb-4">
-                          <label htmlFor="campName">Camp Name</label>
-                          <input
-                            id="campName"
-                            type="text"
-                            className="form-input"
-                            value={campName}
-                            onChange={(e) => setCampName(e.target.value)}
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="campType">Camp Type</label>
-                          <select
-                            id="campType"
-                            className="form-select"
-                            value={campType}
-                            onChange={(e) => setCampType(e.target.value)}
-                          >
-                            <option value="18Trial">18 Trial</option>
-                            <option value="15Trial">15 Trial</option>
-                            <option value="Division">Division</option>
-                            <option value="District">District</option>
-                          </select>
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="campDate">Camp Date</label>
-                          <DatePicker
-                            id="campDate"
-                            selected={campDate}
-                            onChange={(date) => setCampDate(date)}
-                            dateFormat="dd/MM/yyyy"
-                            className="form-input"
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="campTime">Time</label>
-                          <input
-                            id="campTime"
-                            type="time"
-                            className="form-input"
-                            value={time}
-                            onChange={(e) => setTime(e.target.value)}
-                          />
-                        </div>
-                      </>
-                    )}
+                    <div className="mb-4">
+                      <label htmlFor="groundName">Ground Name</label>
+                      <input
+                        id="groundName"
+                        type="text"
+                        className="form-input"
+                        value={groundName}
+                        onChange={(e) => setGroundName(e.target.value)}
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label htmlFor="tournamentDate">Tournament Date</label>
+                      <DatePicker
+                        id="tournamentDate"
+                        selected={tournamentDate}
+                        onChange={(date) => setTournamentDate(date)}
+                        dateFormat="dd/MM/yyyy"
+                        className="form-input"
+                      />
+                    </div>
 
                     <div className="mb-4">
                       <label htmlFor="note">Note</label>
