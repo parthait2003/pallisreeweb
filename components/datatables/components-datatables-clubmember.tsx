@@ -560,11 +560,7 @@ const ComponentsDatatablesClubmember = () => {
               method: "POST",
               body: uploadFormData,
             });
-            if (res.ok) {
-              alert("File uploaded successfully");
-            } else {
-              alert("File upload failed");
-            }
+           
           }
 
           // Update reports API with the new count
