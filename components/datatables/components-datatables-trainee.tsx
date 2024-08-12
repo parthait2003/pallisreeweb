@@ -621,11 +621,7 @@ const ComponentsDatatablesTrainee = () => {
             method: "POST",
             body: uploadFormData,
           });
-          if (uploadRes.ok) {
-            alert("File uploaded successfully");
-          } else {
-            alert("File upload failed");
-          }
+         
         }
 
         if (!editid) {
