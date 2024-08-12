@@ -404,11 +404,7 @@ const ComponentsDatatablesExpenditure = () => {
               body: uploadFormData,
             });
 
-            if (res.ok) {
-              alert("Expenditure uploaded successfully");
-            } else {
-              alert("Expenditure upload failed");
-            }
+            
           }
 
           const reportData = {
