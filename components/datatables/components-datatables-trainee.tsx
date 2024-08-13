@@ -20,6 +20,7 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
+import "styles/globals.css";
 import dayjs from "dayjs";
 import Papa from "papaparse";
 import { jsPDF } from "jspdf";
@@ -30,8 +31,6 @@ import IconMagnifyingGlass from "@/components/icon/icon-magnifying-glass";
 import { FaSearch } from "react-icons/fa";
 
 const MySwal = withReactContent(Swal);
-
-
 
 const initialRowData = [
   {
@@ -621,7 +620,6 @@ const ComponentsDatatablesTrainee = () => {
             method: "POST",
             body: uploadFormData,
           });
-         
         }
 
         if (!editid) {
@@ -1505,7 +1503,6 @@ const ComponentsDatatablesTrainee = () => {
           Clear
         </button>
       </div>
-
       <div className="datatables">
         <DataTable
           highlightOnHover
@@ -1528,7 +1525,19 @@ const ComponentsDatatablesTrainee = () => {
               sortable: true,
               render: (row) => <RenderImage row={row} />,
             },
-            { accessor: "name", sortable: true },
+            {
+              accessor: "name",
+              sortable: true,
+              render: (row) => (
+                <button
+                  type="button"
+                  className="text-blue-500 underline"
+                  onClick={() => handleViewClick(row.id)}
+                >
+                  {row.name}
+                </button>
+              ),
+            },
             { accessor: "sportstype", title: "Sports type", sortable: true },
             {
               accessor: "extraPractice",
@@ -1536,7 +1545,6 @@ const ComponentsDatatablesTrainee = () => {
               sortable: true,
             },
             { accessor: "fathersname", title: "Fathers Name", sortable: true },
-
             {
               accessor: "guardiansname",
               title: "Guardians name",
@@ -1569,7 +1577,6 @@ const ComponentsDatatablesTrainee = () => {
             {
               accessor: "Certificate",
               sortable: true,
-
               render: (row) => (
                 <div className="mx-auto flex w-max items-center gap-4">
                   <Tippy content="Birth Certificate">
@@ -1589,12 +1596,10 @@ const ComponentsDatatablesTrainee = () => {
                 </div>
               ),
             },
-
             {
               accessor: "adhar",
               title: "Aadhaar",
               sortable: true,
-
               render: (row) => (
                 <div className="mx-auto flex w-max items-center gap-4">
                   <Tippy content="Aadhaar">
@@ -1664,6 +1669,9 @@ const ComponentsDatatablesTrainee = () => {
           minHeight={200}
           paginationText={({ from, to, totalRecords }) =>
             `Showing ${from} to ${to} of ${totalRecords} entries`
+          }
+          rowClassName={(row) =>
+            selectedTrainees.includes(row.id) ? "bg-blue-100" : ""
           }
         />
       </div>
