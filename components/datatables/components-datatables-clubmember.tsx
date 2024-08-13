@@ -560,7 +560,11 @@ const ComponentsDatatablesClubmember = () => {
               method: "POST",
               body: uploadFormData,
             });
-           
+            if (res.ok) {
+              alert("File uploaded successfully");
+            } else {
+              alert("File upload failed");
+            }
           }
 
           // Update reports API with the new count
@@ -1080,10 +1084,10 @@ const ComponentsDatatablesClubmember = () => {
             Delete All
           </button>
         </div>
-        <div className="mx-auto flex w-full max-w-2xl items-center gap-4">
+        <div className="flex w-1/2 flex-col gap-4   sm:flex-row sm:items-center sm:gap-2 ">
           <label className="flex-shrink-0">Filter by</label>
           <select
-            className="form-select flex-1"
+            className="form-select w-full sm:w-1/3 md:w-1/4"
             value={selectedGender}
             onChange={(e) => setSelectedGender(e.target.value)}
           >
@@ -1095,7 +1099,7 @@ const ComponentsDatatablesClubmember = () => {
             ))}
           </select>
           <select
-            className="form-select flex-1"
+            className="form-select w-full sm:w-1/3 md:w-1/4"
             value={selectedBloodGroup}
             onChange={(e) => setSelectedBloodGroup(e.target.value)}
           >
@@ -1108,7 +1112,7 @@ const ComponentsDatatablesClubmember = () => {
           </select>
           <button
             type="button"
-            className="btn btn-secondary flex-shrink-0"
+            className="btn btn-secondary w-full flex-shrink-0 sm:w-auto"
             onClick={() => {
               setSelectedGender("");
               setSelectedBloodGroup("");
