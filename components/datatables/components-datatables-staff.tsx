@@ -4,7 +4,6 @@ import { useEffect, useState, Fragment, useRef } from "react";
 import sortBy from "lodash/sortBy";
 import IconFile from "@/components/icon/icon-file";
 import { Dialog, Transition } from "@headlessui/react";
-import IconPrinter from "@/components/icon/icon-printer";
 import IconPlus from "../icon/icon-plus";
 import IconXCircle from "@/components/icon/icon-x-circle";
 import IconPencil from "@/components/icon/icon-pencil";
@@ -169,14 +168,12 @@ const ComponentsDatatablesStaff = () => {
   const filterMonths = async (selectedStaff = formData.staffName) => {
     let months = allMonths;
 
-    // Si l'année sélectionnée est 2024, commencez à partir de mars.
     if (formData.year === "2024") {
-      months = allMonths.slice(3); // De mars à décembre
+      months = allMonths.slice(3);
     }
 
     if (selectedStaff) {
       try {
-        // Requête pour récupérer les mois déjà attribués à ce personnel pour l'année sélectionnée.
         const response = await fetch(
           `/api/staffpayment?staff=${selectedStaff}&year=${formData.year}`
         );
@@ -184,13 +181,10 @@ const ComponentsDatatablesStaff = () => {
           throw new Error("Failed to fetch existing months for the staff");
         }
         const data = await response.json();
-
-        // Extraction des mois déjà attribués.
         const existingMonths = data.expenditures.flatMap((expenditure) =>
           expenditure.months.map((m) => m.month)
         );
 
-        // Filtrage des mois déjà utilisés.
         months = months.filter(
           (month) => !existingMonths.includes(month.value)
         );
@@ -290,7 +284,6 @@ const ComponentsDatatablesStaff = () => {
         formattedExpenditure.slice((page - 1) * pageSize, page * pageSize)
       );
       setLoading(false);
-      console.log("Fetched data:", formattedExpenditure);
     } catch (error) {
       console.error(error);
       setError(error.message);
@@ -314,7 +307,6 @@ const ComponentsDatatablesStaff = () => {
       throw new Error(`Failed to fetch data for ID: ${deleteid}`);
     }
     const data = await resdel.json();
-    console.log("deleted data" + data);
     const reportData2 = {
       date: data.expenditure.date,
       income: parseFloat(data.expenditure.amount),
@@ -499,7 +491,6 @@ const ComponentsDatatablesStaff = () => {
               method: "POST",
               body: uploadFormData,
             });
-            console.log("res" + res.json());
             if (res.ok) {
               alert("Expenditure uploaded successfully");
             } else {
@@ -535,7 +526,6 @@ const ComponentsDatatablesStaff = () => {
           console.log("Failed to add new expenditure:", await res.json());
         }
       } else {
-        console.log("Fileds" + JSON.stringify(formattedFormData));
         const url = `/api/staffpayment/${editid}`;
         formattedFormData.staffName = cutomerName;
         const res = await fetch(url, {
@@ -583,7 +573,6 @@ const ComponentsDatatablesStaff = () => {
 
   const handleUpdateClick = async (value) => {
     try {
-      console.log("Fetching data for ID:", value);
       const res = await fetch(`/api/staffpayment/${value}`, {
         method: "GET",
       });
@@ -591,7 +580,6 @@ const ComponentsDatatablesStaff = () => {
         throw new Error(`Failed to fetch data for ID: ${value}`);
       }
       const data = await res.json();
-      console.log("Fetched data:", data.expenditure);
 
       setcutomerName(data.expenditure.staffName);
 
@@ -607,7 +595,7 @@ const ComponentsDatatablesStaff = () => {
       setFormData({
         id: data.expenditure._id,
         billNo: data.expenditure.billNo.toString(),
-        year: data.expenditure.year.toString(), // Ensure year is correctly set
+        year: data.expenditure.year.toString(),
         staffName: selectedCoach ? selectedCoach.value : "other",
         otherCoach: selectedCoach ? "" : data.expenditure.staffName,
         date: formatDate(data.expenditure.date),
@@ -694,7 +682,6 @@ const ComponentsDatatablesStaff = () => {
 
       doc.text(`Name: ${row.staffName}`, 15, 60);
 
-      // Process the "things" data, removing null or empty amounts
       const things = row.things
         ? row.things
             .split(", ")
@@ -708,30 +695,26 @@ const ComponentsDatatablesStaff = () => {
                     : null,
               };
             })
-            .filter((thing) => thing.amount !== null) // Remove entries with null amounts
+            .filter((thing) => thing.amount !== null)
         : [];
 
-      // Calculate the total amount of the "things" values
       const totalThingsAmount = things.reduce(
         (total, thing) => total + parseFloat(thing.amount),
         0
       );
 
-      // Calculate the current amount for months after subtracting things' total amount
       let currentAmount = parseFloat(row.amount) - totalThingsAmount;
       const months = row.months.map((month) => [
-        `${month.month} ${row.year}`, // Include month and year
+        `${month.month} ${row.year}`,
         `${currentAmount.toFixed(2)}`,
       ]);
 
-      // Prepare the table data for the PDF, filtering out any things entries with null or empty amounts
       const tableData = [
         ...months,
         ...things.map((thing) => [thing.name, thing.amount]),
         ["Total", "Rs." + row.amount + " INR"],
       ];
 
-      // Generate the table in the PDF
       autoTable(doc, {
         startY: 65,
         head: [["Item", "Amount"]],
@@ -744,13 +727,11 @@ const ComponentsDatatablesStaff = () => {
         },
       });
 
-      // Add the description if it exists
       const tableHeight = doc.previousAutoTable.finalY;
       if (row.description) {
         doc.text("\n\nDescription\n" + row.description, 15, tableHeight + 10);
       }
 
-      // Save the PDF with a dynamic filename
       doc.save(`expenditure_${row.id}.pdf`);
     };
   };
@@ -762,6 +743,25 @@ const ComponentsDatatablesStaff = () => {
     { value: "2027", label: "2027" },
     { value: "2028", label: "2028" },
   ];
+
+  useEffect(() => {
+    const filteredRecords = initialRecords.filter((item: any) => {
+      return (
+        item.billNo.toString().includes(search) ||
+        item.staffName.toLowerCase().includes(search.toLowerCase()) ||
+        item.year.toString().includes(search.toLowerCase()) ||
+        item.date.toString().includes(search.toLowerCase()) ||
+        item.months.some((month) =>
+          month.month.toLowerCase().includes(search.toLowerCase())
+        ) ||
+        item.amount.toString().includes(search.toLowerCase())
+      );
+    });
+
+    setRecordsData(
+      filteredRecords.slice((page - 1) * pageSize, page * pageSize)
+    );
+  }, [search, initialRecords, page, pageSize]);
 
   return (
     <div className="panel mt-6">
@@ -1091,11 +1091,11 @@ const ComponentsDatatablesStaff = () => {
                         amount.trim() !== "null" &&
                         amount.trim() !== ""
                         ? `${name}: ${amount}`
-                        : `x`; // Display only the name followed by a blank if amount is null or empty
+                        : `x`;
                     })
                     .join(", ");
                 }
-                return ""; // Return an empty string if row.things is not a string
+                return "";
               },
             },
             { accessor: "amount", sortable: true, title: "Amount" },
