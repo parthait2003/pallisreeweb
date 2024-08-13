@@ -117,6 +117,31 @@ const ComponentsDatatablesSettings = () => {
     }
   };
 
+
+
+
+  const handleBackup = () => {
+    fetch("/api/backup")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.blob();
+      })
+      .then((blob) => {
+        const url = window.URL.createObjectURL(new Blob([blob]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `backup_${new Date().toISOString()}.json`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+      })
+      .catch((error) => {
+        console.error("There was a problem with the backup operation:", error);
+      });
+  };
+
   return (
     <div className="pt-5">
       <div className="mb-5 flex items-center justify-between">
@@ -324,6 +349,23 @@ const ComponentsDatatablesSettings = () => {
           </button>
         </div>
       )}
+
+
+
+<div className="mt-10">
+        <h6 className="text-lg font-bold">Backup</h6>
+        <button
+          type="button"
+          className="btn btn-secondary mt-3"
+          onClick={handleBackup}
+        >
+          Download Database Backup
+        </button>
+      </div>
+
+
+
+      
     </div>
   );
 };
