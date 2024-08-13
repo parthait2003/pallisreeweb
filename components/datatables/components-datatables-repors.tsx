@@ -490,95 +490,100 @@ const ComponentsDatatablesReports = () => {
       <h5 className="mb-5 text-lg font-semibold dark:text-white-light">
         Records
       </h5>
-      <div className="mb-4.5 flex flex-col justify-between gap-5 md:flex-row md:items-center">
-        <button
-          type="button"
-          className="btn btn-primary my-5 w-100"
-          onClick={() => setModal1(true)}
-          style={{ fontSize: "calc(1em - 2px)" }}
-        >
-          {" "}
-          <IconPlus className="ltr:mr-2 rtl:ml-2" />
-          Record
-        </button>
-        <div className="flex flex-wrap items-center gap-4 w-full">
-          <select
-            className="form-select flex-1"
-            onChange={handleYearChange}
-            value={year}
-          >
-            <option value="">Select Year</option>
-            {Array.from(
-              { length: 5 },
-              (_, i) => new Date().getFullYear() - i
-            ).map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className="form-select flex-1"
-            onChange={handleMonthChange}
-            value={month}
-          >
-            <option value="">Select Month</option>
-            {monthNames.map((monthName, index) => (
-              <option key={index} value={index + 1}>
-                {monthName}
-              </option>
-            ))}
-          </select>
-
-          <Flatpickr
-            options={{ dateFormat: "d/m/Y" }}
-            className="form-input flex-1"
-            placeholder="Start Date"
-            onChange={(date) =>
-              setStartDate(date[0] ? date[0].toISOString().split("T")[0] : "")
-            }
-          />
-          <Flatpickr
-            options={{ dateFormat: "d/m/Y" }}
-            className="form-input flex-1"
-            placeholder="End Date"
-            onChange={(date) =>
-              setEndDate(date[0] ? date[0].toISOString().split("T")[0] : "")
-            }
-          />
-
+      <div className="mb-4.5 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
           <button
-            onClick={clearFilters}
-            className="btn btn-secondary btn-sm m-1"
+            type="button"
+            className="btn btn-primary w-full lg:w-auto"
+            onClick={() => setModal1(true)}
           >
-            Clear Filters
+            <IconPlus className="ltr:mr-2 rtl:ml-2" />
+            Record
           </button>
 
-          <button
-            onClick={() => generatePDF(filteredRecords)}
-            className="btn btn-primary btn-sm m-1"
-          >
-            <IconFile className="h-5 w-5 ltr:mr-2 rtl:ml-2" />
-            Generate PDF
-          </button>
+          <div className="flex w-full flex-wrap gap-4">
+            <select
+              className="form-select w-full sm:w-1/2 md:w-1/4 lg:w-1/6"
+              onChange={handleYearChange}
+              value={year}
+            >
+              <option value="">Select Year</option>
+              {Array.from(
+                { length: 5 },
+                (_, i) => new Date().getFullYear() - i
+              ).map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
 
-          <button
-            onClick={() => generateTraineeRecordPDF(filteredRecords)}
-            className="btn btn-primary btn-sm m-1"
-          >
-            <IconFile className="h-5 w-5 ltr:mr-2 rtl:ml-2" />
-            Generate Trainee Record PDF
-          </button>
+            <select
+              className="form-select w-full sm:w-1/2 md:w-1/4 lg:w-1/6"
+              onChange={handleMonthChange}
+              value={month}
+            >
+              <option value="">Select Month</option>
+              {monthNames.map((monthName, index) => (
+                <option key={index} value={index + 1}>
+                  {monthName}
+                </option>
+              ))}
+            </select>
+
+            <Flatpickr
+              options={{ dateFormat: "d/m/Y" }}
+              className="form-input w-full sm:w-1/2 md:w-1/4 lg:w-auto"
+              placeholder="Start Date"
+              onChange={(date) =>
+                setStartDate(date[0] ? date[0].toISOString().split("T")[0] : "")
+              }
+            />
+            <Flatpickr
+              options={{ dateFormat: "d/m/Y" }}
+              className="form-input w-full sm:w-1/2 md:w-1/4 lg:w-auto"
+              placeholder="End Date"
+              onChange={(date) =>
+                setEndDate(date[0] ? date[0].toISOString().split("T")[0] : "")
+              }
+            />
+
+            <button
+              onClick={clearFilters}
+              className="btn btn-secondary btn-sm w-full sm:w-auto lg:w-auto"
+            >
+              Clear Filters
+            </button>
+          </div>
         </div>
 
-        <input
-          type="text"
-          className="form-input w-auto"
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex w-full flex-wrap gap-4">
+            <button
+              onClick={() => generatePDF(filteredRecords)}
+              className="btn btn-primary btn-sm w-full lg:w-auto"
+            >
+              <IconFile className="h-5 w-5 ltr:mr-2 rtl:ml-2" />
+              Generate PDF
+            </button>
+
+            <button
+              onClick={() => generateTraineeRecordPDF(filteredRecords)}
+              className="btn btn-primary btn-sm w-full lg:w-auto"
+            >
+              <IconFile className="h-5 w-5 ltr:mr-2 rtl:ml-2" />
+              Generate Trainee Record PDF
+            </button>
+
+            <input
+              type="text"
+              className="form-input w-full lg:ml-auto lg:w-auto"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="datatables">
