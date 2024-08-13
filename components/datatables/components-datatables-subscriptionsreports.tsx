@@ -280,7 +280,7 @@ const ComponentsDatatablesSubscriptionsReports = () => {
         pendingMonths.map((month, index) => (
           <span
             key={index}
-            className="month-badge inline-block border border-gray-300 p-2 m-1 rounded"
+            className="month-badge m-1 inline-block rounded border border-gray-300 p-2"
           >
             &#10060; {month.label}
           </span>
@@ -294,9 +294,11 @@ const ComponentsDatatablesSubscriptionsReports = () => {
         Pending Payments
       </h5>
 
-      <div className="mb-4.5 flex flex-wrap items-center gap-3">
-        <div className="flex flex-wrap gap-3 items-center">
+      <div className="mb-4.5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center gap-3">
           <label>
+            {" "}
+            Filter by Month{" - "}{" "}
             <input
               type="checkbox"
               name="currentMonth"
@@ -328,8 +330,8 @@ const ComponentsDatatablesSubscriptionsReports = () => {
             </label>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          <div className="w-60 z-50 relative">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative z-50 w-full lg:w-60">
             <Select
               options={sportOptions}
               value={sportFilter}
@@ -338,27 +340,31 @@ const ComponentsDatatablesSubscriptionsReports = () => {
               isClearable
             />
           </div>
-          <button
-            className="bg-blue-500 text-white px-3 py-2 rounded"
-            onClick={clearFilters}
-          >
-            Clear Filters
-          </button>
-          <button
-            className="bg-green-500 text-white px-3 py-2 rounded"
-            onClick={generateReport}
-          >
-            Generate Report
-          </button>
-          <input
-            type="text"
-            className="form-input w-auto"
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+
+          <div className="flex items-center gap-3">
+            <button
+              className="w-full rounded bg-blue-500 px-3 py-2 text-white lg:w-auto"
+              onClick={clearFilters}
+            >
+              Clear Filters
+            </button>
+            <button
+              className="w-full rounded bg-green-500 px-3 py-2 text-white lg:w-auto"
+              onClick={generateReport}
+            >
+              Generate Report
+            </button>
+            <input
+              type="text"
+              className="form-input w-full lg:w-auto"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
         </div>
       </div>
+
       <div className="datatables">
         <DataTable
           highlightOnHover
@@ -379,6 +385,7 @@ const ComponentsDatatablesSubscriptionsReports = () => {
           }
         />
       </div>
+
       <style jsx>{`
         .month-badge {
           display: inline-block;
