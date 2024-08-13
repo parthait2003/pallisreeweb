@@ -1425,10 +1425,10 @@ const ComponentsDatatablesTrainee = () => {
         />
       </div>
 
-      <div className="mb-4 flex gap-4">
+      <div className="mb-4 flex flex-wrap gap-4 sm:flex-col md:flex-row">
         <Flatpickr
           options={{ dateFormat: "d/m/Y" }}
-          className="form-input"
+          className="form-input w-full sm:w-auto"
           placeholder="Start Date"
           onChange={(date) =>
             setStartDate(date[0] ? date[0].toISOString() : null)
@@ -1436,14 +1436,14 @@ const ComponentsDatatablesTrainee = () => {
         />
         <Flatpickr
           options={{ dateFormat: "d/m/Y" }}
-          className="form-input"
+          className="form-input w-full sm:w-auto"
           placeholder="End Date"
           onChange={(date) =>
             setEndDate(date[0] ? date[0].toISOString() : null)
           }
         />
         <select
-          className="form-input"
+          className="form-input w-full sm:w-auto"
           value={ageFilter}
           onChange={(e) => setAgeFilter(e.target.value)}
         >
@@ -1455,7 +1455,7 @@ const ComponentsDatatablesTrainee = () => {
           ))}
         </select>
         <select
-          className="form-input"
+          className="form-input w-full sm:w-auto"
           value={genderFilter}
           onChange={(e) => setGenderFilter(e.target.value)}
         >
@@ -1467,7 +1467,7 @@ const ComponentsDatatablesTrainee = () => {
           ))}
         </select>
         <select
-          className="form-input"
+          className="form-input w-full sm:w-auto"
           value={sportstypeFilter}
           onChange={(e) => setSportstypeFilter(e.target.value)}
         >
@@ -1479,7 +1479,7 @@ const ComponentsDatatablesTrainee = () => {
           ))}
         </select>
         <select
-          className="form-input"
+          className="form-input w-full sm:w-auto"
           value={extraPracticeFilter}
           onChange={(e) => setExtraPracticeFilter(e.target.value)}
         >
@@ -1488,7 +1488,7 @@ const ComponentsDatatablesTrainee = () => {
           <option value="No">No</option>
         </select>
         <select
-          className="form-input"
+          className="form-input w-full sm:w-auto"
           value={bloodGroupFilter}
           onChange={(e) => setBloodGroupFilter(e.target.value)}
         >
@@ -1499,10 +1499,14 @@ const ComponentsDatatablesTrainee = () => {
             </option>
           ))}
         </select>
-        <button className="btn btn-secondary" onClick={handleClearFilters}>
+        <button
+          className="btn btn-secondary w-full sm:w-auto"
+          onClick={handleClearFilters}
+        >
           Clear
         </button>
       </div>
+
       <div className="datatables">
         <DataTable
           highlightOnHover
