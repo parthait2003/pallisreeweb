@@ -5,7 +5,8 @@ import React, { useState, useEffect } from "react";
 const ComponentsDatatablesSettings = () => {
   const [tabs, setTabs] = useState<string>("home");
   const [editid, setEditid] = useState("");
-  const [popupVisible, setPopupVisible] = useState(false);
+  const [stableMessage, setStableMessage] = useState(""); // State for stable message
+  const [popupVisible, setPopupVisible] = useState(false); // State for popup notification
   const [couches, setCouches] = useState([
     { name: "", fee: "", mobile: "", designation: "" },
   ]);
@@ -79,7 +80,6 @@ const ComponentsDatatablesSettings = () => {
   };
 
   const saveSettings = async () => {
-    // Logic to save settings goes here
     try {
       const url = editid ? `/api/settings/${editid}` : "/api/settings";
       const method = editid ? "PUT" : "POST";
@@ -107,7 +107,7 @@ const ComponentsDatatablesSettings = () => {
       const data = await res.json();
       console.log("Settings saved!", data);
 
-      // Show popup message
+      // Show popup notification
       setPopupVisible(true);
       setTimeout(() => {
         setPopupVisible(false);
@@ -116,9 +116,6 @@ const ComponentsDatatablesSettings = () => {
       console.error("There was a problem with the save operation:", error);
     }
   };
-
-
-
 
   const handleBackup = () => {
     fetch("/api/backup")
@@ -132,10 +129,19 @@ const ComponentsDatatablesSettings = () => {
         const url = window.URL.createObjectURL(new Blob([blob]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", `backup_${new Date().toISOString()}.json`);
+        link.setAttribute(
+          "download",
+          `backup_${new Date().toISOString()}.json`
+        );
         document.body.appendChild(link);
         link.click();
         link.parentNode.removeChild(link);
+
+        // Get current date in "dd/mm/yyyy" format
+        const currentDate = new Date().toLocaleDateString("en-GB");
+
+        // Set stable message
+        setStableMessage(`Backup downloaded successfully on ${currentDate}`);
       })
       .catch((error) => {
         console.error("There was a problem with the backup operation:", error);
@@ -154,6 +160,32 @@ const ComponentsDatatablesSettings = () => {
           {/* Vos onglets ici */}
         </ul>
       </div>
+
+      {/* Display stable message for backup */}
+      {stableMessage && (
+        <div className="relative flex items-center border p-3.5 rounded text-primary bg-primary-light !border-primary ltr:border-l-[64px] rtl:border-r-[64px] dark:bg-primary-dark-light">
+          <span className="absolute ltr:-left-11 rtl:-right-11 inset-y-0 text-white w-6 h-6 m-auto">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14V11c0-1.306-.835-2.417-2-2.83V7a4 4 0 10-8 0v1.17C6.835 8.583 6 9.694 6 11v3c0 .374-.073.735-.215 1.075L4.5 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+          </span>
+          <span className="ltr:pr-2 rtl:pl-2">
+            <strong className="ltr:mr-1 rtl:ml-1">Status:</strong>
+            {stableMessage}
+          </span>
+        </div>
+      )}
 
       <div>
         <form className="mb-5 rounded-md border border-[#ebedf2] bg-white p-4 dark:border-[#191e3a] dark:bg-black">
@@ -337,22 +369,20 @@ const ComponentsDatatablesSettings = () => {
         </div>
       </div>
 
+      {/* Popup notification for data update */}
       {popupVisible && (
-        <div className="fixed bottom-5 left-20 bg-gray-800 text-white p-3 rounded shadow-lg flex items-center">
+         <div className="fixed bottom-5 right-5 bg-gray-800 text-white p-3 rounded shadow-lg flex items-center justify-between">
           <span>Data updated successfully</span>
           <button
-            type="button"
-            className="ml-3 bg-transparent text-white"
             onClick={() => setPopupVisible(false)}
+            className="bg-transparent text-white"
           >
             &times;
           </button>
         </div>
       )}
 
-
-
-<div className="mt-10">
+      <div className="mt-10">
         <h6 className="text-lg font-bold">Backup</h6>
         <button
           type="button"
@@ -362,10 +392,6 @@ const ComponentsDatatablesSettings = () => {
           Download Database Backup
         </button>
       </div>
-
-
-
-      
     </div>
   );
 };
