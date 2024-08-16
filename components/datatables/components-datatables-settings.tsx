@@ -5,8 +5,8 @@ import React, { useState, useEffect } from "react";
 const ComponentsDatatablesSettings = () => {
   const [tabs, setTabs] = useState<string>("home");
   const [editid, setEditid] = useState("");
-  const [stableMessage, setStableMessage] = useState(() => localStorage.getItem("backupMessage") || ""); // Initialize with value from localStorage
-  const [popupVisible, setPopupVisible] = useState(false); // State for popup notification
+  const [stableMessage, setStableMessage] = useState(""); // Initialize with an empty string
+  const [popupVisible, setPopupVisible] = useState(false);
   const [couches, setCouches] = useState([
     { name: "", fee: "", mobile: "", designation: "" },
   ]);
@@ -20,6 +20,12 @@ const ComponentsDatatablesSettings = () => {
   });
 
   useEffect(() => {
+    // Retrieve the stableMessage from localStorage when the component mounts
+    const messageFromStorage = localStorage.getItem("backupMessage");
+    if (messageFromStorage) {
+      setStableMessage(messageFromStorage);
+    }
+
     // Fetch initial data from the database
     fetch("/api/settings")
       .then((response) => {
@@ -191,7 +197,6 @@ const ComponentsDatatablesSettings = () => {
             <strong className="ltr:mr-1 rtl:ml-1">Status:</strong>
             {stableMessage}
           </span>
-          
         </div>
       )}
 
