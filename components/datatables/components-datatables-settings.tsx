@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 const ComponentsDatatablesSettings = () => {
   const [tabs, setTabs] = useState<string>("home");
   const [editid, setEditid] = useState("");
-  const [stableMessage, setStableMessage] = useState(""); // State for stable message
+  const [stableMessage, setStableMessage] = useState(() => localStorage.getItem("backupMessage") || ""); // Initialize with value from localStorage
   const [popupVisible, setPopupVisible] = useState(false); // State for popup notification
   const [couches, setCouches] = useState([
     { name: "", fee: "", mobile: "", designation: "" },
@@ -140,12 +140,19 @@ const ComponentsDatatablesSettings = () => {
         // Get current date in "dd/mm/yyyy" format
         const currentDate = new Date().toLocaleDateString("en-GB");
 
-        // Set stable message
-        setStableMessage(`Backup downloaded successfully on ${currentDate}`);
+        // Set stable message and store it in localStorage
+        const backupMessage = `Backup downloaded successfully on ${currentDate}`;
+        setStableMessage(backupMessage);
+        localStorage.setItem("backupMessage", backupMessage);
       })
       .catch((error) => {
         console.error("There was a problem with the backup operation:", error);
       });
+  };
+
+  const clearStableMessage = () => {
+    setStableMessage("");
+    localStorage.removeItem("backupMessage");
   };
 
   return (
@@ -184,6 +191,7 @@ const ComponentsDatatablesSettings = () => {
             <strong className="ltr:mr-1 rtl:ml-1">Status:</strong>
             {stableMessage}
           </span>
+          
         </div>
       )}
 
