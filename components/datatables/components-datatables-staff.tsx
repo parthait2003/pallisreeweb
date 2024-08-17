@@ -279,16 +279,19 @@ const ComponentsDatatablesStaff = () => {
         })
       );
 
-      setInitialRecords(formattedExpenditure);
-      setRecordsData(
-        formattedExpenditure.slice((page - 1) * pageSize, page * pageSize)
-      );
-      setLoading(false);
-    } catch (error) {
-      console.error(error);
-      setError(error.message);
-    }
-  };
+       // Sort by billNo in descending order
+       const sortedRecords = sortBy(formattedExpenditure, "billNo").reverse();
+
+       setInitialRecords(sortedRecords);
+       setRecordsData(
+         sortedRecords.slice((page - 1) * pageSize, page * pageSize)
+       );
+       setLoading(false);
+     } catch (error) {
+       console.error(error);
+       setError(error.message);
+     }
+   };
 
   useEffect(() => {
     fetchExpenditureData();
@@ -618,6 +621,8 @@ const ComponentsDatatablesStaff = () => {
       alert(`Error: ${error.message}`);
     }
   };
+
+  
 
   const handleAddRow = () => {
     setFormData((prevFormData) => ({
