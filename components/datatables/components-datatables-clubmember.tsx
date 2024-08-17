@@ -204,7 +204,7 @@ const ComponentsDatatablesClubmember = () => {
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
     columnAccessor: "id",
-    direction: "asc",
+    direction: "desc",
   });
 
   useEffect(() => {
@@ -263,6 +263,8 @@ const ComponentsDatatablesClubmember = () => {
     e.stopPropagation();
     setShowAddCustomer(!showAddCustomer);
   };
+
+  
 
   useEffect(() => {
     const sortedData = sortBy(initialRecords, sortStatus.columnAccessor);
