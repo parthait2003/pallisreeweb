@@ -245,17 +245,21 @@ const ComponentsDatatablesMemberfees = () => {
         })
       );
 
-      setInitialRecords(formattedSubscription);
-      setRecordsData(
-        formattedSubscription.slice((page - 1) * pageSize, page * pageSize)
+      const sortedRecords = formattedSubscription.sort(
+        (a, b) => parseInt(b.billNo) - parseInt(a.billNo)
       );
-      setLoading(false);
-      console.log("Fetched data:", formattedSubscription);
-    } catch (error) {
-      console.error(error);
-      setError(error.message);
-    }
-  };
+
+    setInitialRecords(sortedRecords);
+    setRecordsData(
+      sortedRecords.slice((page - 1) * pageSize, page * pageSize)
+    );
+    setLoading(false);
+    console.log("Fetched and sorted data by bill number:", sortedRecords);
+  } catch (error) {
+    console.error(error);
+    setError(error.message);
+  }
+};
 
   const fetchMembersData = async () => {
     try {
@@ -287,11 +291,18 @@ const ComponentsDatatablesMemberfees = () => {
     fetchMembersData();
   }, []);
 
+
+
+
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
     columnAccessor: "id",
-    direction: "asc",
+    direction: "desc",
   });
+
+  
+
+
 
   useEffect(() => {
     setPage(1);
