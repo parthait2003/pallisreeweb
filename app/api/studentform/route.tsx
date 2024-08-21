@@ -12,8 +12,15 @@ async function setCORSHeaders(response: NextResponse) {
   return response;
 }
 
+function formatToDDMMYYYY(date: Date): string {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based, so add 1
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 export async function OPTIONS() {
-  let response = NextResponse.json({}, { status: 200 });
+  const response = NextResponse.json({}, { status: 200 });
   setCORSHeaders(response);
   return response;
 }
@@ -35,26 +42,12 @@ export async function POST(request: Request) {
       bloodgroup,
       document,
       adhar,
-      extraPractice, // Nouveau champ ajouté
+      extraPractice,
     } = await request.json();
 
-    console.log("Received payload:", {
-      image,
-      sportstype,
-      name,
-      fathersname,
-      guardiansname,
-      guardiansoccupation,
-      gender,
-      address,
-      phoneno,
-      date,
-      nameoftheschool,
-      bloodgroup,
-      document,
-      adhar,
-      extraPractice, // Nouveau champ ajouté
-    });
+    // Ensure the date is stored in DD/MM/YYYY format
+    const formattedDate = formatToDDMMYYYY(new Date(date));
+    const joiningdate = formatToDDMMYYYY(new Date()); // Store current date in DD/MM/YYYY format
 
     await connectDB();
     const newStudentForm = await studentformModel.create({
@@ -67,28 +60,29 @@ export async function POST(request: Request) {
       gender,
       address,
       phoneno,
-      date,
+      date: formattedDate,
       nameoftheschool,
       bloodgroup,
       document,
       adhar,
-      extraPractice, // Nouveau champ ajouté
+      extraPractice,
+      joiningdate,
     });
 
-    console.log("Created student form:", newStudentForm);
-
-    let response = NextResponse.json(
-      { message: "Student form created" },
+    const response = NextResponse.json(
+      { message: "Student form created", data: newStudentForm },
       { status: 201 }
     );
     setCORSHeaders(response);
     return response;
   } catch (error) {
     console.error("Failed to create student form:", error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }
     );
+    setCORSHeaders(response);
+    return response;
   }
 }
 
@@ -97,14 +91,16 @@ export async function GET() {
     await connectDB();
     const studentforms = await studentformModel.find();
 
-    let response = NextResponse.json({ studentforms });
+    const response = NextResponse.json({ studentforms }, { status: 200 });
     setCORSHeaders(response);
     return response;
   } catch (error) {
     console.error("Failed to get student forms:", error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }
     );
+    setCORSHeaders(response);
+    return response;
   }
 }
