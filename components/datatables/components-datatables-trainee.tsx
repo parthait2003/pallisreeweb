@@ -539,6 +539,7 @@ const ComponentsDatatablesTrainee = () => {
     bloodgroup: "",
     document: "",
     adhar: "",
+    joiningdate: "",
     extraPractice: "Yes",
   });
 
@@ -623,8 +624,18 @@ const ComponentsDatatablesTrainee = () => {
         }
 
         if (!editid) {
-          const [day, month, year] = formData.date.split("/");
-          const isoDate = `${year}-${month}-${day}`;
+          const currentDate = new Date();
+
+          // Format the current date to DD/MM/YYYY
+          const day = String(currentDate.getDate()).padStart(2, "0");
+          const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Months are 0-based, so add 1
+          const year = currentDate.getFullYear();
+          const formattedCurrentDate = `${day}/${month}/${year}`;
+
+          // Now replace formData.joiningdate with the formatted current date
+          const [currentDay, currentMonth, currentYear] =
+            formattedCurrentDate.split("/");
+          const isoDate = `${currentYear}-${currentMonth}-${currentDay}`;
 
           const reportData = {
             date: isoDate,
@@ -1205,7 +1216,7 @@ const ComponentsDatatablesTrainee = () => {
                                 />
                               </div>
                               <div>
-                                <label htmlFor="date">Date</label>
+                                <label htmlFor="date">Date of birth</label>
                                 <Flatpickr
                                   id="date"
                                   value={formData.date}
