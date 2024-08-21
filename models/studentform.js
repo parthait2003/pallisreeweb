@@ -38,7 +38,7 @@ const studentformSchema = new mongoose.Schema({
     required: true,
   },
   date: {
-    type: String,
+    type: String, // Store date in DD/MM/YYYY format
     required: true,
   },
   nameoftheschool: {
@@ -57,10 +57,14 @@ const studentformSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  extraPractice: {  // Nouveau champ ajouté
+  extraPractice: {
     type: String,
     required: false,
-    default: 'Yes',  // Valeur par défaut
+    default: 'Yes',
+  },
+  joiningdate: {
+    type: String, // Store joiningdate in DD/MM/YYYY format
+    required: true,
   },
 });
 
