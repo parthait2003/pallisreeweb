@@ -11,7 +11,7 @@ const ComponentsDatatablesSettings = () => {
     { name: "", fee: "", mobile: "", designation: "" },
   ]);
   const [settings, setSettings] = useState({
-    regularmonthlyfee: "",
+    monthlyfee: "",
     extrapractice: "",
     membershipfee: "",
     gymfee: "",
@@ -37,7 +37,7 @@ const ComponentsDatatablesSettings = () => {
       .then((data) => {
         setEditid(data._id);
         setSettings({
-          regularmonthlyfee: data.regularmonthlyfee,
+          monthlyfee: data.monthlyfee,
           extrapractice: data.extrapractice,
           membershipfee: data.membershipfee,
           gymfee: data.gymfee,
@@ -85,7 +85,7 @@ const ComponentsDatatablesSettings = () => {
     setCouches(updatedCouches);
   };
 
- const saveSettings = async () => {
+  const saveSettings = async () => {
     try {
       const url = editid ? `/api/settings/${editid}` : "/api/settings";
       const method = editid ? "PUT" : "POST";
@@ -124,6 +124,7 @@ const ComponentsDatatablesSettings = () => {
       console.error("There was a problem with the save operation:", error);
     }
   };
+  
 
   const handleBackup = () => {
     fetch("/api/backup")
@@ -208,13 +209,13 @@ const ComponentsDatatablesSettings = () => {
           <div className="flex flex-col sm:flex-row">
             <div className="grid flex-1 grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
-                <label htmlFor="regularmonthlyfee">Regular Monthly Fee</label>
+                <label htmlFor="monthlyfee">Regular Monthly Fee</label>
                 <input
-                  id="regularmonthlyfee"
-                  name="regularmonthlyfee"
+                  id="monthlyfee"
+                  name="monthlyfee"
                   type="text"
                   className="form-input"
-                  value={settings.regularmonthlyfee}
+                  value={settings.monthlyfee}
                   onChange={handleSettingsChange}
                 />
               </div>
