@@ -86,35 +86,35 @@ const ComponentsDatatablesSettings = () => {
   };
 
  const saveSettings = async () => {
-  try {
-    const url = editid ? `/api/settings/${editid}` : "/api/settings";
-    const method = editid ? "PUT" : "POST";
-
-    const res = await fetch(url, {
-      method: method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        settings: {
-          monthlyfee: settings.monthlyfee,
-          extraPracticeFee: settings.extrapractice,
-          membershipFee: settings.membershipfee,
-          gymFee: settings.gymfee,
-          developmentFee: settings.developementfee,
-          admissionFee: settings.admissionfee,
+    try {
+      const url = editid ? `/api/settings/${editid}` : "/api/settings";
+      const method = editid ? "PUT" : "POST";
+  
+      const res = await fetch(url, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
         },
-        couches,
-      }),
-    });
-
+        body: JSON.stringify({
+          settings: {
+            monthlyfee: settings.monthlyfee,
+            extraPracticeFee: settings.extrapractice,
+            membershipFee: settings.membershipfee,
+            gymFee: settings.gymfee,
+            developmentFee: settings.developementfee,
+            admissionFee: settings.admissionfee,
+          },
+          couches,
+        }),
+      });
+  
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-
+  
       const data = await res.json();
       console.log("Settings saved!", data);
-
+  
       // Show popup notification
       setPopupVisible(true);
       setTimeout(() => {
