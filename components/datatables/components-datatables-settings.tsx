@@ -5,13 +5,13 @@ import React, { useState, useEffect } from "react";
 const ComponentsDatatablesSettings = () => {
   const [tabs, setTabs] = useState<string>("home");
   const [editid, setEditid] = useState("");
-  const [stableMessage, setStableMessage] = useState(""); // Initialize with an empty string
-  const [popupVisible, setPopupVisible] = useState(false);
+  const [stableMessage, setStableMessage] = useState(""); // State for stable message
+  const [popupVisible, setPopupVisible] = useState(false); // State for popup notification
   const [couches, setCouches] = useState([
     { name: "", fee: "", mobile: "", designation: "" },
   ]);
   const [settings, setSettings] = useState({
-    monthlyfee: "",
+    regularmonthlyfee: "",
     extrapractice: "",
     membershipfee: "",
     gymfee: "",
@@ -20,12 +20,6 @@ const ComponentsDatatablesSettings = () => {
   });
 
   useEffect(() => {
-    // Retrieve the stableMessage from localStorage when the component mounts
-    const messageFromStorage = localStorage.getItem("backupMessage");
-    if (messageFromStorage) {
-      setStableMessage(messageFromStorage);
-    }
-
     // Fetch initial data from the database
     fetch("/api/settings")
       .then((response) => {
@@ -37,7 +31,7 @@ const ComponentsDatatablesSettings = () => {
       .then((data) => {
         setEditid(data._id);
         setSettings({
-          monthlyfee: data.monthlyfee,
+          regularmonthlyfee: data.regularmonthlyfee,
           extrapractice: data.extrapractice,
           membershipfee: data.membershipfee,
           gymfee: data.gymfee,
@@ -89,32 +83,30 @@ const ComponentsDatatablesSettings = () => {
     try {
       const url = editid ? `/api/settings/${editid}` : "/api/settings";
       const method = editid ? "PUT" : "POST";
-  
+
       const res = await fetch(url, {
         method: method,
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          settings: {
-            monthlyfee: settings.monthlyfee,
-            extraPracticeFee: settings.extrapractice,
-            membershipFee: settings.membershipfee,
-            gymFee: settings.gymfee,
-            developmentFee: settings.developementfee,
-            admissionFee: settings.admissionfee,
-          },
+          regularmonthlyfee: settings.regularmonthlyfee,
+          extrapractice: settings.extrapractice,
+          membershipfee: settings.membershipfee,
+          gymfee: settings.gymfee,
+          developementfee: settings.developementfee,
+          admissionfee: settings.admissionfee,
           couches,
         }),
       });
-  
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-  
+
       const data = await res.json();
       console.log("Settings saved!", data);
-  
+
       // Show popup notification
       setPopupVisible(true);
       setTimeout(() => {
@@ -124,7 +116,6 @@ const ComponentsDatatablesSettings = () => {
       console.error("There was a problem with the save operation:", error);
     }
   };
-  
 
   const handleBackup = () => {
     fetch("/api/backup")
@@ -149,19 +140,12 @@ const ComponentsDatatablesSettings = () => {
         // Get current date in "dd/mm/yyyy" format
         const currentDate = new Date().toLocaleDateString("en-GB");
 
-        // Set stable message and store it in localStorage
-        const backupMessage = `Backup downloaded successfully on ${currentDate}`;
-        setStableMessage(backupMessage);
-        localStorage.setItem("backupMessage", backupMessage);
+        // Set stable message
+        setStableMessage(`Backup downloaded successfully on ${currentDate}`);
       })
       .catch((error) => {
         console.error("There was a problem with the backup operation:", error);
       });
-  };
-
-  const clearStableMessage = () => {
-    setStableMessage("");
-    localStorage.removeItem("backupMessage");
   };
 
   return (
@@ -209,13 +193,13 @@ const ComponentsDatatablesSettings = () => {
           <div className="flex flex-col sm:flex-row">
             <div className="grid flex-1 grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
-                <label htmlFor="monthlyfee">Regular Monthly Fee</label>
+                <label htmlFor="regularmonthlyfee">Regular Monthly Fee</label>
                 <input
-                  id="monthlyfee"
-                  name="monthlyfee"
+                  id="regularmonthlyfee"
+                  name="regularmonthlyfee"
                   type="text"
                   className="form-input"
-                  value={settings.monthlyfee}
+                  value={settings.regularmonthlyfee}
                   onChange={handleSettingsChange}
                 />
               </div>
