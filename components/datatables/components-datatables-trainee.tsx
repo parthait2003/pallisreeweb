@@ -370,11 +370,11 @@ const ComponentsDatatablesTrainee = () => {
   }, [sortStatus, page, pageSize, initialRecords]);
 
   const formatDate = (date) => {
-    if (date) {
-      return dayjs(date).format("DD/MM/YYYY");
-    }
-    return "";
+    if (!date) return ""; // Return empty string if date is not provided
+    const parsedDate = dayjs(date);
+    return parsedDate.isValid() ? parsedDate.format("DD/MM/YYYY") : ""; // Format date to DD/MM/YYYY
   };
+  
 
   const handleDeleteData = async () => {
     setModal2(false);
@@ -443,11 +443,17 @@ const ComponentsDatatablesTrainee = () => {
   };
 
   const handleDateChange = (date) => {
+    const utcDate = new Date(Date.UTC(date[0].getFullYear(), date[0].getMonth(), date[0].getDate()));
+    const formattedDate = utcDate.toISOString().split("T")[0]; // Format to 'YYYY-MM-DD'
+    console.log('UTC Date:', utcDate); // Log the UTC date
+    console.log('Formatted Date:', formattedDate); // Log the formatted date
     setFormData((prevFormData) => ({
       ...prevFormData,
-      date: date[0] ? date[0].toISOString().split("T")[0] : "",
+      date: formattedDate,
     }));
   };
+  
+  
 
   const handleUpload = async () => {
     if (files.length === 0) {
@@ -842,6 +848,8 @@ const ComponentsDatatablesTrainee = () => {
       const day = date.getDate();
       return formattedDate.replace(day, getOrdinalSuffix(day));
     };
+
+    
 
     const formatTraineeDate = (date) => {
       const d = new Date(date);
@@ -1587,6 +1595,7 @@ const ComponentsDatatablesTrainee = () => {
               sortable: true,
               render: (row) => formatDate(row.date),
             },
+            
             { accessor: "nameoftheschool", title: "School", sortable: true },
             { accessor: "bloodgroup", title: "Blood", sortable: true },
             {
@@ -1985,9 +1994,9 @@ const ComponentsDatatablesTrainee = () => {
                           />
                         </div>
                         <div className="mb-4">
-                          <label htmlFor="campTime">Time</label>
+                          <label htmlFor="time">Time</label>
                           <input
-                            id="campTime"
+                            id="time"
                             type="time"
                             className="form-input"
                             value={time}
@@ -2004,38 +2013,16 @@ const ComponentsDatatablesTrainee = () => {
                         className="form-input"
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
-                      ></textarea>
+                      />
                     </div>
-                    <ul>
-                      {selectedTrainees.map((id) => {
-                        const trainee = initialRecords.find((t) => t.id === id);
-                        return (
-                          <li key={id} className="mb-4 flex items-center gap-4">
-                            <img
-                              src={`https://pallisree.blr1.cdn.digitaloceanspaces.com/${trainee.image}`}
-                              alt={trainee.name}
-                              className="h-16 w-16 rounded-full"
-                            />
-                            <div>
-                              <h4 className="text-lg font-semibold">
-                                {trainee.name}
-                              </h4>
-                              <p>{formatDate(trainee.date)}</p>
-                              <p>{trainee.phoneno}</p>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                  <div className="mt-4 flex justify-end">
-                    <button
-                      type="button"
-                      className="btn btn-primary mb-4 mr-4"
-                      onClick={handleGeneratePDF}
-                    >
-                      Generate PDF
-                    </button>
+                    <div className="flex justify-end">
+                      <button
+                        className="btn btn-primary"
+                        onClick={handleGeneratePDF}
+                      >
+                        Generate PDF
+                      </button>
+                    </div>
                   </div>
                 </Dialog.Panel>
               </Transition.Child>
