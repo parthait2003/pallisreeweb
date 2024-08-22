@@ -43,6 +43,12 @@ const ComponentsDatatablesSettings = () => {
       .catch((error) => {
         console.error("There was a problem with the fetch operation:", error);
       });
+
+    // Retrieve stable message from local storage
+    const savedMessage = localStorage.getItem("backupMessage");
+    if (savedMessage) {
+      setStableMessage(savedMessage);
+    }
   }, []);
 
   const toggleTabs = (name: string) => {
@@ -141,11 +147,20 @@ const ComponentsDatatablesSettings = () => {
         const currentDate = new Date().toLocaleDateString("en-GB");
 
         // Set stable message
-        setStableMessage(`Backup downloaded successfully on ${currentDate}`);
+        const message = `Backup downloaded successfully on ${currentDate}`;
+        setStableMessage(message);
+
+        // Save the message to local storage
+        localStorage.setItem("backupMessage", message);
       })
       .catch((error) => {
         console.error("There was a problem with the backup operation:", error);
       });
+  };
+
+  const clearBackupMessage = () => {
+    setStableMessage("");
+    localStorage.removeItem("backupMessage");
   };
 
   return (
@@ -184,6 +199,12 @@ const ComponentsDatatablesSettings = () => {
             <strong className="ltr:mr-1 rtl:ml-1">Status:</strong>
             {stableMessage}
           </span>
+          <button
+            onClick={clearBackupMessage}
+            className="ml-auto btn btn-sm btn-danger"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 
