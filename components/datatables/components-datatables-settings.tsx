@@ -85,26 +85,28 @@ const ComponentsDatatablesSettings = () => {
     setCouches(updatedCouches);
   };
 
-  const saveSettings = async () => {
-    try {
-      const url = editid ? `/api/settings/${editid}` : "/api/settings";
-      const method = editid ? "PUT" : "POST";
+ const saveSettings = async () => {
+  try {
+    const url = editid ? `/api/settings/${editid}` : "/api/settings";
+    const method = editid ? "PUT" : "POST";
 
-      const res = await fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
+    const res = await fetch(url, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        settings: {
+          monthlyfee: settings.monthlyfee,
+          extraPracticeFee: settings.extrapractice,
+          membershipFee: settings.membershipfee,
+          gymFee: settings.gymfee,
+          developmentFee: settings.developementfee,
+          admissionFee: settings.admissionfee,
         },
-        body: JSON.stringify({
-          regularmonthlyfee: settings.regularmonthlyfee,
-          extrapractice: settings.extrapractice,
-          membershipfee: settings.membershipfee,
-          gymfee: settings.gymfee,
-          developementfee: settings.developementfee,
-          admissionfee: settings.admissionfee,
-          couches,
-        }),
-      });
+        couches,
+      }),
+    });
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
