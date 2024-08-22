@@ -199,12 +199,7 @@ const ComponentsDatatablesSettings = () => {
             <strong className="ltr:mr-1 rtl:ml-1">Status:</strong>
             {stableMessage}
           </span>
-          <button
-            onClick={clearBackupMessage}
-            className="ml-auto btn btn-sm btn-danger"
-          >
-            Dismiss
-          </button>
+          
         </div>
       )}
 
