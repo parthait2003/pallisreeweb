@@ -38,6 +38,7 @@ export async function PUT(
       nameoftheschool,
       bloodgroup,
       extraPractice, // Nouveau champ ajouté
+      joiningdate,
     } = await request.json();
 
     await connectDB();
@@ -56,7 +57,8 @@ export async function PUT(
         date,
         nameoftheschool,
         bloodgroup,
-        extraPractice, // Nouveau champ ajouté
+        extraPractice, 
+        joiningdate,
       },
       { new: true }
     );
