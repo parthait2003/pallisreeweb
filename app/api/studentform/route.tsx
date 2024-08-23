@@ -29,6 +29,7 @@ export async function OPTIONS() {
 }
 
 // Handle POST requests to create a new student form
+// Handle POST requests to create a new student form
 export async function POST(request: Request) {
   try {
     const {
@@ -50,12 +51,10 @@ export async function POST(request: Request) {
       joiningdate,
     } = await request.json();
 
-    // Convert the input date to a UTC date by appending 'T00:00:00Z'
-    const inputDate = new Date(`${date}T00:00:00Z`);
-    const formattedDate = inputDate.toISOString().split("T")[0];
+    // No need to convert the date here since it's already in DD/MM/YYYY format
+    const formattedDate = date; // Already in DD/MM/YYYY format
+    const formattedJoiningDate = joiningdate; // Already in DD/MM/YYYY format
 
-
-    
     // Connect to the database
     await connectDB();
 
@@ -76,7 +75,7 @@ export async function POST(request: Request) {
       document,
       adhar,
       extraPractice,
-      joiningdate,
+      joiningdate: formattedJoiningDate,
     });
 
     // Return success response
@@ -96,6 +95,7 @@ export async function POST(request: Request) {
     return response;
   }
 }
+
 
 
 // Handle GET requests to retrieve student forms
