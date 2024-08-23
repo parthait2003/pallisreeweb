@@ -1,8 +1,8 @@
-// api/uploadcsv/route.tsx
 import studentformModel from "@/models/studentform";
 import connectDB from "@/config/database";
 import { NextResponse } from "next/server";
 import { parse } from "papaparse";
+import dayjs from "dayjs";  // Import dayjs for date handling
 
 async function setCORSHeaders(response: NextResponse) {
   response.headers.set("Access-Control-Allow-Origin", "*");
@@ -53,12 +53,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Remove id field and convert keys to lowercase
+    // Remove id field and convert keys to lowercase, and set default joiningdate if missing
     const filteredData = data.map((row) => {
       const { id, ...rest } = row;
       const lowerCaseRow = {};
       for (const key in rest) {
         lowerCaseRow[key.toLowerCase()] = rest[key];
+      }
+      // Set a default joining date if missing
+      if (!lowerCaseRow['joiningdate']) {
+        lowerCaseRow['joiningdate'] = dayjs().format('YYYY-MM-DD');
       }
       return lowerCaseRow;
     });
