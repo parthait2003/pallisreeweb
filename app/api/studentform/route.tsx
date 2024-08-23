@@ -47,15 +47,15 @@ export async function POST(request: Request) {
       document,
       adhar,
       extraPractice,
+      joiningdate,
     } = await request.json();
 
     // Convert the input date to a UTC date by appending 'T00:00:00Z'
     const inputDate = new Date(`${date}T00:00:00Z`);
     const formattedDate = inputDate.toISOString().split("T")[0];
 
-    // Get the current date in UTC
-    const joiningdate = new Date().toISOString().split("T")[0];
 
+    
     // Connect to the database
     await connectDB();
 
