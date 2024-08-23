@@ -50,7 +50,8 @@ const initialRowData = [
     document: "likgjrtdk",
     adhar: "hjklfhkjsh",
     extraPractice: "Yes",
-  },
+    joiningdate: "2004-05-28",
+  }
 ];
 
 const col = [
@@ -70,6 +71,7 @@ const col = [
   "document",
   "adhar",
   "extraPractice",
+  "joiningdate",
 ];
 
 const Bloods = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
@@ -151,7 +153,7 @@ const ComponentsDatatablesTrainee = () => {
 
     fetch("/api/uploadcsv", {
       method: "POST",
-      body: formData,
+      body: formData
     })
       .then((response) => response.json())
       .then((data) => {
@@ -162,7 +164,7 @@ const ComponentsDatatablesTrainee = () => {
             position: "bottom-start",
             showConfirmButton: false,
             timer: 5000,
-            showCloseButton: true,
+            showCloseButton: true
           });
           newTraineeadded();
           fetchTraineeData();
@@ -183,7 +185,7 @@ const ComponentsDatatablesTrainee = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true,
+      showCloseButton: true
     });
   };
 
@@ -194,7 +196,7 @@ const ComponentsDatatablesTrainee = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true,
+      showCloseButton: true
     });
   };
 
@@ -205,7 +207,7 @@ const ComponentsDatatablesTrainee = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true,
+      showCloseButton: true
     });
   };
 
@@ -225,6 +227,7 @@ const ComponentsDatatablesTrainee = () => {
     document: string;
     adhar: string;
     extraPractice: string;
+    joiningdate: string;
   }
 
   const handleDeleteClick = (value) => {
@@ -257,6 +260,7 @@ const ComponentsDatatablesTrainee = () => {
         document: trainee.document,
         adhar: trainee.adhar,
         extraPractice: trainee.extraPractice,
+        joiningdate: formatDate(trainee.joiningdate),
       }));
 
       setInitialRecords(formattedTrainee);
@@ -277,7 +281,7 @@ const ComponentsDatatablesTrainee = () => {
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
     columnAccessor: "_id",
-    direction: "desc",
+    direction: "desc"
   });
 
   useEffect(() => {
@@ -330,6 +334,7 @@ const ComponentsDatatablesTrainee = () => {
           item.bloodgroup.toLowerCase().includes(search.toLowerCase()) ||
           item.extraPractice.toLowerCase().includes(search.toLowerCase()) ||
           item.document?.toString().includes(search.toLowerCase()) ||
+          (item.joiningdate?.toString() || "").includes(search.toLowerCase()) ||
           item.adhar?.toString().includes(search.toLowerCase())) &&
         isInDateRange &&
         (!ageFilter || isAgeMatch) &&
@@ -354,7 +359,7 @@ const ComponentsDatatablesTrainee = () => {
     genderFilter,
     sportstypeFilter,
     extraPracticeFilter,
-    bloodGroupFilter,
+    bloodGroupFilter
   ]);
 
   const handleAddCustomerClick = (e) => {
@@ -370,17 +375,47 @@ const ComponentsDatatablesTrainee = () => {
   }, [sortStatus, page, pageSize, initialRecords]);
 
   const formatDate = (date) => {
-    if (!date) return ""; // Return empty string if date is not provided
-    const parsedDate = dayjs(date);
-    return parsedDate.isValid() ? parsedDate.format("DD/MM/YYYY") : ""; // Format date to DD/MM/YYYY
+    if (!date) return "No Date Available"; // Handle missing dates
+    
+    let dt;
+  
+    // Check if the date is already a Date object
+    if (date instanceof Date) {
+      dt = date;
+    } else if (typeof date === 'string') {
+      const dateParts = date.split("/");
+      
+      if (dateParts.length === 3) {
+        // Assuming DD/MM/YYYY format
+        const [day, month, year] = dateParts;
+        dt = new Date(`${year}-${month}-${day}`);
+      } else {
+        // Assume it's in a parseable format like YYYY-MM-DD
+        dt = new Date(date);
+      }
+    } else {
+      // Handle unexpected date formats or types
+      return "Invalid Date";
+    }
+  
+    // If the date is still invalid, return a default string
+    if (isNaN(dt.getTime())) {
+      return "Invalid Date";
+    }
+  
+    const month = dt.getMonth() + 1 < 10 ? "0" + (dt.getMonth() + 1) : dt.getMonth() + 1;
+    const day = dt.getDate() < 10 ? "0" + dt.getDate() : dt.getDate();
+    return `${day}/${month}/${dt.getFullYear()}`;
   };
+  
+  
   
 
   const handleDeleteData = async () => {
     setModal2(false);
 
     const res = await fetch(`/api/studentform/${deleteid}`, {
-      method: "DELETE",
+      method: "DELETE"
     });
 
     if (res.ok) {
@@ -409,12 +444,13 @@ const ComponentsDatatablesTrainee = () => {
       document: "",
       adhar: "",
       extraPractice: "Yes",
+      joiningdate: formatDate(new Date()),
     });
     const options = customerData.map((customer) => ({
       value: customer._id,
       label: `${customer.firstName} ${
         customer.middleName ? customer.middleName + " " : ""
-      }${customer.lastName} - ${customer.mobile}`,
+      }${customer.lastName} - ${customer.mobile}`
     }));
     setOptions(options);
     setModal1(true);
@@ -443,17 +479,17 @@ const ComponentsDatatablesTrainee = () => {
   };
 
   const handleDateChange = (date) => {
-    const utcDate = new Date(Date.UTC(date[0].getFullYear(), date[0].getMonth(), date[0].getDate()));
+    const utcDate = new Date(
+      Date.UTC(date[0].getFullYear(), date[0].getMonth(), date[0].getDate())
+    );
     const formattedDate = utcDate.toISOString().split("T")[0]; // Format to 'YYYY-MM-DD'
-    console.log('UTC Date:', utcDate); // Log the UTC date
-    console.log('Formatted Date:', formattedDate); // Log the formatted date
+    console.log("UTC Date:", utcDate); // Log the UTC date
+    console.log("Formatted Date:", formattedDate); // Log the formatted date
     setFormData((prevFormData) => ({
       ...prevFormData,
-      date: formattedDate,
+      date: formattedDate
     }));
   };
-  
-  
 
   const handleUpload = async () => {
     if (files.length === 0) {
@@ -547,6 +583,7 @@ const ComponentsDatatablesTrainee = () => {
     adhar: "",
     joiningdate: "",
     extraPractice: "Yes",
+    joiningdate: "",
   });
 
   const handleChange = (e) => {
@@ -554,19 +591,33 @@ const ComponentsDatatablesTrainee = () => {
 
     setFormData((formData) => ({
       ...formData,
-      [name]: value,
+      [name]: value
     }));
   };
 
   useEffect(() => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      id: editid,
+      id: editid
     }));
   }, [editid]);
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
+
+
+
+    const formattedFormData = {
+      ...formData,
+      dob: formData.dob ? formData.dob.split("/").reverse().join("-") : "",
+      joiningdate: formData.joiningdate
+        ? formData.joiningdate.split("/").reverse().join("-")
+        : "",
+    };
+
+
+
+
 
     let imageName = "";
     let docname = "";
@@ -596,9 +647,9 @@ const ComponentsDatatablesTrainee = () => {
       const res = await fetch(url, {
         method: method,
         headers: {
-          "Content-type": "application/json",
+          "Content-type": "application/json"
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData)
       });
 
       if (res.ok) {
@@ -625,7 +676,7 @@ const ComponentsDatatablesTrainee = () => {
 
           const uploadRes = await fetch("/api/upload", {
             method: "POST",
-            body: uploadFormData,
+            body: uploadFormData
           });
         }
 
@@ -646,15 +697,17 @@ const ComponentsDatatablesTrainee = () => {
           const reportData = {
             date: isoDate,
             noOfNewTraineeCricket: formData.sportstype === "Cricket" ? 1 : 0,
-            noOfNewTraineeFootball: formData.sportstype === "Football" ? 1 : 0,
+            noOfNewTraineeFootball: formData.sportstype === "Football" ? 1 : 0
           };
+
+          
 
           const reportRes = await fetch("/api/reports", {
             method: "POST",
             headers: {
-              "Content-type": "application/json",
+              "Content-type": "application/json"
             },
-            body: JSON.stringify(reportData),
+            body: JSON.stringify(reportData)
           });
 
           if (reportRes.ok) {
@@ -674,7 +727,7 @@ const ComponentsDatatablesTrainee = () => {
   const handleUpdateClick = async (value) => {
     try {
       const res = await fetch(`/api/studentform/${value}`, {
-        method: "GET",
+        method: "GET"
       });
       if (!res.ok) {
         throw new Error(`Failed to fetch data for ID: ${value}`);
@@ -698,6 +751,7 @@ const ComponentsDatatablesTrainee = () => {
           document: data.student.document || "",
           adhar: data.student.adhar || "",
           extraPractice: data.student.extraPractice || "Yes",
+          joiningdate: data.student.joiningdate ? data.student.joiningdate.split("T")[0] : "",
         });
         setEditid(data.student._id);
         setModal1(true);
@@ -729,9 +783,9 @@ const ComponentsDatatablesTrainee = () => {
           const response = await fetch("/api/imagefile", {
             method: "POST",
             headers: {
-              "Content-type": "application/json",
+              "Content-type": "application/json"
             },
-            body: JSON.stringify({ url: imageUrl }),
+            body: JSON.stringify({ url: imageUrl })
           });
 
           if (!response.ok) {
@@ -805,7 +859,7 @@ const ComponentsDatatablesTrainee = () => {
     setFile(null);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      image: null,
+      image: null
     }));
   };
 
@@ -813,7 +867,7 @@ const ComponentsDatatablesTrainee = () => {
     setDocumentFile(null);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      document: null,
+      document: null
     }));
   };
 
@@ -821,7 +875,7 @@ const ComponentsDatatablesTrainee = () => {
     setAdharFile(null);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      adhar: null,
+      adhar: null
     }));
   };
 
@@ -840,7 +894,7 @@ const ComponentsDatatablesTrainee = () => {
         weekday: "long",
         year: "numeric",
         month: "long",
-        day: "numeric",
+        day: "numeric"
       };
       const formattedDate = new Intl.DateTimeFormat("en-US", options).format(
         date
@@ -848,8 +902,6 @@ const ComponentsDatatablesTrainee = () => {
       const day = date.getDate();
       return formattedDate.replace(day, getOrdinalSuffix(day));
     };
-
-    
 
     const formatTraineeDate = (date) => {
       const d = new Date(date);
@@ -902,14 +954,14 @@ const ComponentsDatatablesTrainee = () => {
           trainee.name,
           trainee.phoneno,
           formatTraineeDate(trainee.date),
-          trainee.image,
+          trainee.image
         ];
       });
 
       autoTable(doc, {
         startY: startY + 10,
         head: [["No", "Name", "Phone No", "DOB"]],
-        body: rows,
+        body: rows
       });
 
       doc.save("selected_trainees.pdf");
@@ -923,7 +975,7 @@ const ComponentsDatatablesTrainee = () => {
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, delete them!",
+      confirmButtonText: "Yes, delete them!"
     }).then((result) => {
       if (result.isConfirmed) {
         handleDeleteSelectedTrainees();
@@ -935,7 +987,7 @@ const ComponentsDatatablesTrainee = () => {
     try {
       for (let id of selectedTrainees) {
         const res = await fetch(`/api/studentform/${id}`, {
-          method: "DELETE",
+          method: "DELETE"
         });
 
         if (!res.ok) {
@@ -951,7 +1003,7 @@ const ComponentsDatatablesTrainee = () => {
         position: "bottom-start",
         showConfirmButton: false,
         timer: 5000,
-        showCloseButton: true,
+        showCloseButton: true
       });
     } catch (error) {
       console.error(error);
@@ -963,7 +1015,7 @@ const ComponentsDatatablesTrainee = () => {
         position: "bottom-start",
         showConfirmButton: false,
         timer: 5000,
-        showCloseButton: true,
+        showCloseButton: true
       });
     }
   };
@@ -1036,7 +1088,7 @@ const ComponentsDatatablesTrainee = () => {
                                   <div
                                     style={{
                                       position: "relative",
-                                      display: "flex",
+                                      display: "flex"
                                     }}
                                   >
                                     <img
@@ -1056,7 +1108,7 @@ const ComponentsDatatablesTrainee = () => {
                                         borderRadius: "50%",
                                         width: "24px",
                                         height: "24px",
-                                        cursor: "pointer",
+                                        cursor: "pointer"
                                       }}
                                     >
                                       &times;
@@ -1231,9 +1283,7 @@ const ComponentsDatatablesTrainee = () => {
                                   required
                                   options={{
                                     dateFormat: "d/m/Y",
-                                    position: isRtl
-                                      ? "auto right"
-                                      : "auto left",
+                                    position: isRtl ? "auto right" : "auto left"
                                   }}
                                   className="form-input"
                                   onChange={handleDateChange}
@@ -1274,11 +1324,34 @@ const ComponentsDatatablesTrainee = () => {
                               </div>
 
                               <div>
+                                <label htmlFor="joiningdate">
+                                  Joining Date
+                                </label>
+                                <Flatpickr
+                                  id="joiningdate"
+                                  value={formData.joiningdate}
+                                  options={{
+                                    dateFormat: "d/m/Y",
+                                    position: isRtl ? "auto right" : "auto left"
+                                  }}
+                                  className="form-input"
+                                  onChange={(date) =>
+                                    setFormData((prevFormData) => ({
+                                      ...prevFormData,
+                                      joiningdate: date[0]
+                                        ? formatDate(date[0])
+                                        : ""
+                                    }))
+                                  }
+                                />
+                              </div>
+
+                              <div>
                                 {formData.document ? (
                                   <div
                                     style={{
                                       position: "relative",
-                                      display: "flex",
+                                      display: "flex"
                                     }}
                                   >
                                     <a
@@ -1287,7 +1360,7 @@ const ComponentsDatatablesTrainee = () => {
                                       rel="noopener noreferrer"
                                       style={{
                                         textDecoration: "none",
-                                        color: "blue",
+                                        color: "blue"
                                       }}
                                     >
                                       View Document
@@ -1304,7 +1377,7 @@ const ComponentsDatatablesTrainee = () => {
                                         borderRadius: "50%",
                                         width: "24px",
                                         height: "24px",
-                                        cursor: "pointer",
+                                        cursor: "pointer"
                                       }}
                                     >
                                       &times;
@@ -1331,7 +1404,7 @@ const ComponentsDatatablesTrainee = () => {
                                   <div
                                     style={{
                                       position: "relative",
-                                      display: "flex",
+                                      display: "flex"
                                     }}
                                   >
                                     <a
@@ -1340,7 +1413,7 @@ const ComponentsDatatablesTrainee = () => {
                                       rel="noopener noreferrer"
                                       style={{
                                         textDecoration: "none",
-                                        color: "blue",
+                                        color: "blue"
                                       }}
                                     >
                                       View Aadhaar
@@ -1357,7 +1430,7 @@ const ComponentsDatatablesTrainee = () => {
                                         borderRadius: "50%",
                                         width: "24px",
                                         height: "24px",
-                                        cursor: "pointer",
+                                        cursor: "pointer"
                                       }}
                                     >
                                       &times;
@@ -1518,6 +1591,7 @@ const ComponentsDatatablesTrainee = () => {
             </option>
           ))}
         </select>
+
         <button
           className="btn btn-secondary w-full sm:w-auto"
           onClick={handleClearFilters}
@@ -1541,12 +1615,12 @@ const ComponentsDatatablesTrainee = () => {
                   checked={selectedTrainees.includes(row.id)}
                   onChange={() => handleCheckboxChange(row.id)}
                 />
-              ),
+              )
             },
             {
               accessor: "image",
               sortable: true,
-              render: (row) => <RenderImage row={row} />,
+              render: (row) => <RenderImage row={row} />
             },
             {
               accessor: "name",
@@ -1559,24 +1633,24 @@ const ComponentsDatatablesTrainee = () => {
                 >
                   {row.name}
                 </button>
-              ),
+              )
             },
             { accessor: "sportstype", title: "Sports type", sortable: true },
             {
               accessor: "extraPractice",
               title: "Extra Practice",
-              sortable: true,
+              sortable: true
             },
             { accessor: "fathersname", title: "Fathers Name", sortable: true },
             {
               accessor: "guardiansname",
               title: "Guardians name",
-              sortable: true,
+              sortable: true
             },
             {
               accessor: "guardiansoccupation",
               title: "Occupation",
-              sortable: true,
+              sortable: true
             },
             { accessor: "gender", sortable: true },
             {
@@ -1586,18 +1660,19 @@ const ComponentsDatatablesTrainee = () => {
                 <Tippy content={row.address}>
                   <span>{truncateAddress(row.address)}</span>
                 </Tippy>
-              ),
+              )
             },
             { accessor: "phoneno", sortable: true },
             {
               accessor: "date",
               title: "DOB",
               sortable: true,
-              render: (row) => formatDate(row.date),
+              render: (row) => formatDate(row.date)
             },
-            
+
             { accessor: "nameoftheschool", title: "School", sortable: true },
             { accessor: "bloodgroup", title: "Blood", sortable: true },
+            { accessor: "joiningdate", title: "Joining date", sortable: true, },
             {
               accessor: "Certificate",
               sortable: true,
@@ -1618,7 +1693,7 @@ const ComponentsDatatablesTrainee = () => {
                     </button>
                   </Tippy>
                 </div>
-              ),
+              )
             },
             {
               accessor: "adhar",
@@ -1641,7 +1716,7 @@ const ComponentsDatatablesTrainee = () => {
                     </button>
                   </Tippy>
                 </div>
-              ),
+              )
             },
             {
               accessor: "action",
@@ -1679,8 +1754,8 @@ const ComponentsDatatablesTrainee = () => {
                     </button>
                   </Tippy>
                 </div>
-              ),
-            },
+              )
+            }
           ]}
           totalRecords={initialRecords.length}
           recordsPerPage={pageSize}
