@@ -479,17 +479,15 @@ const ComponentsDatatablesTrainee = () => {
   };
 
   const handleDateChange = (date) => {
-    const utcDate = new Date(
-      Date.UTC(date[0].getFullYear(), date[0].getMonth(), date[0].getDate())
-    );
-    const formattedDate = utcDate.toISOString().split("T")[0]; // Format to 'YYYY-MM-DD'
-    console.log("UTC Date:", utcDate); // Log the UTC date
-    console.log("Formatted Date:", formattedDate); // Log the formatted date
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      date: formattedDate
-    }));
+    if (date && date.length > 0) {
+      const formattedDate = dayjs(date[0]).format('DD/MM/YYYY'); // Convert to DD/MM/YYYY format
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        date: formattedDate,
+      }));
+    }
   };
+  
 
   const handleUpload = async () => {
     if (files.length === 0) {
@@ -1281,6 +1279,7 @@ const ComponentsDatatablesTrainee = () => {
                                   id="date"
                                   value={formData.date}
                                   required
+                                  
                                   options={{
                                     dateFormat: "d/m/Y",
                                     position: isRtl ? "auto right" : "auto left"
