@@ -2,7 +2,7 @@ import studentformModel from "@/models/studentform";
 import connectDB from "@/config/database";
 import { NextResponse } from "next/server";
 import { parse } from "papaparse";
-import dayjs from "dayjs";  // Import dayjs for date handling
+import dayjs from "dayjs";
 
 async function setCORSHeaders(response: NextResponse) {
   response.headers.set("Access-Control-Allow-Origin", "*");
@@ -60,10 +60,21 @@ export async function POST(request: Request) {
       for (const key in rest) {
         lowerCaseRow[key.toLowerCase()] = rest[key];
       }
-      // Set a default joining date if missing
-      if (!lowerCaseRow['joiningdate']) {
-        lowerCaseRow['joiningdate'] = dayjs().format('YYYY-MM-DD');
+
+      // Handle the date of birth parsing (assume it's in MM/DD/YYYY format)
+      if (lowerCaseRow['date']) {
+        const parsedDate = dayjs(lowerCaseRow['date'], 'MM/DD/YYYY');
+        lowerCaseRow['date'] = parsedDate.isValid() ? parsedDate.format('DD/MM/YYYY') : "Invalid Date";
       }
+
+      // Handle the joiningdate parsing (assume it's in MM/DD/YYYY format)
+      if (!lowerCaseRow['joiningdate']) {
+        lowerCaseRow['joiningdate'] = dayjs().format('DD/MM/YYYY');
+      } else {
+        const parsedJoiningDate = dayjs(lowerCaseRow['joiningdate'], 'MM/DD/YYYY');
+        lowerCaseRow['joiningdate'] = parsedJoiningDate.isValid() ? parsedJoiningDate.format('DD/MM/YYYY') : "Invalid Date";
+      }
+
       return lowerCaseRow;
     });
 
