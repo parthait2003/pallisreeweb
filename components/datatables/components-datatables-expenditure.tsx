@@ -44,6 +44,7 @@ const showMessage8 = () => {
 const initialRowData = [
   {
     id: "989",
+    billNo: 100000,
     expenditures: "hihdsoaf",
     description: "guygipgilgyi",
     date: "2004-05-28",
@@ -57,6 +58,7 @@ const initialRowData = [
 ];
 
 const col = [
+  "billNo",
   "id",
   "expenditures",
   "description",
@@ -138,6 +140,7 @@ const ComponentsDatatablesExpenditure = () => {
 
   interface Expenditure {
     id: string;
+    billNo: number;
     expenditures: string;
     description: string;
     date: string;
@@ -162,6 +165,7 @@ const ComponentsDatatablesExpenditure = () => {
       const formattedExpenditure = data.expenditures.map(
         (expenditure: Expenditure) => ({
           id: expenditure._id,
+          billNo: expenditure.billNo || 100000 + data.expenditures.length,
           expenditures: expenditure.expenditures,
           description: expenditure.description,
           things: Array.isArray(expenditure.things)
@@ -192,7 +196,7 @@ const ComponentsDatatablesExpenditure = () => {
 
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
-    columnAccessor: "_id",
+    columnAccessor: "billNo",
     direction: "desc",
   });
 
@@ -209,6 +213,7 @@ const ComponentsDatatablesExpenditure = () => {
   useEffect(() => {
     const filteredRecords = initialRecords.filter((item: any) => {
       return (
+        item.billNo.toString().includes(search.toLowerCase()) ||
         item.id.toString().includes(search.toLowerCase()) ||
         item.expenditures.toLowerCase().includes(search.toLowerCase()) ||
         item.description.toLowerCase().includes(search.toLowerCase()) ||
@@ -280,6 +285,9 @@ const ComponentsDatatablesExpenditure = () => {
     setFiles([]);
     setFormData({
       id: "",
+      billNo: initialRecords.length
+        ? Math.max(...initialRecords.map((rec) => rec.billNo)) + 1
+        : 100000,
       expenditures: "",
       description: "",
       date: formatDate(new Date()), // Set the default date here
@@ -330,6 +338,9 @@ const ComponentsDatatablesExpenditure = () => {
 
   const [formData, setFormData] = useState({
     id: "",
+    billNo: initialRecords.length
+      ? Math.max(...initialRecords.map((rec) => rec.billNo)) + 1
+      : 100000,
     expenditures: "",
     description: "",
     date: formatDate(new Date()), // Set the default date here
@@ -403,8 +414,6 @@ const ComponentsDatatablesExpenditure = () => {
               method: "POST",
               body: uploadFormData,
             });
-
-            
           }
 
           const reportData = {
@@ -548,60 +557,91 @@ const ComponentsDatatablesExpenditure = () => {
     });
   };
 
-  const generatePDF = (row) => {
-    const doc = new jsPDF();
+  const generatePDF = async (row) => {
+    const doc = new jsPDF("p", "mm", "a4"); // 'p' for portrait, 'mm' for millimeters, 'a4' for A4 size
     const logoUrl = "/assets/images/logo.png";
 
-    // Add logo
-    const img = new Image();
-    img.src = logoUrl;
-    img.onload = function () {
-      doc.addImage(img, "PNG", 10, 10, 20, 20);
+    const loadImage = (url) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => resolve(img);
+      });
+    };
+
+    const img = await loadImage(logoUrl);
+
+    const renderContent = (startY) => {
+      // Add logo
+      doc.addImage(img, "PNG", 10, startY, 20, 20);
 
       // Add title
       doc.setFontSize(16);
-      doc.text("PALLISREE", 105, 30, { align: "center" });
+      doc.text("PALLISREE", 105, startY + 20, { align: "center" });
 
       // Add additional text
       const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
       doc.setFontSize(10);
-      doc.text(additionalText, 105, 35, { align: "center" });
+      doc.text(additionalText, 105, startY + 25, { align: "center" });
 
-      // Add date
+      // Add Bill No
       doc.setFontSize(12);
-      doc.text(`Date: ${row.date}`, 200, 10, { align: "right" });
+      doc.text(`Bill No: ${row.billNo}`, 200, startY, { align: "right" });
+
+      // Add date below Bill No
+      doc.setFontSize(12);
+      doc.text(`Date: ${row.date}`, 200, startY + 5, { align: "right" });
 
       // Add expenditure details
-      doc.text(`Expenditures: ${row.expenditures}`, 15, 60);
+      doc.text(`Expenditures: ${row.expenditures}`, 15, startY + 50);
 
       // Prepare table data
       const things = row.things.split(", ").map((thing) => thing.split(": "));
       const tableData = [
         ...things.map(([name, amount]) => [name, amount]),
-        ["Total", "Rs." + row.amount + "INR"], // Add total amount as the last row of the table
+        ["Total", "Rs." + row.amount + " INR"], // Add total amount as the last row of the table
       ];
 
       // Add expenditure table
       autoTable(doc, {
-        startY: 65,
+        startY: startY + 55,
         head: [["Things name", "Amount"]],
         body: tableData,
         willDrawCell: function (data) {
-          // Check if this is the last row
-          if (data.row.index === tableData.length - 1) {
-            doc.setFillColor(0, 0, 255); // Blue background
+          // Apply fill color to header
+          if (data.section === "head") {
+            doc.setFillColor(102, 153, 153); // Blue background
             doc.setTextColor(255, 255, 255); // White text
+          }
+
+          // Apply the same fill color to the footer (last row)
+          if (data.row.index === tableData.length - 1) {
+            doc.setFillColor(102, 153, 153); // Blue background
+            doc.setTextColor(255, 255, 255); // White text
+          }
+        },
+        // Ensure that table footer fills the row
+        didDrawCell: function (data) {
+          if (data.row.index === tableData.length - 1) {
+            data.cell.styles.fillColor = [0, 0, 255];
+            data.cell.styles.textColor = [255, 255, 255];
           }
         },
       });
 
       // Add description below the table
       const tableHeight = doc.previousAutoTable.finalY;
-      doc.text("\n\nDescription\n" + row.description, 15, tableHeight + 10);
-
-      // Save the PDF
-      doc.save(`expenditure_${row.id}.pdf`);
+      doc.text("\n\nDescription\n" + row.description, 15, tableHeight);
     };
+
+    // Render first copy
+    renderContent(10);
+
+    // Render second copy below the first one
+    renderContent(150);
+
+    // Save the PDF
+    doc.save(`expenditure_${row.id}.pdf`);
   };
 
   return (
@@ -669,6 +709,22 @@ const ComponentsDatatablesExpenditure = () => {
                               className="space-y-5"
                               onSubmit={handleFormSubmit}
                             >
+                              {/* Render Bill No only if editid is empty */}
+                              {!editid && (
+                                <div>
+                                  <label htmlFor="billNo">Bill No</label>
+                                  <input
+                                    id="billNo"
+                                    type="text"
+                                    name="billNo"
+                                    placeholder="Bill Number"
+                                    value={formData.billNo}
+                                    readOnly
+                                    className="form-input"
+                                  />
+                                </div>
+                              )}
+
                               <div>
                                 <label htmlFor="description">Expenditure</label>
                                 <input
@@ -717,7 +773,7 @@ const ComponentsDatatablesExpenditure = () => {
                                 {formData.things.map((thing, index) => (
                                   <div
                                     key={index}
-                                    className="flex items-center space-x-2 mb-2"
+                                    className="mb-2 flex items-center space-x-2"
                                   >
                                     <input
                                       required
@@ -826,7 +882,6 @@ const ComponentsDatatablesExpenditure = () => {
                                 )}
                               </div>
 
-
                               <button
                                 type="submit"
                                 className="btn btn-primary !mt-6"
@@ -867,6 +922,7 @@ const ComponentsDatatablesExpenditure = () => {
           className="table-hover whitespace-nowrap"
           records={recordsData}
           columns={[
+            { accessor: "billNo", title: "Bill No", sortable: true },
             { accessor: "expenditures", sortable: true },
             { accessor: "description", sortable: true },
             {
