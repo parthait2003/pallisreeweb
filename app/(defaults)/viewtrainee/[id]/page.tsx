@@ -42,6 +42,11 @@ const ViewTrainee = () => {
       return;
     }
 
+    const parseDate = (dateString) => {
+      const [day, month, year] = dateString.split("/").map(Number);
+      return new Date(year, month - 1, day); // month is 0-based in Date
+    };
+
     const fetchTraineeDetails = async () => {
       try {
         const traineeRes = await fetch(`/api/studentform/${id}`);
@@ -63,11 +68,20 @@ const ViewTrainee = () => {
           sub.monthsSelected.map((month) => month.month)
         );
 
+        const joiningDate = parseDate(trainee.joiningdate);
+        const joiningMonthIndex = joiningDate.getMonth();
+        const joiningYear = joiningDate.getFullYear().toString();
+
         let monthsToCheck;
-        if (currentYear === "2024") {
-          monthsToCheck = allMonthsOptions.slice(3, currentMonthIndex + 1); // From April to current month for 2024
+        if (currentYear === joiningYear) {
+          monthsToCheck = allMonthsOptions.slice(
+            Math.max(joiningMonthIndex + 1, 3),
+            currentMonthIndex + 1
+          );
+        } else if (currentYear === "2024") {
+          monthsToCheck = allMonthsOptions.slice(3, currentMonthIndex + 1);
         } else {
-          monthsToCheck = allMonthsOptions.slice(0, currentMonthIndex + 1); // From January to current month for other years
+          monthsToCheck = allMonthsOptions.slice(0, currentMonthIndex + 1);
         }
 
         const pending = monthsToCheck.filter(
@@ -199,7 +213,7 @@ const ViewTrainee = () => {
                   {pendingMonths.map((month, index) => (
                     <span
                       key={index}
-                      className="pending-month-badge inline-block border border-red-300 p-2 m-1 rounded bg-red-100 text-red-600"
+                      className="pending-month-badge m-1 inline-block rounded border border-red-300 bg-red-100 p-2 text-red-600"
                     >
                       &#10060; {month.label}
                     </span>
@@ -207,7 +221,7 @@ const ViewTrainee = () => {
                 </div>
               </div>
             )}
-            <h5 className="text-lg font-semibold text-black-600">
+            <h5 className="text-black-600 text-lg font-semibold">
               Payments Details
             </h5>
             <div className="grid gap-5 lg:grid-cols-3">
@@ -215,7 +229,7 @@ const ViewTrainee = () => {
                 feesDetails.map((feeDetail) => (
                   <div
                     key={feeDetail._id}
-                    className="rounded-lg shadow-lg p-5 bg-white dark:bg-gray-800 flex justify-between items-start"
+                    className="flex items-start justify-between rounded-lg bg-white p-5 shadow-lg dark:bg-gray-800"
                   >
                     <ul className="space-y-2">
                       <li>
@@ -241,7 +255,7 @@ const ViewTrainee = () => {
                           <li>
                             <strong>Other Fees:</strong>
                           </li>
-                          <ul className="pl-4 list-disc">
+                          <ul className="list-disc pl-4">
                             {feeDetail.subscriptionType.map((sub, index) => (
                               <li key={index}>
                                 {sub.type}: {sub.amount}
