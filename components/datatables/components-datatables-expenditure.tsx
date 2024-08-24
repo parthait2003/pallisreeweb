@@ -576,13 +576,13 @@ const ComponentsDatatablesExpenditure = () => {
       doc.addImage(img, "PNG", 10, startY, 20, 20);
 
       // Add title
-      doc.setFontSize(16);
-      doc.text("PALLISREE", 105, startY + 20, { align: "center" });
+      doc.setFontSize(22);
+      doc.text("PALLISREE", 105, startY + 10, { align: "center" });
 
       // Add additional text
       const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
       doc.setFontSize(10);
-      doc.text(additionalText, 105, startY + 25, { align: "center" });
+      doc.text(additionalText, 105, startY + 15, { align: "center" });
 
       // Add Bill No
       doc.setFontSize(12);
@@ -593,7 +593,7 @@ const ComponentsDatatablesExpenditure = () => {
       doc.text(`Date: ${row.date}`, 200, startY + 5, { align: "right" });
 
       // Add expenditure details
-      doc.text(`Expenditures: ${row.expenditures}`, 15, startY + 50);
+      doc.text(`Expenditures: ${row.expenditures}`, 15, startY + 38);
 
       // Prepare table data
       const things = row.things.split(", ").map((thing) => thing.split(": "));
@@ -604,7 +604,7 @@ const ComponentsDatatablesExpenditure = () => {
 
       // Add expenditure table
       autoTable(doc, {
-        startY: startY + 55,
+        startY: startY + 40,
         head: [["Things name", "Amount"]],
         body: tableData,
         willDrawCell: function (data) {
