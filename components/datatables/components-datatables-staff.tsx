@@ -279,19 +279,19 @@ const ComponentsDatatablesStaff = () => {
         })
       );
 
-       // Sort by billNo in descending order
-       const sortedRecords = sortBy(formattedExpenditure, "billNo").reverse();
+      // Sort by billNo in descending order
+      const sortedRecords = sortBy(formattedExpenditure, "billNo").reverse();
 
-       setInitialRecords(sortedRecords);
-       setRecordsData(
-         sortedRecords.slice((page - 1) * pageSize, page * pageSize)
-       );
-       setLoading(false);
-     } catch (error) {
-       console.error(error);
-       setError(error.message);
-     }
-   };
+      setInitialRecords(sortedRecords);
+      setRecordsData(
+        sortedRecords.slice((page - 1) * pageSize, page * pageSize)
+      );
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      setError(error.message);
+    }
+  };
 
   useEffect(() => {
     fetchExpenditureData();
@@ -622,8 +622,6 @@ const ComponentsDatatablesStaff = () => {
     }
   };
 
-  
-
   const handleAddRow = () => {
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -672,71 +670,89 @@ const ComponentsDatatablesStaff = () => {
     const img = new Image();
     img.src = logoUrl;
     img.onload = function () {
-      doc.addImage(img, "PNG", 10, 10, 20, 20);
+      // Function to render content at a specified Y position
+      const renderContent = (startY) => {
+        // Add logo
+        doc.addImage(img, "PNG", 10, startY, 20, 20);
 
-      doc.setFontSize(16);
-      doc.text("PALLISREE", 105, 30, { align: "center" });
+        // Add title
+        doc.setFontSize(22);
+        doc.text("PALLISREE", 105, startY + 10, { align: "center" });
 
-      const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
-      doc.setFontSize(10);
-      doc.text(additionalText, 105, 35, { align: "center" });
+        // Add additional text
+        const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
+        doc.setFontSize(10);
+        doc.text(additionalText, 105, startY + 15, { align: "center" });
 
-      doc.setFontSize(12);
-      doc.text(`Date: ${row.date}`, 200, 10, { align: "right" });
-      doc.text(`Bill No: ${row.billNo}`, 200, 15, { align: "right" });
+        // Add Date and Bill No
+        doc.setFontSize(12);
+        doc.text(`Bill No: ${row.billNo}`, 200, startY, { align: "right" });
+        doc.text(`Date: ${row.date}`, 200, startY + 5, { align: "right" });
 
-      doc.text(`Name: ${row.staffName}`, 15, 60);
+        // Add staff name
+        doc.text(`Name: ${row.staffName}`, 15, startY + 38);
 
-      const things = row.things
-        ? row.things
-            .split(", ")
-            .map((thing) => {
-              const [name, amount] = thing.split(": ");
-              return {
-                name,
-                amount:
-                  amount && amount.trim() !== "null" && amount.trim() !== ""
-                    ? amount
-                    : null,
-              };
-            })
-            .filter((thing) => thing.amount !== null)
-        : [];
+        // Process things
+        const things = row.things
+          ? row.things
+              .split(", ")
+              .map((thing) => {
+                const [name, amount] = thing.split(": ");
+                return {
+                  name,
+                  amount:
+                    amount && amount.trim() !== "null" && amount.trim() !== ""
+                      ? amount
+                      : null,
+                };
+              })
+              .filter((thing) => thing.amount !== null)
+          : [];
 
-      const totalThingsAmount = things.reduce(
-        (total, thing) => total + parseFloat(thing.amount),
-        0
-      );
+        // Calculate current amount and months
+        const totalThingsAmount = things.reduce(
+          (total, thing) => total + parseFloat(thing.amount),
+          0
+        );
 
-      let currentAmount = parseFloat(row.amount) - totalThingsAmount;
-      const months = row.months.map((month) => [
-        `${month.month} ${row.year}`,
-        `${currentAmount.toFixed(2)}`,
-      ]);
+        let currentAmount = parseFloat(row.amount) - totalThingsAmount;
+        const months = row.months.map((month) => [
+          `${month.month} ${row.year}`,
+          `${currentAmount.toFixed(2)}`,
+        ]);
 
-      const tableData = [
-        ...months,
-        ...things.map((thing) => [thing.name, thing.amount]),
-        ["Total", "Rs." + row.amount + " INR"],
-      ];
+        // Prepare table data
+        const tableData = [
+          ...months,
+          ...things.map((thing) => [thing.name, thing.amount]),
+          ["Total", "Rs." + row.amount + " INR"],
+        ];
 
-      autoTable(doc, {
-        startY: 65,
-        head: [["Item", "Amount"]],
-        body: tableData,
-        willDrawCell: function (data) {
-          if (data.row.index === tableData.length - 1) {
-            doc.setFillColor(0, 0, 255);
-            doc.setTextColor(255, 255, 255);
-          }
-        },
-      });
+        // Add table
+        autoTable(doc, {
+          startY: startY + 40,
+          head: [["Item", "Amount"]],
+          body: tableData,
+          willDrawCell: function (data) {
+            if (data.row.index === tableData.length - 1) {
+              doc.setFillColor(102, 153, 153);
+              doc.setTextColor(255, 255, 255);
+            }
+          },
+        });
 
-      const tableHeight = doc.previousAutoTable.finalY;
-      if (row.description) {
-        doc.text("\n\nDescription\n" + row.description, 15, tableHeight + 10);
-      }
+        // Add description if it exists
+        const tableHeight = doc.previousAutoTable.finalY;
+        if (row.description) {
+          doc.text("\n\nDescription\n" + row.description, 15, tableHeight + 10);
+        }
+      };
 
+      // Render the content twice
+      renderContent(10); // First copy starting at Y = 10
+      renderContent(150); // Second copy starting at Y = 150
+
+      // Save the PDF
       doc.save(`expenditure_${row.id}.pdf`);
     };
   };
