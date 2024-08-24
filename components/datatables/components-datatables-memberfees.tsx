@@ -827,21 +827,21 @@ const ComponentsDatatablesMemberfees = () => {
     }
   };
 
-  // Helper function to filter month options based on joining date and existing subscriptions
   const filterMonthOptions = (
     joiningDate: string,
     monthOptions: any,
-    subscriptions: Subscription[]
+    subscriptions: Subscription[],
+    selectedYear: string
   ) => {
     const joinDate = new Date(joiningDate);
     const joinYear = joinDate.getFullYear();
     const joinMonth = joinDate.getMonth() + 1; // JavaScript months are 0-based, so add 1
-    console.log("joinDate" + joinMonth);
+
     const existingMonths = subscriptions
       .filter(
         (subscription) =>
           subscription.memberid === customerId &&
-          subscription.year === formData.year
+          subscription.year === selectedYear
       )
       .flatMap((subscription) =>
         subscription.monthsSelected.map((m) => m.month)
@@ -849,12 +849,25 @@ const ComponentsDatatablesMemberfees = () => {
 
     return monthOptions.filter((option: any) => {
       const monthIndex =
-        new Date(`${option.label} 1, ${joinYear}`).getMonth() + 1;
-      return monthIndex >= joinMonth && !existingMonths.includes(option.label);
+        new Date(`${option.label} 1, ${selectedYear}`).getMonth() + 1;
+
+      // If the selected year is the same as the joining year, filter out months before the joining month
+      if (parseInt(selectedYear) === joinYear) {
+        return (
+          monthIndex >= joinMonth && !existingMonths.includes(option.label)
+        );
+      }
+
+      // If the selected year is after the joining year, allow all months (starting from January)
+      if (parseInt(selectedYear) > joinYear) {
+        return !existingMonths.includes(option.label);
+      }
+
+      // If the selected year is before the joining year, return an empty list (since this should not be possible)
+      return false;
     });
   };
 
-  // Update useEffect to filter month options based on joining date and existing subscriptions
   useEffect(() => {
     if (customerId) {
       const selectedMember = memberData.find(
@@ -864,7 +877,8 @@ const ComponentsDatatablesMemberfees = () => {
         const filteredOptions = filterMonthOptions(
           selectedMember.joiningdate,
           allMonthOptions[formData.year],
-          initialRecords // Pass the subscriptions to the filter function
+          initialRecords, // Pass the subscriptions to the filter function
+          formData.year
         );
         setMonthOptions(filteredOptions);
       }
