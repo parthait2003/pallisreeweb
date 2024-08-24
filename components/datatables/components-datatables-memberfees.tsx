@@ -6,9 +6,7 @@ import { useEffect, useState, Fragment, useRef } from "react";
 import sortBy from "lodash/sortBy";
 import IconFile from "@/components/icon/icon-file";
 import { Dialog, Transition } from "@headlessui/react";
-import IconPrinter from "@/components/icon/icon-printer";
 import IconPlus from "@/components/icon/icon-plus";
-import axios from "axios";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/flatpickr.css";
 import { useSelector } from "react-redux";
@@ -39,7 +37,6 @@ const col = [
   "billNo",
   "id",
   "member",
-
   "year",
   "date",
   "monthsSelected",
@@ -165,6 +162,11 @@ const ComponentsDatatablesMemberfees = () => {
   const [transactionNo, setTransactionNo] = useState("");
   const [utrNo, setUtrNo] = useState("");
 
+  const [settings, setSettings] = useState({
+    regularmonthlyfee: 0,
+    membershipfee: 0,
+  });
+
   const newMemberAdded = () => {
     MySwal.fire({
       title: "New Fees has been added",
@@ -230,6 +232,7 @@ const ComponentsDatatablesMemberfees = () => {
           id: subscription._id,
           billNo: subscription.billNo,
           member: subscription.member,
+          memberid: subscription.memberid,
           year: subscription.year,
           date: formatDate(subscription.date),
           monthsSelected: Array.isArray(subscription.monthsSelected)
@@ -249,17 +252,17 @@ const ComponentsDatatablesMemberfees = () => {
         (a, b) => parseInt(b.billNo) - parseInt(a.billNo)
       );
 
-    setInitialRecords(sortedRecords);
-    setRecordsData(
-      sortedRecords.slice((page - 1) * pageSize, page * pageSize)
-    );
-    setLoading(false);
-    console.log("Fetched and sorted data by bill number:", sortedRecords);
-  } catch (error) {
-    console.error(error);
-    setError(error.message);
-  }
-};
+      setInitialRecords(sortedRecords);
+      setRecordsData(
+        sortedRecords.slice((page - 1) * pageSize, page * pageSize)
+      );
+      setLoading(false);
+      console.log("Fetched and sorted data by bill number:", sortedRecords);
+    } catch (error) {
+      console.error(error);
+      setError(error.message);
+    }
+  };
 
   const fetchMembersData = async () => {
     try {
@@ -268,9 +271,8 @@ const ComponentsDatatablesMemberfees = () => {
         throw new Error("Failed to fetch member data");
       }
       const data = await response.json();
-      console.log("Fetched member data:", data); // Log the fetched data to see its structure
+      console.log("Fetched member data:", data);
 
-      // Check if the data has a clubmembers property and ensure memberData is always an array
       const members = Array.isArray(data.clubmembers) ? data.clubmembers : [];
       setMemberData(members);
       console.log(members); // Added logging for members array
@@ -286,23 +288,34 @@ const ComponentsDatatablesMemberfees = () => {
     }
   };
 
+  const fetchSettingsData = async () => {
+    try {
+      const response = await fetch("/api/settings");
+      if (!response.ok) {
+        throw new Error("Failed to fetch settings data");
+      }
+      const data = await response.json();
+      setSettings({
+        regularmonthlyfee: data.regularmonthlyfee,
+        membershipfee: data.membershipfee,
+      });
+    } catch (error) {
+      console.error("Error fetching settings data:", error);
+      setError(error.message);
+    }
+  };
+
   useEffect(() => {
     fetchSubscriptionData();
     fetchMembersData();
+    fetchSettingsData();
   }, []);
-
-
-
 
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
     columnAccessor: "id",
     direction: "desc",
   });
-
-  
-
-
 
   useEffect(() => {
     setPage(1);
@@ -351,8 +364,7 @@ const ComponentsDatatablesMemberfees = () => {
     setRecordsData(finalData.slice((page - 1) * pageSize, page * pageSize));
   }, [sortStatus, page, pageSize, initialRecords]);
 
-  // Updated formatDate function to format date as DD/MM/YYYY
-  const formatDate = (date) => {
+  const formatDate = (date: string) => {
     if (date) {
       const dt = new Date(date);
       const day = dt.getDate() < 10 ? "0" + dt.getDate() : dt.getDate();
@@ -400,7 +412,7 @@ const ComponentsDatatablesMemberfees = () => {
   const getFirstName = (label: string) => label.split(" - ")[0];
 
   const getCustomerVal = () => {
-    const currentFormattedDate = formatDate(new Date());
+    const currentFormattedDate = formatDate(new Date().toISOString());
 
     setEditId("");
     setFiles([]);
@@ -408,8 +420,8 @@ const ComponentsDatatablesMemberfees = () => {
       id: "",
       billNo: getNextBillNo(),
       member: "",
-      year: currentYear, // Set default year to current year
-      date: currentFormattedDate, // Set default date to current formatted date
+      year: currentYear,
+      date: currentFormattedDate,
       monthsSelected: [],
       subscriptionType: [],
       amount: "",
@@ -561,8 +573,8 @@ const ComponentsDatatablesMemberfees = () => {
     billNo: "",
     member: "",
     memberid: "",
-    year: currentYear, // Set default year to current year
-    date: formatDate(new Date()), // Set default date to current date
+    year: currentYear,
+    date: formatDate(new Date()),
     monthsSelected: [],
     subscriptionType: [],
     amount: "",
@@ -583,7 +595,7 @@ const ComponentsDatatablesMemberfees = () => {
     }));
   };
 
-  const handleMonthAmountChange = (index, value) => {
+  const handleMonthAmountChange = (index: number, value: string) => {
     const updatedMonths = [...formData.monthsSelected];
     updatedMonths[index].amount = value;
     setFormData((prevFormData) => ({
@@ -592,7 +604,7 @@ const ComponentsDatatablesMemberfees = () => {
     }));
   };
 
-  const handleTypeAmountChange = (index, value) => {
+  const handleTypeAmountChange = (index: number, value: string) => {
     const updatedTypes = [...formData.subscriptionType];
     updatedTypes[index].amount = value;
     setFormData((prevFormData) => ({
@@ -605,7 +617,7 @@ const ComponentsDatatablesMemberfees = () => {
     const selectedValues = selectedOptions
       ? selectedOptions.map((option: any) => ({
           month: option.value,
-          amount: "",
+          amount: settings.membershipfee, // Using membershipfee instead of regularmonthlyfee
         }))
       : [];
     setFormData((prevFormData) => ({
@@ -616,10 +628,13 @@ const ComponentsDatatablesMemberfees = () => {
 
   const handleSubscriptionChange = (selectedOptions: any) => {
     const selectedValues = selectedOptions
-      ? selectedOptions.map((option: any) => ({
-          type: option.value,
-          amount: "",
-        }))
+      ? selectedOptions.map((option: any) => {
+          const amount =
+            option.value === "Concession"
+              ? -settings.membershipfee
+              : settings.membershipfee;
+          return { type: option.value, amount };
+        })
       : [];
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -699,7 +714,6 @@ const ComponentsDatatablesMemberfees = () => {
           fetchSubscriptionData();
           setModal1(false);
 
-          // Send report data
           await fetch("/api/reports", {
             method: "POST",
             headers: {
@@ -758,7 +772,7 @@ const ComponentsDatatablesMemberfees = () => {
 
   const handleUpdateClick = async (value: any) => {
     try {
-      console.log("Fetching data for ID:", value); // Log the value to ensure it is correct
+      console.log("Fetching data for ID:", value);
       const res = await fetch(`/api/membersubscription/${value}`, {
         method: "GET",
       });
@@ -766,15 +780,24 @@ const ComponentsDatatablesMemberfees = () => {
         throw new Error(`Failed to fetch data for ID: ${value}`);
       }
       const data = await res.json();
-      console.log("set to state" + data.subscription.amount);
-      setUamount(data.subscription.amount);
-      //  setUamount(data.subscriptions.amount);
-      console.log("Fetched data:", data); // Log the fetched data
+      console.log("Fetched data:", data);
 
-      // Find the corresponding member from the options
+      setUamount(data.subscription.amount);
+
+      // Find the corresponding member
       const memberOption = options.find(
         (option) => option.label.split(" - ")[0] === data.subscription.member
       );
+
+      // Get the selected months from the database
+      const selectedMonths = data.subscription.monthsSelected.map(
+        (month) => month.month
+      );
+
+      // Filter out selected months from monthOptions
+      const filteredMonthOptions = allMonthOptions[
+        data.subscription.year
+      ].filter((option) => !selectedMonths.includes(option.value));
 
       setFormData({
         ...data.subscription,
@@ -788,119 +811,175 @@ const ComponentsDatatablesMemberfees = () => {
           : [],
         date: formatDate(data.subscription.date),
       });
-      setEditId(data.subscription._id); // Set the edit ID to ensure we are updating the correct record
+
+      setMonthOptions(filteredMonthOptions);
+      setEditId(data.subscription._id);
       setPaymentType(data.subscription.paymentType || "");
       setTransactionNo(data.subscription.transactionNo || "");
       setUtrNo(data.subscription.utrNo || "");
-      setModal1(true); // Moved inside the try block to ensure it opens only if fetch is successful
+      setModal1(true);
       if (res.ok) {
         fetchSubscriptionData();
       }
     } catch (error) {
-      console.error("Fetch error:", error); // Log any errors
+      console.error("Fetch error:", error);
       alert(`Error: ${error.message}`);
     }
   };
 
-  const generatePdf = (row) => {
+  // Helper function to filter month options based on joining date and existing subscriptions
+  const filterMonthOptions = (
+    joiningDate: string,
+    monthOptions: any,
+    subscriptions: Subscription[]
+  ) => {
+    const joinDate = new Date(joiningDate);
+    const joinYear = joinDate.getFullYear();
+    const joinMonth = joinDate.getMonth() + 1; // JavaScript months are 0-based, so add 1
+    console.log("joinDate" + joinMonth);
+    const existingMonths = subscriptions
+      .filter(
+        (subscription) =>
+          subscription.memberid === customerId &&
+          subscription.year === formData.year
+      )
+      .flatMap((subscription) =>
+        subscription.monthsSelected.map((m) => m.month)
+      );
+
+    return monthOptions.filter((option: any) => {
+      const monthIndex =
+        new Date(`${option.label} 1, ${joinYear}`).getMonth() + 1;
+      return monthIndex >= joinMonth && !existingMonths.includes(option.label);
+    });
+  };
+
+  // Update useEffect to filter month options based on joining date and existing subscriptions
+  useEffect(() => {
+    if (customerId) {
+      const selectedMember = memberData.find(
+        (member) => member._id === customerId
+      );
+      if (selectedMember && selectedMember.joiningdate) {
+        const filteredOptions = filterMonthOptions(
+          selectedMember.joiningdate,
+          allMonthOptions[formData.year],
+          initialRecords // Pass the subscriptions to the filter function
+        );
+        setMonthOptions(filteredOptions);
+      }
+    }
+  }, [customerId, formData.year, initialRecords]);
+
+  const generatePdf = async (row) => {
     const doc = new jsPDF();
 
-    // Add logo and Bill number
-    const logoUrl = "/assets/images/logo.png";
-    const logoImg = new Image();
-    logoImg.src = logoUrl;
-    logoImg.onload = () => {
-      doc.addImage(logoImg, "PNG", 10, 10, 20, 20); // Adjust the position and size as needed
-      doc.setFontSize(12);
-      doc.text(`Bill No: ${row.billNo}`, 200 - 10, 10, { align: "right" });
-      doc.text(`Date: ${row.date}`, 200 - 10, 15, { align: "right" });
-
-      // Add heading
-      doc.setFontSize(18);
-      doc.text("PALLISREE", 105, 30, { align: "center" });
-
-      // Add additional text
-      doc.setFontSize(12);
-      const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
-      doc.text(additionalText, 105, 35, { align: "center" });
-
-      // Add member name
-      doc.setFontSize(12);
-      doc.text(`Name: ${row.member}`, 15, 65);
-
-      // Prepare the table rows
-      const tableRows = [
-        ["Monthly Fees", row.year, ""],
-        ...row.monthsSelected.map((month) => [month.month, "", month.amount]),
-      ];
-
-      if (row.subscriptionType.some((type) => type.amount)) {
-        tableRows.push(["Other", row.year, ""]);
-        tableRows.push(
-          ...row.subscriptionType
-            .filter((type) => type.amount)
-            .map((type) => [type.type, "", type.amount])
-        );
-      }
-
-      // Add the table
-      autoTable(doc, {
-        startY: 70,
-        head: [["Description", "Year", "Amount"]],
-        body: tableRows,
-        theme: "grid",
-        headStyles: { fillColor: [0, 0, 139] }, // Dark blue color
-        columnStyles: { 2: { halign: "right" } },
-        styles: { fontSize: 10 }, // Set font size to smaller for all cells
-        alternateRowStyles: { fillColor: [240, 240, 240] },
+    const loadImage = (url) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => resolve(img);
+        img.onerror = (err) => reject(err);
       });
+    };
 
-      // Calculate the total amount
-      const totalAmount =
-        row.monthsSelected.reduce(
-          (total, month) => total + parseFloat(month.amount || 0),
-          0
-        ) +
-        row.subscriptionType.reduce(
-          (total, type) => total + parseFloat(type.amount || 0),
-          0
-        );
+    try {
+      const logoUrl = "/assets/images/logo.png";
+      const logoImg = await loadImage(logoUrl);
 
-      // Add horizontal lines and total amount
-      const totalAmountStartY = doc.autoTable.previous.finalY + 2;
-      doc.setFontSize(14);
-      doc.text("Total Amount", 15, totalAmountStartY + 8);
-      doc.text(`Rs. ${totalAmount} INR`, 200 - 15, totalAmountStartY + 8, {
-        align: "right",
-      });
+      const renderContent = (startY) => {
+        doc.addImage(logoImg, "PNG", 10, startY, 20, 20);
+        doc.setFontSize(12);
+        doc.text(`Bill No: ${row.billNo}`, 200 - 10, startY + 10, {
+          align: "right",
+        });
+        doc.text(`Date: ${row.date}`, 200 - 10, startY + 15, {
+          align: "right",
+        });
 
-      doc.line(10, totalAmountStartY, 200, totalAmountStartY);
-      doc.line(10, totalAmountStartY + 12, 200, totalAmountStartY + 12);
+        doc.setFontSize(22);
+        doc.text("PALLISREE", 105, startY + 10, { align: "center" });
 
-      // Add payment details
-      doc.setFontSize(10);
-      doc.setFont("italic");
-      let paymentDetails = `Payment Type: ${row.paymentType}`;
-      if (row.paymentType === "upi") {
-        if (row.transactionNo) {
-          paymentDetails += `, Transaction No: ${row.transactionNo}`;
+        doc.setFontSize(10);
+        const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
+        doc.text(additionalText, 105, startY + 18, { align: "center" });
+
+        doc.setFontSize(12);
+        doc.text(`Name: ${row.member}`, 15, startY + 50);
+
+        const tableRows = [
+          ["Monthly Fees", row.year, ""],
+          ...row.monthsSelected.map((month) => [month.month, "", month.amount]),
+        ];
+
+        if (row.subscriptionType.some((type) => type.amount)) {
+          tableRows.push(["Other", row.year, ""]);
+          tableRows.push(
+            ...row.subscriptionType
+              .filter((type) => type.amount)
+              .map((type) => [type.type, "", type.amount])
+          );
         }
-        if (row.utrNo) {
-          paymentDetails += `, UTR No: ${row.utrNo}`;
-        }
-      }
-      doc.text(paymentDetails, 15, totalAmountStartY + 20);
 
-      // Add "Collector" and "General Secretary" text
-      const pageHeight = doc.internal.pageSize.height;
-      doc.setFontSize(12);
-      doc.text("Collector", 10, pageHeight - 10, { align: "left" });
-      doc.text("General Secretary", 200 - 10, pageHeight - 10, {
-        align: "right",
-      });
+        autoTable(doc, {
+          startY: startY + 55,
+          head: [["Description", "Year", "Amount"]],
+          body: tableRows,
+          theme: "grid",
+          headStyles: { fillColor: [0, 0, 139] },
+          columnStyles: { 2: { halign: "right" } },
+          styles: { fontSize: 10 },
+          alternateRowStyles: { fillColor: [240, 240, 240] },
+        });
+
+        const totalAmount =
+          row.monthsSelected.reduce(
+            (total, month) => total + parseFloat(month.amount || 0),
+            0
+          ) +
+          row.subscriptionType.reduce(
+            (total, type) => total + parseFloat(type.amount || 0),
+            0
+          );
+
+        const totalAmountStartY = doc.autoTable.previous.finalY + 2;
+        doc.setFontSize(12);
+        doc.text("Total Amount", 15, totalAmountStartY + 8);
+        doc.text(`Rs. ${totalAmount} INR`, 200 - 15, totalAmountStartY + 8, {
+          align: "right",
+        });
+
+        doc.line(10, totalAmountStartY, 200, totalAmountStartY);
+        doc.line(10, totalAmountStartY + 12, 200, totalAmountStartY + 12);
+
+        doc.setFontSize(10);
+        doc.setFont("italic");
+        let paymentDetails = `Payment Type: ${row.paymentType}`;
+        if (row.paymentType === "upi") {
+          if (row.transactionNo) {
+            paymentDetails += `, Transaction No: ${row.transactionNo}`;
+          }
+          if (row.utrNo) {
+            paymentDetails += `, UTR No: ${row.utrNo}`;
+          }
+        }
+        doc.text(paymentDetails, 15, totalAmountStartY + 20);
+
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setFontSize(12);
+        doc.text("Collector", 10, pageHeight - 10, { align: "left" });
+        doc.text("General Secretary", 200 - 10, pageHeight - 10, {
+          align: "right",
+        });
+      };
+
+      renderContent(10);
+      renderContent(140);
 
       doc.save(`subscription_${row.member}.pdf`);
-    };
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
   };
 
   return (
@@ -1032,7 +1111,7 @@ const ComponentsDatatablesMemberfees = () => {
                                   value={formData.date}
                                   required
                                   options={{
-                                    dateFormat: "d/m/Y", // Setting format to DD/MM/YYYY
+                                    dateFormat: "d/m/Y",
                                     defaultDate: formData.date,
                                     position: isRtl
                                       ? "auto right"
