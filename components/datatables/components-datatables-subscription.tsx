@@ -121,6 +121,8 @@ const ComponentsDatatablesSubscription = () => {
   const [paymentType, setPaymentType] = useState("cash");
   const [transactionNo, setTransactionNo] = useState("");
   const [utrNo, setUtrNo] = useState("");
+  const [extraPractice, setExtraPractice] = useState(false); // New state for extra practice
+  const [joiningDate, setJoiningDate] = useState<Date | null>(null);
 
   const newTraineeadded = () => {
     MySwal.fire({
@@ -248,6 +250,8 @@ const ComponentsDatatablesSubscription = () => {
       const options = trainees.map((trainee) => ({
         value: trainee._id,
         label: `${trainee.name} - ${trainee.phoneno}`,
+        extraPractice: trainee.extraPractice, // Include extraPractice in options
+        joiningDate: trainee.joiningdate, // Include joiningDate in options
       }));
       setOptions(options);
     } catch (error) {
@@ -534,7 +538,15 @@ const ComponentsDatatablesSubscription = () => {
 
   const handleTypeAmountChange = (index, value) => {
     const updatedTypes = [...formData.subscriptionType];
-    updatedTypes[index].amount = value;
+    const type = updatedTypes[index].type;
+
+    let amount = parseFloat(value);
+    if (type === "Concession" || type === "Discount") {
+      // Convert to negative value
+      amount = -Math.abs(amount);
+    }
+
+    updatedTypes[index].amount = amount;
     setFormData((prevFormData) => ({
       ...prevFormData,
       subscriptionType: updatedTypes,
@@ -570,11 +582,17 @@ const ComponentsDatatablesSubscription = () => {
   const handleSubscriptionChange = (selectedOptions: any) => {
     const selectedValues = selectedOptions
       ? selectedOptions.map((option: any) => {
-          let amount = "";
+          let amount = 0;
           if (option.value === "Admission fees") {
             amount = admissionFee;
           } else if (option.value === "Development Fees") {
             amount = developmentFee;
+          } else if (
+            option.value === "Concession" ||
+            option.value === "Discount"
+          ) {
+            // Set negative amount for Concession and Discount
+            amount = -Math.abs(parseFloat(option.amount || 0));
           }
           return {
             type: option.value,
@@ -748,6 +766,7 @@ const ComponentsDatatablesSubscription = () => {
       const newBillNo = maxBillNo + 1; // Update bill number
       setcutomerid(data.subscription.traineeid);
       setcutomerName(data.subscription.trainee);
+      setExtraPractice(traineeOption.extraPractice === "Yes"); // Update extraPractice state
       setFormData({
         ...data.subscription,
         trainee: data.subscription.trainee,
@@ -962,22 +981,15 @@ const ComponentsDatatablesSubscription = () => {
 
     generateAllBills();
   };
-
+  const parseDate = (dateString: string) => {
+    const [day, month, year] = dateString.split("/").map(Number);
+    return new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
+  };
   const getMonthOptions = (year) => {
-    if (year === "2024") {
-      return allMonthsOptions.filter((month) =>
-        [
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
-        ].includes(month.value)
-      );
+    if (year === "2024" && joiningDate) {
+      const joiningMonth = new Date(joiningDate).getMonth();
+      console.log("joioinhmonth" + joiningMonth);
+      return allMonthsOptions.filter((month, index) => index > joiningMonth);
     }
     return allMonthsOptions;
   };
@@ -1126,8 +1138,15 @@ const ComponentsDatatablesSubscription = () => {
                                         const traineeName = getFirstName(
                                           t.label
                                         );
+                                        console.log("Training" + t.joiningDate);
                                         setcutomerName(traineeName);
                                         setcutomerid(t.value);
+                                        setJoiningDate(
+                                          parseDate(t.joiningDate)
+                                        );
+                                        setExtraPractice(
+                                          t.extraPractice === "Yes"
+                                        ); // Set extraPractice state based on selection
                                         setFormData((prevFormData) => ({
                                           ...prevFormData,
                                           trainee: t.value,
@@ -1204,60 +1223,65 @@ const ComponentsDatatablesSubscription = () => {
                                   </div>
                                 ))}
                               </div>
-                              <div>
-                                <label htmlFor="extraPracticeMonthsSelected">
-                                  Extra Practice Monthly Fees
-                                </label>
-                                <Select
-                                  id="extraPracticeMonthsSelected"
-                                  name="extraPracticeMonthsSelected"
-                                  options={getMonthOptions(
-                                    formData.year
-                                  ).filter(
-                                    (month) =>
-                                      !usedExtraPracticeMonths.includes(
-                                        month.value
-                                      )
+
+                              {/* Conditional rendering based on extraPractice value */}
+                              {extraPractice && (
+                                <div>
+                                  <label htmlFor="extraPracticeMonthsSelected">
+                                    Extra Practice Monthly Fees
+                                  </label>
+                                  <Select
+                                    id="extraPracticeMonthsSelected"
+                                    name="extraPracticeMonthsSelected"
+                                    options={getMonthOptions(
+                                      formData.year
+                                    ).filter(
+                                      (month) =>
+                                        !usedExtraPracticeMonths.includes(
+                                          month.value
+                                        )
+                                    )}
+                                    isMulti
+                                    onChange={
+                                      handleExtraPracticeMonthsSelectedChange
+                                    }
+                                    value={formData.extraPracticeMonthsSelected.map(
+                                      (month) => ({
+                                        value: month.month,
+                                        label: month.month,
+                                      })
+                                    )}
+                                    className="form-select"
+                                  />
+                                  {formData.extraPracticeMonthsSelected.map(
+                                    (month, index) => (
+                                      <div key={index}>
+                                        <label
+                                          htmlFor={`extraPracticeMonthAmount-${index}`}
+                                        >
+                                          {month.month} Amount
+                                        </label>
+                                        <input
+                                          id={`extraPracticeMonthAmount-${index}`}
+                                          type="number"
+                                          name={`extraPracticeMonthAmount-${index}`}
+                                          placeholder="Enter amount"
+                                          onChange={(e) =>
+                                            handleExtraPracticeMonthAmountChange(
+                                              index,
+                                              e.target.value
+                                            )
+                                          }
+                                          className="form-input"
+                                          value={month.amount}
+                                          required
+                                        />
+                                      </div>
+                                    )
                                   )}
-                                  isMulti
-                                  onChange={
-                                    handleExtraPracticeMonthsSelectedChange
-                                  }
-                                  value={formData.extraPracticeMonthsSelected.map(
-                                    (month) => ({
-                                      value: month.month,
-                                      label: month.month,
-                                    })
-                                  )}
-                                  className="form-select"
-                                />
-                                {formData.extraPracticeMonthsSelected.map(
-                                  (month, index) => (
-                                    <div key={index}>
-                                      <label
-                                        htmlFor={`extraPracticeMonthAmount-${index}`}
-                                      >
-                                        {month.month} Amount
-                                      </label>
-                                      <input
-                                        id={`extraPracticeMonthAmount-${index}`}
-                                        type="number"
-                                        name={`extraPracticeMonthAmount-${index}`}
-                                        placeholder="Enter amount"
-                                        onChange={(e) =>
-                                          handleExtraPracticeMonthAmountChange(
-                                            index,
-                                            e.target.value
-                                          )
-                                        }
-                                        className="form-input"
-                                        value={month.amount}
-                                        required
-                                      />
-                                    </div>
-                                  )
-                                )}
-                              </div>
+                                </div>
+                              )}
+
                               <div>
                                 <label htmlFor="subscriptionType">Other </label>
                                 <Select
