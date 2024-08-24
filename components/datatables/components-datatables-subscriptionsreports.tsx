@@ -2,8 +2,6 @@
 import { useEffect, useState } from "react";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import axios from "axios";
-import { useSelector } from "react-redux";
-import { IRootState } from "@/store";
 import Select from "react-select";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -23,15 +21,10 @@ const allMonthsOptions = [
   { value: "December", label: "December" },
 ];
 
-const getPreviousMonths = (currentMonthIndex) => {
-  const months = [];
-  for (let i = 0; i < 3; i++) {
-    const index = currentMonthIndex - i;
-    if (index >= 0) {
-      months.push(allMonthsOptions[index]);
-    }
-  }
-  return months;
+// Helper function to parse date in DD/MM/YYYY format
+const parseDate = (dateString: string) => {
+  const [day, month, year] = dateString.split("/").map(Number);
+  return new Date(year, month - 1, day);
 };
 
 const ComponentsDatatablesSubscriptionsReports = () => {
@@ -78,11 +71,27 @@ const ComponentsDatatablesSubscriptionsReports = () => {
               sub.monthsSelected.map((month) => month.month)
             );
 
+            // Parse the joining date
+            const joiningDate = parseDate(trainee.joiningdate);
+            const joiningMonthIndex = joiningDate.getMonth(); // 0-based index
+            const joiningYear = joiningDate.getFullYear();
+
             let monthsToCheck;
+
             if (currentYear === "2024") {
               monthsToCheck = allMonthsOptions.slice(3, currentMonthIndex + 1); // From April to current month for 2024
             } else {
               monthsToCheck = allMonthsOptions.slice(0, currentMonthIndex + 1); // From January to current month for other years
+            }
+
+            // Adjust monthsToCheck based on the joining date
+            if (
+              joiningYear === parseInt(currentYear, 10) &&
+              joiningMonthIndex >= allMonthsOptions.indexOf(monthsToCheck[0])
+            ) {
+              monthsToCheck = monthsToCheck.filter(
+                (month) => allMonthsOptions.indexOf(month) > joiningMonthIndex
+              );
             }
 
             const pendingMonths = monthsToCheck.filter(
@@ -100,11 +109,27 @@ const ComponentsDatatablesSubscriptionsReports = () => {
               sub.monthsSelected.map((month) => month.month)
             );
 
+            // Parse the joining date
+            const joiningDate = parseDate(trainee.joiningdate);
+            const joiningMonthIndex = joiningDate.getMonth(); // 0-based index
+            const joiningYear = joiningDate.getFullYear();
+
             let monthsToCheck;
+
             if (currentYear === "2024") {
               monthsToCheck = allMonthsOptions.slice(3, currentMonthIndex + 1); // From April to current month for 2024
             } else {
               monthsToCheck = allMonthsOptions.slice(0, currentMonthIndex + 1); // From January to current month for other years
+            }
+
+            // Adjust monthsToCheck based on the joining date
+            if (
+              joiningYear === parseInt(currentYear, 10) &&
+              joiningMonthIndex >= allMonthsOptions.indexOf(monthsToCheck[0])
+            ) {
+              monthsToCheck = monthsToCheck.filter(
+                (month) => allMonthsOptions.indexOf(month) > joiningMonthIndex
+              );
             }
 
             const pendingMonths = monthsToCheck.filter(
