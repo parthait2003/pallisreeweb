@@ -22,7 +22,7 @@ export async function OPTIONS() {
 }
 
 // Handle GET request to fetch subscriptions
-export async function GET(request) {
+export async function GET(request: NextRequest) {
   console.log("GET request received");
   try {
     await connectDB();
@@ -55,7 +55,7 @@ export async function GET(request) {
 }
 
 // Handle POST request to create a new subscription
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   console.log("POST request received");
   try {
     const requestBody = await request.json();
@@ -77,7 +77,7 @@ export async function POST(request) {
     } = requestBody;
 
     // Validate required fields
-    if (!billNo || !trainee || !year || !date || !amount) {
+    if (!billNo || !trainee || !year || !date || amount === undefined) {
       console.error("Validation Error: Missing required fields");
       let response = NextResponse.json(
         { message: "Missing required fields" },
@@ -100,6 +100,25 @@ export async function POST(request) {
       subscriptionType = JSON.parse(subscriptionType);
     }
 
+    // Calculate the total amount if not provided
+    if (amount === undefined) {
+      const totalMonthAmount = monthsSelected.reduce(
+        (total, month) => total + parseFloat(month.amount || 0),
+        0
+      );
+      const totalExtraPracticeMonthAmount = extraPracticeMonthsSelected.reduce(
+        (total, month) => total + parseFloat(month.amount || 0),
+        0
+      );
+      const totalTypeAmount = subscriptionType.reduce(
+        (total, type) => total + parseFloat(type.amount || 0),
+        0
+      );
+
+      amount =
+        totalMonthAmount + totalExtraPracticeMonthAmount + totalTypeAmount;
+    }
+
     await connectDB();
     const newSubscription = await subscriptionModel.create({
       billNo,
@@ -117,7 +136,7 @@ export async function POST(request) {
     });
 
     let response = NextResponse.json(
-      { message: "Subscription Created" },
+      { message: "Subscription Created", subscription: newSubscription },
       { status: 201 }
     );
     await setCORSHeaders(response);
