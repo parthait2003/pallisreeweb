@@ -606,65 +606,69 @@ const ComponentsDatatablesDonation = () => {
     const doc = new jsPDF();
     const logoUrl = "/assets/images/logo.png";
 
-    // Add logo
     const img = new Image();
     img.src = logoUrl;
     img.onload = function () {
-      doc.addImage(img, "PNG", 10, 10, 20, 20);
+      const renderContent = (startY) => {
+        // Add logo
+        doc.addImage(img, "PNG", 10, startY, 20, 20);
 
-      // Add title
-      doc.setFontSize(16);
-      doc.text("PALLISREE", 105, 30, { align: "center" });
+        // Add title
+        doc.setFontSize(22);
+        doc.text("PALLISREE", 105, startY + 2, { align: "center" });
 
-      // Add additional text
-      const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
-      doc.setFontSize(10);
-      doc.text(additionalText, 105, 35, { align: "center" });
+        // Add additional text
+        const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
+        doc.setFontSize(10);
+        doc.text(additionalText, 105, startY + 10, { align: "center" });
 
-      // Add date and bill no
-      doc.setFontSize(12);
-      doc.text(`Bill No: ${row.billNo}`, 200, 10, { align: "right" });
-      doc.text(`Date: ${new Date().toLocaleDateString()}`, 200, 15, {
-        align: "right",
-      });
+        // Add date and bill no
+        doc.setFontSize(12);
+        doc.text(`Bill No: ${row.billNo}`, 200, startY, { align: "right" });
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 200, startY + 5, {
+          align: "right",
+        });
 
-      // Define table data
-      const tableData = [
-        ["Name", "Purpose", "Type", "Amount"],
-        [
-          row.name,
-          row.purpose,
-          row.type.charAt(0).toUpperCase() + row.type.slice(1),
-          row.amount,
-        ],
-      ];
+        // Define table data
+        const tableData = [
+          ["Name", "Purpose", "Type", "Amount"],
+          [
+            row.name,
+            row.purpose,
+            row.type.charAt(0).toUpperCase() + row.type.slice(1),
+            row.amount,
+          ],
+        ];
 
-      // Add full-width table
-      autoTable(doc, {
-        startY: 55,
-        theme: "grid",
-        head: [tableData[0]],
-        body: tableData.slice(1),
-        tableWidth: doc.internal.pageSize.getWidth() - 20, // Adjust width to be full-page minus margins
-        styles: {
-          halign: "center",
-          cellWidth: "wrap",
-        },
-        margin: { left: 10, right: 10 }, // Ensuring there is a little margin on each side
-        didDrawPage: function (data) {
-          // If you want to perform additional operations each page
-        },
-      });
+        // Add full-width table
+        autoTable(doc, {
+          startY: startY + 30,
+          theme: "grid",
+          head: [tableData[0]],
+          body: tableData.slice(1),
+          tableWidth: doc.internal.pageSize.getWidth() - 20, // Adjust width to be full-page minus margins
+          styles: {
+            halign: "center",
+            cellWidth: "wrap",
+          },
+          margin: { left: 10, right: 10 }, // Ensuring there is a little margin on each side
+        });
 
-      // Get position to add total and payment type
-      let finalY = doc.lastAutoTable.finalY || 90; // Y position after the table
+        // Get position to add total and payment type
+        let finalY = doc.lastAutoTable.finalY || startY + 30; // Y position after the table
 
-      // Add total amount below the table
-      doc.setFontSize(10);
-      doc.text(`Total Amount: ${row.amount}`, 15, finalY + 10);
-      doc.setFontSize(8);
-      // Add payment type below the total amount
-      doc.text(`Payment Type: ${row.paymentType}`, 15, finalY + 15);
+        // Add total amount below the table
+        doc.setFontSize(10);
+        doc.text(`Total Amount: ${row.amount}`, 15, finalY + 10);
+
+        // Add payment type below the total amount
+        doc.setFontSize(8);
+        doc.text(`Payment Type: ${row.paymentType}`, 15, finalY + 15);
+      };
+
+      // Render the content twice on the same page
+      renderContent(10); // First instance of the content
+      renderContent(140); // Second instance of the content, starting lower on the page
 
       // Save the PDF
       doc.save(`donation_${row.id}.pdf`);
