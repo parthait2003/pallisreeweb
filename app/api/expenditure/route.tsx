@@ -2,7 +2,8 @@ import expenditureModel from "@/models/expenditure";
 import connectDB from "@/config/database";
 import { NextResponse } from "next/server";
 
-async function setCORSHeaders(response: NextResponse) {
+// Utility function to set CORS headers on the response
+function setCORSHeaders(response: NextResponse) {
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set(
     "Access-Control-Allow-Methods",
@@ -12,29 +13,37 @@ async function setCORSHeaders(response: NextResponse) {
   return response;
 }
 
+// Handle OPTIONS preflight requests
 export async function OPTIONS() {
-  let response = NextResponse.json({}, { status: 200 });
+  const response = NextResponse.json({}, { status: 200 });
   setCORSHeaders(response);
   return response;
 }
 
+// Handle POST requests to create a new expenditure
 export async function POST(request: Request) {
   try {
-    const { expenditures, description, date, amount, document, things } =
-      await request.json();
+    const { expenditures, description, date, amount, document, things } = await request.json();
 
-    await connectDB();
+    await connectDB(); // Connect to the database
+
+    // Find the maximum existing billNo
+    const lastExpenditure = await expenditureModel.findOne().sort({ billNo: -1 });
+    const newBillNo = lastExpenditure ? lastExpenditure.billNo + 1 : 100000;
+
+    // Create a new expenditure with the generated billNo
     const newExpenditure = await expenditureModel.create({
       expenditures,
       description,
       date,
       amount,
       document,
-      things, // Include the new field
+      things,
+      billNo: newBillNo,
     });
 
     let response = NextResponse.json(
-      { message: "Expenditure Created" },
+      { message: "Expenditure Created", newExpenditure },
       { status: 201 }
     );
     setCORSHeaders(response);
@@ -50,9 +59,10 @@ export async function POST(request: Request) {
   }
 }
 
+// Handle GET requests to retrieve expenditures
 export async function GET() {
   try {
-    await connectDB();
+    await connectDB(); // Connect to the database
     const expenditures = await expenditureModel.find();
 
     let response = NextResponse.json({ expenditures }, { status: 200 });
