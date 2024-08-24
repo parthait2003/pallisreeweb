@@ -986,17 +986,33 @@ const ComponentsDatatablesSubscription = () => {
     return new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
   };
   const getMonthOptions = (year) => {
-    if (year === "2024" && joiningDate) {
+    if (joiningDate) {
+      const joiningYear = new Date(joiningDate).getFullYear();
       const joiningMonth = new Date(joiningDate).getMonth(); // 0-indexed
-      const aprilIndex = 3; // April is the 4th month, so its index is 3
 
-      // If joining month is greater than April, start from the month after the joining month
-      const startMonthIndex =
-        joiningMonth > aprilIndex ? joiningMonth + 1 : aprilIndex;
+      if (parseInt(year) < joiningYear) {
+        // If the selected year is before the joining year, show no months
+        return [];
+      }
 
-      return allMonthsOptions.filter(
-        (month, index) => index >= startMonthIndex
-      );
+      if (year === "2024") {
+        // For 2024, start from April if joiningDate is before April
+        const aprilIndex = 3; // April's index
+        const startMonthIndex =
+          joiningMonth > aprilIndex ? joiningMonth + 1 : aprilIndex;
+        return allMonthsOptions.filter(
+          (month, index) => index >= startMonthIndex
+        );
+      } else if (parseInt(year) === joiningYear) {
+        // If the selected year matches the joining year, start from the month after the joining month
+        const startMonthIndex = joiningMonth + 1;
+        return allMonthsOptions.filter(
+          (month, index) => index >= startMonthIndex
+        );
+      } else {
+        // If the selected year is after the joining year, all months are available
+        return allMonthsOptions;
+      }
     }
     return allMonthsOptions;
   };
