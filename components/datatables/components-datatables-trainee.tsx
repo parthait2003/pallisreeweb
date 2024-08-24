@@ -1270,6 +1270,7 @@ const ComponentsDatatablesTrainee = () => {
                                   onChange={handleChange}
                                   className="form-input"
                                   value={formData.phoneno}
+                                  maxLength={10} // Restrict input to 10 digits
                                   required
                                 />
                               </div>
