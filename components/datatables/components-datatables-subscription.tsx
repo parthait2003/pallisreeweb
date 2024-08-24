@@ -987,9 +987,16 @@ const ComponentsDatatablesSubscription = () => {
   };
   const getMonthOptions = (year) => {
     if (year === "2024" && joiningDate) {
-      const joiningMonth = new Date(joiningDate).getMonth();
-      console.log("joioinhmonth" + joiningMonth);
-      return allMonthsOptions.filter((month, index) => index > joiningMonth);
+      const joiningMonth = new Date(joiningDate).getMonth(); // 0-indexed
+      const aprilIndex = 3; // April is the 4th month, so its index is 3
+
+      // If joining month is greater than April, start from the month after the joining month
+      const startMonthIndex =
+        joiningMonth > aprilIndex ? joiningMonth + 1 : aprilIndex;
+
+      return allMonthsOptions.filter(
+        (month, index) => index >= startMonthIndex
+      );
     }
     return allMonthsOptions;
   };
