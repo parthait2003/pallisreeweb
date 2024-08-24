@@ -318,6 +318,7 @@ const ComponentsDatatablesSettings = () => {
                     type="text"
                     className="form-input"
                     value={couch.mobile}
+                    maxLength={10} // Restrict input to 10 digits
                     onChange={(e) => handleInputChange(index, e)}
                   />
                 </div>
