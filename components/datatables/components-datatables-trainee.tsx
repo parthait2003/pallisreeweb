@@ -915,12 +915,12 @@ const ComponentsDatatablesTrainee = () => {
     logoImg.onload = () => {
       doc.addImage(logoImg, "PNG", 10, 10, 20, 20);
 
-      doc.setFontSize(18);
-      doc.text("PALLISREE", 105, 30, { align: "center" });
+      doc.setFontSize(22);
+      doc.text("PALLISREE", 105, 10, { align: "center" });
 
       doc.setFontSize(12);
       const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
-      doc.text(additionalText, 105, 35, { align: "center" });
+      doc.text(additionalText, 105, 20, { align: "center" });
 
       doc.setFontSize(10);
       if (eventType === "Tournament") {
@@ -943,7 +943,7 @@ const ComponentsDatatablesTrainee = () => {
           index + 1,
           trainee.name,
           trainee.phoneno,
-          formatTraineeDate(trainee.date),
+          trainee.date,
           trainee.image,
         ];
       });
