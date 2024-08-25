@@ -74,6 +74,7 @@ const ComponentsDatatablesReports = () => {
   const [recordsData, setRecordsData] = useState(initialRecords);
   const [search, setSearch] = useState("");
   const [deleteid, setDeleteid] = useState("");
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
   const [year, setYear] = useState("");
   const [month, setMonth] = useState("");
@@ -81,10 +82,10 @@ const ComponentsDatatablesReports = () => {
   const [endDate, setEndDate] = useState("");
   const [filteredRecords, setFilteredRecords] = useState(initialRecords);
 
-  const handleYearChange = (e) => setYear(e.target.value);
-  const handleMonthChange = (e) => setMonth(e.target.value);
+  const handleYearChange = (e: any) => setYear(e.target.value);
+  const handleMonthChange = (e: any) => setMonth(e.target.value);
 
-  const parseDate = (dateString) => {
+  const parseDate = (dateString: string) => {
     const [day, month, year] = dateString.split("/");
     return new Date(`${year}-${month}-${day}`);
   };
@@ -98,7 +99,7 @@ const ComponentsDatatablesReports = () => {
       const data = await response.json();
       console.log("Fetched Data:", data);
 
-      const formattedRecords = data.reports.map((record) => ({
+      const formattedRecords = data.reports.map((record: any) => ({
         id: record._id,
         date: formatDate(record.date),
         expense: record.expense,
@@ -188,7 +189,7 @@ const ComponentsDatatablesReports = () => {
     });
   };
 
-  const handleDeleteClick = (value) => {
+  const handleDeleteClick = (value: string) => {
     setModal2(true);
     setDeleteid(value);
   };
@@ -206,7 +207,7 @@ const ComponentsDatatablesReports = () => {
     }
   };
 
-  const handleUpdateClick = async (value) => {
+  const handleUpdateClick = async (value: string) => {
     try {
       const res = await fetch(`/api/reports/${value}`, {
         method: "GET",
@@ -232,14 +233,14 @@ const ComponentsDatatablesReports = () => {
     }
   };
 
-  const handleDateChange = (date) => {
+  const handleDateChange = (date: any) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
       date: date[0] ? formatDate(date[0]) : "",
     }));
   };
 
-  const formatDate = (date) => {
+  const formatDate = (date: string) => {
     if (date) {
       const dt = new Date(date);
       const month =
@@ -261,7 +262,7 @@ const ComponentsDatatablesReports = () => {
     profitAndLoss: "",
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
 
     setFormData((formData) => ({
@@ -270,7 +271,7 @@ const ComponentsDatatablesReports = () => {
     }));
   };
 
-  const handleFormSubmit = async (event) => {
+  const handleFormSubmit = async (event: any) => {
     event.preventDefault();
 
     const formattedFormData = {
@@ -319,17 +320,17 @@ const ComponentsDatatablesReports = () => {
     }
   };
 
-  const generatePDF = (data) => {
+  const generatePDF = (data: any) => {
     const doc = new jsPDF();
     const tableColumn = ["Date", "Income", "Expense", "Profit and Loss"];
-    const tableRows = [];
+    const tableRows: string[][] = [];
 
     let totalIncome = 0;
     let totalExpense = 0;
     let totalProfitAndLoss = 0;
 
     // Calculate totals and prepare table rows
-    data.forEach((record) => {
+    data.forEach((record: any) => {
       const income = parseFloat(record.income);
       const expense = parseFloat(record.expense);
       const profitAndLoss = parseFloat(record.profitAndLoss);
@@ -398,7 +399,7 @@ const ComponentsDatatablesReports = () => {
     };
   };
 
-  const generateTraineeRecordPDF = (data) => {
+  const generateTraineeRecordPDF = (data: any) => {
     const doc = new jsPDF();
     const tableColumn = [
       "Date",
@@ -406,14 +407,14 @@ const ComponentsDatatablesReports = () => {
       "No of New Trainee (Football)",
       "No of New Club Member",
     ];
-    const tableRows = [];
+    const tableRows: string[][] = [];
 
     let totalCricketTrainees = 0;
     let totalFootballTrainees = 0;
     let totalClubMembers = 0;
 
     // Prepare table rows
-    data.forEach((record) => {
+    data.forEach((record: any) => {
       const cricketTrainees = parseInt(record.noOfNewTraineeCricket, 10);
       const footballTrainees = parseInt(record.noOfNewTraineeFootball, 10);
       const clubMembers = parseInt(record.noOfNewClubMember, 10);
@@ -424,9 +425,9 @@ const ComponentsDatatablesReports = () => {
 
       const recordData = [
         record.date,
-        cricketTrainees,
-        footballTrainees,
-        clubMembers,
+        cricketTrainees.toString(),
+        footballTrainees.toString(),
+        clubMembers.toString(),
       ];
       tableRows.push(recordData);
     });
@@ -434,9 +435,9 @@ const ComponentsDatatablesReports = () => {
     // Add totals row
     const totalsRow = [
       "Total",
-      totalCricketTrainees,
-      totalFootballTrainees,
-      totalClubMembers,
+      totalCricketTrainees.toString(),
+      totalFootballTrainees.toString(),
+      totalClubMembers.toString(),
     ];
     tableRows.push(totalsRow);
 
@@ -485,6 +486,46 @@ const ComponentsDatatablesReports = () => {
     setFilteredRecords(initialRecords);
   };
 
+  const handleDeleteAllClick = async () => {
+    if (selectedRows.length === 0) {
+      MySwal.fire({
+        title: "No records selected",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    const confirmed = await MySwal.fire({
+      title: "Are you sure?",
+      text: "Do you want to delete the selected records?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete them!",
+      cancelButtonText: "Cancel",
+    });
+
+    if (confirmed.isConfirmed) {
+      for (const id of selectedRows) {
+        const res = await fetch(`/api/reports/${id}`, {
+          method: "DELETE",
+        });
+
+        if (!res.ok) {
+          console.error(`Failed to delete record with ID: ${id}`);
+        }
+      }
+
+      fetchRecordsData();
+      setSelectedRows([]);
+      MySwal.fire({
+        title: "Deleted!",
+        text: "Selected records have been deleted.",
+        icon: "success",
+      });
+    }
+  };
+
   return (
     <div className="panel mt-6">
       <h5 className="mb-5 text-lg font-semibold dark:text-white-light">
@@ -499,6 +540,14 @@ const ComponentsDatatablesReports = () => {
           >
             <IconPlus className="ltr:mr-2 rtl:ml-2" />
             Record
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-danger w-full lg:w-auto"
+            onClick={handleDeleteAllClick}
+          >
+            Delete All
           </button>
 
           <div className="flex w-full flex-wrap gap-4">
@@ -592,6 +641,26 @@ const ComponentsDatatablesReports = () => {
           className="table-hover whitespace-nowrap"
           records={recordsData}
           columns={[
+            {
+              accessor: "checkbox",
+              title: "",
+              render: (row) => (
+                <input
+                  type="checkbox"
+                  onChange={() => {
+                    setSelectedRows((prev) =>
+                      prev.includes(row.id)
+                        ? prev.filter((id) => id !== row.id)
+                        : [...prev, row.id]
+                    );
+                  }}
+                  checked={selectedRows.includes(row.id)}
+                />
+              ),
+              titleClassName: "text-center",
+              className: "text-center",
+              width: 50,
+            },
             { accessor: "date", title: "Date", sortable: true },
             { accessor: "income", title: "Income", sortable: true },
             { accessor: "expense", title: "Expense", sortable: true },
