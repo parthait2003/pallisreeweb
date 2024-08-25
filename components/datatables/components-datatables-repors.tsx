@@ -419,17 +419,24 @@ const ComponentsDatatablesReports = () => {
       const footballTrainees = parseInt(record.noOfNewTraineeFootball, 10);
       const clubMembers = parseInt(record.noOfNewClubMember, 10);
 
-      totalCricketTrainees += cricketTrainees;
-      totalFootballTrainees += footballTrainees;
-      totalClubMembers += clubMembers;
+      // Only add row if at least one value is non-zero
+      if (
+        cricketTrainees !== 0 ||
+        footballTrainees !== 0 ||
+        clubMembers !== 0
+      ) {
+        totalCricketTrainees += cricketTrainees;
+        totalFootballTrainees += footballTrainees;
+        totalClubMembers += clubMembers;
 
-      const recordData = [
-        record.date,
-        cricketTrainees.toString(),
-        footballTrainees.toString(),
-        clubMembers.toString(),
-      ];
-      tableRows.push(recordData);
+        const recordData = [
+          record.date,
+          cricketTrainees.toString(),
+          footballTrainees.toString(),
+          clubMembers.toString(),
+        ];
+        tableRows.push(recordData);
+      }
     });
 
     // Add totals row
