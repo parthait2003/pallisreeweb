@@ -1262,6 +1262,7 @@ const ComponentsDatatablesTrainee = () => {
                                   onChange={handleChange}
                                   className="form-input"
                                   value={formData.phoneno}
+                                  maxLength={10}
                                   required
                                 />
                               </div>
