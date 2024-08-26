@@ -899,14 +899,6 @@ const ComponentsDatatablesTrainee = () => {
       return formattedDate.replace(day, getOrdinalSuffix(day));
     };
 
-    const formatTraineeDate = (date) => {
-      const d = new Date(date);
-      const day = String(d.getDate()).padStart(2, "0");
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
-    };
-
     const formatTime = (time) => {
       const [hour, minute] = time.split(":");
       const hourInt = parseInt(hour, 10);
@@ -942,6 +934,14 @@ const ComponentsDatatablesTrainee = () => {
         doc.text("Reporting Time: " + formatTime(time), 15, 85);
         doc.text("Note: " + note, 15, 90);
       }
+      const formatTraineeDate = (dateStr) => {
+        const [day, month, year] = dateStr.split("/");
+        const d = new Date(`${year}-${month}-${day}`);
+        const dayFormatted = String(d.getDate()).padStart(2, "0");
+        const monthFormatted = String(d.getMonth() + 1).padStart(2, "0");
+        const yearFormatted = d.getFullYear();
+        return `${dayFormatted}/${monthFormatted}/${yearFormatted}`;
+      };
 
       const rows = selectedTrainees.map((id, index) => {
         const trainee = initialRecords.find((t) => t.id === id);
@@ -1948,7 +1948,7 @@ const ComponentsDatatablesTrainee = () => {
                 as={Fragment}
                 enter="ease-out duration-300"
                 enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100"
+                enterTo="opacity-100 scale-100"
                 leave="ease-in duration-200"
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
@@ -1988,6 +1988,7 @@ const ComponentsDatatablesTrainee = () => {
                       </select>
                     </div>
 
+                    {/* Existing fields for tournament or camp details */}
                     {eventType === "Tournament" && (
                       <>
                         <div className="mb-4">
@@ -2095,6 +2096,40 @@ const ComponentsDatatablesTrainee = () => {
                         onChange={(e) => setNote(e.target.value)}
                       />
                     </div>
+
+                    {/* New section to display selected trainees */}
+                    <div className="mb-4">
+                      <h3 className="text-lg font-bold">Selected Trainees</h3>
+                      <div className="space-y-4">
+                        {selectedTrainees.map((id) => {
+                          const trainee = initialRecords.find(
+                            (t) => t.id === id
+                          );
+                          if (!trainee) return null;
+                          return (
+                            <div
+                              key={trainee.id}
+                              className="flex items-center space-x-4"
+                            >
+                              <img
+                                src={`https://pallisree.blr1.cdn.digitaloceanspaces.com/${trainee.image}`}
+                                alt={trainee.name}
+                                className="h-12 w-12 rounded-full"
+                              />
+                              <div>
+                                <div className="font-medium">
+                                  {trainee.name}
+                                </div>
+                                <div className="text-gray-500">
+                                  DOB: {formatDate(trainee.date)}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     <div className="flex justify-end">
                       <button
                         className="btn btn-primary"
