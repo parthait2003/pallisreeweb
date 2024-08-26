@@ -110,9 +110,10 @@ const ComponentsDatatablesDonation = () => {
 
   const handleDateChange = (date) => {
     if (date && date[0]) {
+      const formattedDate = formatDate(date[0]);
       setFormData((prevFormData) => ({
         ...prevFormData,
-        date: formatDate(date[0]),
+        date: formattedDate,
       }));
     }
   };
@@ -346,30 +347,48 @@ const ComponentsDatatablesDonation = () => {
     }
   };
 
-  const handleMonthsSelectedChange = (selectedOptions) => {
-    const selectedValues = selectedOptions
-      ? selectedOptions.map((option) => option.value)
-      : [];
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      monthsSelected: selectedValues,
-    }));
-  };
-
   useEffect(() => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      id: editid,
-    }));
-  }, [editid]);
+    if (editid) {
+      const donation = initialRecords.find((record) => record.id === editid);
+      if (donation) {
+        setFormData({
+          id: donation.id,
+          billNo: donation.billNo,
+          type: donation.type,
+          name: donation.name,
+          date: formatDate(donation.date),
+          purpose: donation.purpose,
+          amount: donation.amount,
+          paymentType: donation.paymentType,
+          transactionNo: donation.transactionNo,
+          utrNo: donation.utrNo,
+          chequeNo: donation.chequeNo,
+          draftNo: donation.draftNo,
+        });
+        setPaymentType(donation.paymentType);
+      }
+    }
+  }, [editid, initialRecords]);
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
+    let formattedDate = "";
+    if (formData.date && formData.date.includes("/")) {
+      formattedDate = formData.date.split("/").reverse().join("-");
+    } else if (formData.date) {
+      formattedDate = formData.date;
+    } else {
+      console.error("Date is missing");
+      return; // Stop submission if the date is missing
+    }
+
     const formattedFormData = {
       ...formData,
-      date: formData.date ? formData.date.split("/").reverse().join("-") : "",
+      date: formattedDate,
     };
+
+    console.log("Submitting form data:", formattedFormData); // Log the form data to check the date
 
     try {
       let response;
@@ -454,77 +473,67 @@ const ComponentsDatatablesDonation = () => {
           const reportResponse = await fetch(
             `/api/reports?date=${formattedFormData.date}`
           );
-          const reportData = await reportResponse.json();
 
-          console.log(
-            "Fetched report data for date:",
-            formattedFormData.date,
-            reportData
-          );
+          if (reportResponse.ok) {
+            const reportData = await reportResponse.json();
+            if (reportData && reportData.length > 0) {
+              const existingReport = reportData[0];
 
-          if (reportData && reportData.length > 0) {
-            const existingReport = reportData[0];
+              const updatedReport = {
+                ...existingReport,
+                income: parseFloat(formattedFormData.amount),
+                profitAndLoss:
+                  parseFloat(formattedFormData.amount) -
+                  existingReport.expense,
+              };
 
-            console.log("Existing report found:", existingReport);
+              const reportUpdateResponse = await fetch(
+                `/api/reports/${existingReport._id}`,
+                {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(updatedReport),
+                }
+              );
 
-            // Update the existing report data
-            const updatedReport = {
-              ...existingReport,
-              income: parseFloat(formattedFormData.amount),
-              profitAndLoss:
-                parseFloat(formattedFormData.amount) - existingReport.expense,
-            };
+              if (!reportUpdateResponse.ok) {
+                console.error(
+                  "Failed to update report data:",
+                  await reportUpdateResponse.json()
+                );
+              }
+            } else {
+              console.log("No existing report found. Creating a new one.");
 
-            const reportUpdateResponse = await fetch(
-              `/api/reports/${existingReport._id}`,
-              {
-                method: "PUT",
+              const newReportData = {
+                date: formattedFormData.date,
+                income: parseFloat(formattedFormData.amount),
+                expense: 0,
+                noOfNewTraineeCricket: 0,
+                noOfNewTraineeFootball: 0,
+                noOfNewClubMember: 0,
+                profitAndLoss: parseFloat(formattedFormData.amount),
+              };
+
+              const newReportResponse = await fetch("/api/reports", {
+                method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                 },
-                body: JSON.stringify(updatedReport),
-              }
-            );
+                body: JSON.stringify(newReportData),
+              });
 
-            if (reportUpdateResponse.ok) {
-              console.log("Report updated successfully.");
-            } else {
-              console.log(
-                "Failed to update report data:",
-                await reportUpdateResponse.json()
-              );
+              if (!newReportResponse.ok) {
+                console.error(
+                  "Failed to create new report:",
+                  await newReportResponse.json()
+                );
+              }
             }
           } else {
-            console.log(
-              "No existing report found for the specified date. Creating a new one."
-            );
-
-            const newReportData = {
-              date: formattedFormData.date,
-              income: parseFloat(formattedFormData.amount),
-              expense: 0,
-              noOfNewTraineeCricket: 0,
-              noOfNewTraineeFootball: 0,
-              noOfNewClubMember: 0,
-              profitAndLoss: parseFloat(formattedFormData.amount),
-            };
-
-            const newReportResponse = await fetch("/api/reports", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(newReportData),
-            });
-
-            if (newReportResponse.ok) {
-              console.log("New report created successfully.");
-            } else {
-              console.log(
-                "Failed to create new report:",
-                await newReportResponse.json()
-              );
-            }
+            console.error("Failed to fetch report data:", await reportResponse.json());
           }
         } else {
           console.log("Failed to update donation:", await response.json());
@@ -571,29 +580,6 @@ const ComponentsDatatablesDonation = () => {
       alert(`Error: ${error.message}`);
     }
   };
-
-  useEffect(() => {
-    if (editid) {
-      const donation = initialRecords.find((record) => record.id === editid);
-      if (donation) {
-        setFormData({
-          id: donation.id,
-          billNo: donation.billNo,
-          type: donation.type,
-          name: donation.name,
-          date: formatDate(donation.date),
-          purpose: donation.purpose,
-          amount: donation.amount,
-          paymentType: donation.paymentType,
-          transactionNo: donation.transactionNo,
-          utrNo: donation.utrNo,
-          chequeNo: donation.chequeNo,
-          draftNo: donation.draftNo,
-        });
-        setPaymentType(donation.paymentType); // Ensure paymentType state is updated when editid changes
-      }
-    }
-  }, [editid, initialRecords]);
 
   const handleAddRow = () => {
     setFormData((prevFormData) => ({
