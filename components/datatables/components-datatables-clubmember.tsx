@@ -19,14 +19,6 @@ import IconPencil from "@/components/icon/icon-pencil";
 
 const MySwal = withReactContent(Swal);
 
-const handleRemoveImage = () => {
-  setFile(null);
-  setFormData((prevFormData) => ({
-    ...prevFormData,
-    image: null,
-  }));
-};
-
 const initialRowData = [
   {
     id: "989",
@@ -60,17 +52,13 @@ const col = [
 ];
 
 const Bloods = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-
 const Genders = ["Female", "Male"];
 
 const ComponentsDatatablesClubmember = () => {
   const currentYear = new Date().getFullYear().toString();
   const [file, setFile] = useState(null);
-  const [message, setMessage] = useState("");
   const isRtl =
     useSelector((state: IRootState) => state.themeConfig.rtlClass) === "rtl";
-  const [date1, setDate1] = useState<any>("2022-07-05");
-
   const [modal1, setModal1] = useState(false);
   const [files, setFiles] = useState([]);
   const fileInputRef = useRef(null);
@@ -98,6 +86,19 @@ const ComponentsDatatablesClubmember = () => {
   const [selectedBloodGroup, setSelectedBloodGroup] = useState("");
 
   const [selectedMembers, setSelectedMembers] = useState([]);
+
+  const handleRemoveImage = () => {
+    setFile(null);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      image: null,
+    }));
+
+    // Clear the file input manually
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null;
+    }
+  };
 
   const handleCheckboxChange = (id) => {
     setSelectedMembers((prevSelected) =>
@@ -264,8 +265,6 @@ const ComponentsDatatablesClubmember = () => {
     setShowAddCustomer(!showAddCustomer);
   };
 
-  
-
   useEffect(() => {
     const sortedData = sortBy(initialRecords, sortStatus.columnAccessor);
     const finalData =
@@ -325,16 +324,13 @@ const ComponentsDatatablesClubmember = () => {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFile(e.target.files[0]);
-
-    const selectedFiles = e.target.files;
-    const newFiles = Array.from(selectedFiles!);
-
-    if (files.length + newFiles.length > 1) {
-      showMessage8();
-    } else {
-      setFiles([...files, ...newFiles]);
-      setHiddenFileName(newFiles[0].name);
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        image: selectedFile.name,
+      }));
     }
   };
 
@@ -536,7 +532,6 @@ const ComponentsDatatablesClubmember = () => {
       if (file) {
         const filename = file.name;
         imageName = formData.phoneno + "-" + filename;
-        console.log(imageName);
         formattedFormData.image = imageName;
       }
       try {
@@ -552,20 +547,19 @@ const ComponentsDatatablesClubmember = () => {
           newClubmemberadded();
           fetchClubmemberData();
           setModal1(false);
-          const formData = new FormData();
+
           if (file) {
             const uploadFormData = new FormData();
             uploadFormData.append("file", file);
             uploadFormData.append("imageName", imageName);
 
-            const res = await fetch("/api/upload", {
+            const uploadRes = await fetch("/api/upload", {
               method: "POST",
               body: uploadFormData,
             });
-            if (res.ok) {
-              alert("File uploaded successfully");
-            } else {
-              alert("File upload failed");
+
+            if (!uploadRes.ok) {
+              console.error("File upload failed");
             }
           }
 
@@ -600,7 +594,6 @@ const ComponentsDatatablesClubmember = () => {
     } else {
       try {
         const url = `/api/clubmember/${editid}`;
-
         const res = await fetch(url, {
           method: "PUT",
           headers: {
@@ -609,13 +602,28 @@ const ComponentsDatatablesClubmember = () => {
           body: JSON.stringify(formattedFormData),
         });
 
-        if (!res.ok) {
-          throw new Error("failed to update clubmember");
-        }
         if (res.ok) {
-          setModal1(false);
+          if (file) {
+            const imageName = formData.phoneno + "-" + file.name;
+            const uploadFormData = new FormData();
+            uploadFormData.append("file", file);
+            uploadFormData.append("imageName", imageName);
+
+            const uploadRes = await fetch("/api/upload", {
+              method: "POST",
+              body: uploadFormData,
+            });
+
+            if (!uploadRes.ok) {
+              console.error("File upload failed");
+            }
+          }
+
           fetchClubmemberData();
+          setModal1(false);
           updatedClubmember();
+        } else {
+          console.error("Failed to update clubmember");
         }
       } catch (error) {
         console.log(error);
@@ -879,6 +887,7 @@ const ComponentsDatatablesClubmember = () => {
                                       accept="image/*"
                                       onChange={handleFileChange}
                                       className="form-input"
+                                      ref={fileInputRef}
                                     />
                                   </div>
                                 )}
