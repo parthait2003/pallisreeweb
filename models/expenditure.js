@@ -4,7 +4,7 @@ const expenditureSchema = new mongoose.Schema({
   billNo: {
     type: Number,
     required: true,
-    unique: true, // Ensure that each billNo is unique
+  
   },
   expenditures: {
     type: String,
