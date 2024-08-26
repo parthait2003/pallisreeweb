@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
-import { useEffect, useState, Fragment, useRef } from "react";
+import { useEffect, useState, Fragment } from "react";
 import sortBy from "lodash/sortBy";
 import IconFile from "@/components/icon/icon-file";
 import { Dialog, Transition } from "@headlessui/react";
@@ -603,12 +603,31 @@ const ComponentsDatatablesTrainee = () => {
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    // Validate and format dates to DD/MM/YYYY
+    let formattedDate = "";
+    if (formData.date && dayjs(formData.date, "DD/MM/YYYY", true).isValid()) {
+      formattedDate = dayjs(formData.date, "DD/MM/YYYY").format("DD/MM/YYYY");
+    } else {
+      console.error("Invalid date format for 'date'.");
+    }
+
+    let formattedJoiningDate = "";
+    if (
+      formData.joiningdate &&
+      dayjs(formData.joiningdate, "DD/MM/YYYY", true).isValid()
+    ) {
+      formattedJoiningDate = dayjs(formData.joiningdate, "DD/MM/YYYY").format(
+        "DD/MM/YYYY"
+      );
+    } else {
+      // If joiningdate is not set, provide a default value formatted as DD/MM/YYYY
+      formattedJoiningDate = dayjs().format("DD/MM/YYYY");
+    }
+
     const formattedFormData = {
       ...formData,
-      dob: formData.dob ? formatDate(formData.dob, true) : "",
-      joiningdate: formData.joiningdate
-        ? formatDate(formData.joiningdate, true)
-        : "",
+      date: formattedDate || "", // Use formatted date or an empty string
+      joiningdate: formattedJoiningDate || "", // Use formatted joining date or an empty string
     };
 
     let imageName = "";
@@ -616,20 +635,20 @@ const ComponentsDatatablesTrainee = () => {
     let adhname = "";
     if (file) {
       const filename = file.name;
-      imageName = formData.phoneno + "-" + filename;
-      formData.image = imageName;
+      imageName = `${formData.phoneno}-${filename}`;
+      formattedFormData.image = imageName;
     }
 
     if (documentfile) {
       const documentfilename = documentfile.name;
-      docname = formData.phoneno + "-" + documentfilename;
-      formData.document = docname;
+      docname = `${formData.phoneno}-${documentfilename}`;
+      formattedFormData.document = docname;
     }
 
     if (adharfile) {
       const adharfilename = adharfile.name;
-      adhname = formData.phoneno + "-" + adharfilename;
-      formData.adhar = adhname;
+      adhname = `${formData.phoneno}-${adharfilename}`;
+      formattedFormData.adhar = adhname;
     }
 
     try {
@@ -641,7 +660,7 @@ const ComponentsDatatablesTrainee = () => {
         headers: {
           "Content-type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formattedFormData),
       });
 
       if (res.ok) {
@@ -666,7 +685,7 @@ const ComponentsDatatablesTrainee = () => {
           }
           uploadFormData.append("imageName", imageName);
 
-          const uploadRes = await fetch("/api/upload", {
+          await fetch("/api/upload", {
             method: "POST",
             body: uploadFormData,
           });
@@ -674,37 +693,24 @@ const ComponentsDatatablesTrainee = () => {
 
         if (!editid) {
           const currentDate = new Date();
-
-          // Format the current date to DD/MM/YYYY
           const day = String(currentDate.getDate()).padStart(2, "0");
-          const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Months are 0-based, so add 1
+          const month = String(currentDate.getMonth() + 1).padStart(2, "0");
           const year = currentDate.getFullYear();
           const formattedCurrentDate = `${day}/${month}/${year}`;
 
-          // Now replace formData.joiningdate with the formatted current date
-          const [currentDay, currentMonth, currentYear] =
-            formattedCurrentDate.split("/");
-          const isoDate = `${currentYear}-${currentMonth}-${currentDay}`;
-
           const reportData = {
-            date: isoDate,
+            date: formattedCurrentDate,
             noOfNewTraineeCricket: formData.sportstype === "Cricket" ? 1 : 0,
             noOfNewTraineeFootball: formData.sportstype === "Football" ? 1 : 0,
           };
 
-          const reportRes = await fetch("/api/reports", {
+          await fetch("/api/reports", {
             method: "POST",
             headers: {
               "Content-type": "application/json",
             },
             body: JSON.stringify(reportData),
           });
-
-          if (reportRes.ok) {
-            console.log("Reports updated successfully");
-          } else {
-            console.error("Failed to update reports");
-          }
         }
       } else {
         console.error("Failed to add/update trainee");
@@ -920,7 +926,7 @@ const ComponentsDatatablesTrainee = () => {
 
       doc.setFontSize(12);
       const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
-      doc.text(additionalText, 105, 20, { align: "center" });
+      doc.text(additionalText, 105, 15, { align: "center" });
 
       doc.setFontSize(10);
       if (eventType === "Tournament") {
@@ -1262,7 +1268,6 @@ const ComponentsDatatablesTrainee = () => {
                                   onChange={handleChange}
                                   className="form-input"
                                   value={formData.phoneno}
-                                   maxLength={10}
                                   required
                                 />
                               </div>
@@ -1955,7 +1960,7 @@ const ComponentsDatatablesTrainee = () => {
                 as={Fragment}
                 enter="ease-out duration-300"
                 enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100"
+                enterTo="opacity-100 scale-100"
                 leave="ease-in duration-200"
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
@@ -1981,130 +1986,23 @@ const ComponentsDatatablesTrainee = () => {
                       </svg>
                     </button>
                   </div>
-                  <div className="p-5" id="printableContent">
-                    <div className="mb-4">
-                      <label htmlFor="eventType">Event Type</label>
-                      <select
-                        id="eventType"
-                        className="form-select"
-                        value={eventType}
-                        onChange={(e) => setEventType(e.target.value)}
-                      >
-                        <option value="Tournament">Tournament</option>
-                        <option value="Camp">Camp</option>
-                      </select>
-                    </div>
-
-                    {eventType === "Tournament" && (
-                      <>
-                        <div className="mb-4">
-                          <label htmlFor="tournamentName">
-                            Tournament Name
-                          </label>
-                          <input
-                            id="tournamentName"
-                            type="text"
-                            className="form-input"
-                            value={tournamentName}
-                            onChange={(e) => setTournamentName(e.target.value)}
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="groundName">Ground Name</label>
-                          <input
-                            id="groundName"
-                            type="text"
-                            className="form-input"
-                            value={groundName}
-                            onChange={(e) => setGroundName(e.target.value)}
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="tournamentDate">
-                            Tournament Date
-                          </label>
-                          <DatePicker
-                            id="tournamentDate"
-                            selected={tournamentDate}
-                            onChange={(date) => setTournamentDate(date)}
-                            dateFormat="dd/MM/yyyy"
-                            className="form-input"
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="time">Time</label>
-                          <input
-                            id="time"
-                            type="time"
-                            className="form-input"
-                            value={time}
-                            onChange={(e) => setTime(e.target.value)}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {eventType === "Camp" && (
-                      <>
-                        <div className="mb-4">
-                          <label htmlFor="campName">Camp Name</label>
-                          <input
-                            id="campName"
-                            type="text"
-                            className="form-input"
-                            value={campName}
-                            onChange={(e) => setCampName(e.target.value)}
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="campType">Camp Type</label>
-                          <select
-                            id="campType"
-                            className="form-select"
-                            value={campType}
-                            onChange={(e) => setCampType(e.target.value)}
-                          >
-                            <option value="18Trial">18 Trial</option>
-                            <option value="15Trial">15 Trial</option>
-                            <option value="Division">Division</option>
-                            <option value="District">District</option>
-                          </select>
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="campDate">Camp Date</label>
-                          <DatePicker
-                            id="campDate"
-                            selected={campDate}
-                            onChange={(date) => setCampDate(date)}
-                            dateFormat="dd/MM/yyyy"
-                            className="form-input"
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label htmlFor="time">Time</label>
-                          <input
-                            id="time"
-                            type="time"
-                            className="form-input"
-                            value={time}
-                            onChange={(e) => setTime(e.target.value)}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    <div className="mb-4">
-                      <label htmlFor="note">Note</label>
-                      <textarea
-                        id="note"
-                        className="form-input"
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex justify-end">
+                  <div className="p-5">
+                    <ul>
+                      {selectedTrainees.map((traineeId) => {
+                        const trainee = initialRecords.find(
+                          (t) => t.id === traineeId
+                        );
+                        return (
+                          <li key={traineeId} className="mb-2">
+                            <span>{trainee?.name}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <div className="mt-8 flex items-center justify-end">
                       <button
-                        className="btn btn-primary"
+                        type="button"
+                        className="btn btn-outline-danger"
                         onClick={handleGeneratePDF}
                       >
                         Generate PDF
