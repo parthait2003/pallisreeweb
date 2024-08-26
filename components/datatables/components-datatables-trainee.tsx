@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
-import { useEffect, useState, Fragment } from "react";
+import { useEffect, useState, Fragment, useRef } from "react";
 import sortBy from "lodash/sortBy";
 import IconFile from "@/components/icon/icon-file";
 import { Dialog, Transition } from "@headlessui/react";
@@ -44,14 +44,14 @@ const initialRowData = [
     gender: "Female",
     address: "kolkata",
     phoneno: "123456",
-    date: "28/05/2004", // Correct date format
+    date: "2004-05-28",
     nameoftheschool: "ABC",
     bloodgroup: "O+",
     document: "likgjrtdk",
     adhar: "hjklfhkjsh",
     extraPractice: "Yes",
-    joiningdate: "28/05/2004",
-  },
+    joiningdate: "2004-05-28",
+  }
 ];
 
 const col = [
@@ -80,24 +80,24 @@ const Genders = ["Female", "Male"];
 
 const Sports = ["Cricket", "Football"];
 
-const truncateAddress = (address: string) => {
+const truncateAddress = (address) => {
   const words = address.split(" ");
   return words.length > 2 ? `${words.slice(0, 2).join(" ")}...` : address;
 };
 
 const ComponentsDatatablesTrainee = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [documentfile, setDocumentFile] = useState<File | null>(null);
-  const [adharfile, setAdharFile] = useState<File | null>(null);
-  const [files, setFiles] = useState<File[]>([]);
+  const [file, setFile] = useState(null);
+  const [documentfile, setDocumentFile] = useState(null);
+  const [adharfile, setAdharFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [message, setMessage] = useState("");
   const isRtl =
     useSelector((state: IRootState) => state.themeConfig.rtlClass) === "rtl";
-  const [date1, setDate1] = useState<string>("2022-07-05");
-  const [modal1, setModal1] = useState<boolean>(false);
-  const [page, setPage] = useState<number>(1);
+  const [date1, setDate1] = useState("2022-07-05");
+  const [modal1, setModal1] = useState(false);
+  const [page, setPage] = useState(1);
   const PAGE_SIZES = [10, 20, 30, 50, 100, 500, 1000];
-  const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0]);
+  const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
   const [initialRecords, setInitialRecords] = useState(
     sortBy(initialRowData, "id")
   );
@@ -105,45 +105,44 @@ const ComponentsDatatablesTrainee = () => {
   const [customerData, setCustomerData] = useState([]);
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState<string>("");
-  const [hiddenFileName, setHiddenFileName] = useState<string>("");
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [hiddenFileName, setHiddenFileName] = useState("");
   const [recordsDatasort, setRecordsDatashort] = useState("dsc");
-  const [modal2, setModal2] = useState<boolean>(false);
-  const [editid, setEditid] = useState<string>("");
-  const [deleteid, setDeleteid] = useState<string>("");
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [ageFilter, setAgeFilter] = useState<string>("");
-  const [genderFilter, setGenderFilter] = useState<string>("");
-  const [sportstypeFilter, setSportstypeFilter] = useState<string>("");
-  const [extraPracticeFilter, setExtraPracticeFilter] = useState<string>("");
-  const [bloodGroupFilter, setBloodGroupFilter] = useState<string>("");
-  const [showCsvUpload, setShowCsvUpload] = useState<boolean>(false);
-  const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [selectedTrainees, setSelectedTrainees] = useState<string[]>([]);
-  const [showSelectedTrainees, setShowSelectedTrainees] =
-    useState<boolean>(false);
-  const [tournamentName, setTournamentName] = useState<string>("");
-  const [groundName, setGroundName] = useState<string>("");
-  const [tournamentDate, setTournamentDate] = useState<Date | null>(null);
-  const [note, setNote] = useState<string>("");
-  const [showDetailsModal, setShowDetailsModal] = useState<boolean>(false);
+  const [modal2, setModal2] = useState(false);
+  const [editid, setEditid] = useState("");
+  const [deleteid, setDeleteid] = useState("");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [ageFilter, setAgeFilter] = useState("");
+  const [genderFilter, setGenderFilter] = useState("");
+  const [sportstypeFilter, setSportstypeFilter] = useState("");
+  const [extraPracticeFilter, setExtraPracticeFilter] = useState("");
+  const [bloodGroupFilter, setBloodGroupFilter] = useState("");
+  const [showCsvUpload, setShowCsvUpload] = useState(false);
+  const [csvFile, setCsvFile] = useState(null);
+  const [selectedTrainees, setSelectedTrainees] = useState([]);
+  const [showSelectedTrainees, setShowSelectedTrainees] = useState(false);
+  const [tournamentName, setTournamentName] = useState("");
+  const [groundName, setGroundName] = useState("");
+  const [tournamentDate, setTournamentDate] = useState("");
+  const [note, setNote] = useState("");
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [traineeDetails, setTraineeDetails] = useState(null);
   const [feesDetails, setFeesDetails] = useState(null);
-  const [eventType, setEventType] = useState<string>("Tournament"); // New state for dropdown
-  const [campName, setCampName] = useState<string>("");
-  const [campType, setCampType] = useState<string>("");
-  const [campDate, setCampDate] = useState<Date | null>(null);
-  const [time, setTime] = useState<string>("");
+  const [eventType, setEventType] = useState("Tournament"); // New state for dropdown
+  const [campName, setCampName] = useState("");
+  const [campType, setCampType] = useState("");
+  const [campDate, setCampDate] = useState(null);
+  const [time, setTime] = useState("");
   const router = useRouter();
 
-  const handleViewClick = (id: string) => {
+  const handleViewClick = (id) => {
     router.push(`/viewtrainee/${id}`);
   };
 
-  const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCsvFile(e.target.files?.[0] ?? null);
+  const handleCsvFileChange = (e) => {
+    setCsvFile(e.target.files[0]);
   };
 
   const handleCsvUpload = () => {
@@ -154,7 +153,7 @@ const ComponentsDatatablesTrainee = () => {
 
     fetch("/api/uploadcsv", {
       method: "POST",
-      body: formData,
+      body: formData
     })
       .then((response) => response.json())
       .then((data) => {
@@ -165,7 +164,7 @@ const ComponentsDatatablesTrainee = () => {
             position: "bottom-start",
             showConfirmButton: false,
             timer: 5000,
-            showCloseButton: true,
+            showCloseButton: true
           });
           newTraineeadded();
           fetchTraineeData();
@@ -186,7 +185,7 @@ const ComponentsDatatablesTrainee = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true,
+      showCloseButton: true
     });
   };
 
@@ -197,7 +196,7 @@ const ComponentsDatatablesTrainee = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true,
+      showCloseButton: true
     });
   };
 
@@ -208,7 +207,7 @@ const ComponentsDatatablesTrainee = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true,
+      showCloseButton: true
     });
   };
 
@@ -231,7 +230,7 @@ const ComponentsDatatablesTrainee = () => {
     joiningdate: string;
   }
 
-  const handleDeleteClick = (value: string) => {
+  const handleDeleteClick = (value) => {
     setModal2(true);
     setDeleteid(value);
   };
@@ -255,13 +254,13 @@ const ComponentsDatatablesTrainee = () => {
         gender: trainee.gender,
         address: trainee.address,
         phoneno: trainee.phoneno,
-        date: formatDate(trainee.date, true),
+        date: trainee.date,
         nameoftheschool: trainee.nameoftheschool,
         bloodgroup: trainee.bloodgroup,
         document: trainee.document,
         adhar: trainee.adhar,
         extraPractice: trainee.extraPractice,
-        joiningdate: formatDate(trainee.joiningdate, true),
+        joiningdate: formatDate(trainee.joiningdate),
       }));
 
       setInitialRecords(formattedTrainee);
@@ -279,10 +278,10 @@ const ComponentsDatatablesTrainee = () => {
     fetchTraineeData();
   }, []);
 
-  const [showAddCustomer, setShowAddCustomer] = useState<boolean>(false);
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
     columnAccessor: "_id",
-    direction: "desc",
+    direction: "desc"
   });
 
   useEffect(() => {
@@ -295,52 +294,19 @@ const ComponentsDatatablesTrainee = () => {
     setRecordsData([...initialRecords.slice(from, to)]);
   }, [page, pageSize, initialRecords]);
 
-  const formatDate = (date: string): string => {
-    if (!date) return "No Date Available";
-
-    const [day, month, year] = date.split("/");
-    const dt = new Date(`${year}-${month}-${day}`);
-
-    if (isNaN(dt.getTime())) {
-      return "Date not available";
-    }
-
-    const formattedDay = String(dt.getDate()).padStart(2, "0");
-    const formattedMonth = String(dt.getMonth() + 1).padStart(2, "0");
-    const formattedYear = dt.getFullYear();
-
-    return `${formattedDay}/${formattedMonth}/${formattedYear}`;
-  };
-
   useEffect(() => {
     const filteredRecords = initialRecords.filter((item) => {
-      // Parse the item's date of birth (format: DD/MM/YYYY)
-      const [day, month, year] = item.date.split("/").map(Number);
-      const itemDate = new Date(year, month - 1, day);
-
-      // Check if the date is within the start and end date range
+      const itemDate = dayjs(item.date).format("YYYY-MM-DD");
       const isInDateRange =
-        (!startDate || itemDate >= new Date(startDate)) &&
-        (!endDate || itemDate <= new Date(endDate));
-
-      // Calculate the age based on the current date
-      const currentDate = new Date();
-      const age = currentDate.getFullYear() - itemDate.getFullYear();
-      const monthDifference = currentDate.getMonth() - itemDate.getMonth();
+        (!startDate || dayjs(itemDate).isAfter(startDate)) &&
+        (!endDate || dayjs(itemDate).isBefore(endDate));
+      const age = ageFilter
+        ? Math.floor(dayjs().diff(dayjs(item.date), "year"))
+        : null;
       const isAgeMatch =
-        !ageFilter ||
-        monthDifference < 0 ||
-        (monthDifference === 0 && currentDate.getDate() < itemDate.getDate())
-          ? age - 1
-          : age;
-
-      // If age filter is applied, split it into the lower and upper bounds
-      const [minAge, maxAge] = ageFilter
-        ? ageFilter.split("-").map(Number)
-        : [null, null];
-      const isWithinAgeRange =
-        !ageFilter || (isAgeMatch >= minAge && isAgeMatch <= maxAge);
-
+        ageFilter &&
+        age >= parseInt(ageFilter.split("-")[0]) &&
+        age <= parseInt(ageFilter.split("-")[1]);
       const isGenderMatch = !genderFilter || item.gender === genderFilter;
       const isSportstypeMatch =
         !sportstypeFilter || item.sportstype === sportstypeFilter;
@@ -371,7 +337,7 @@ const ComponentsDatatablesTrainee = () => {
           (item.joiningdate?.toString() || "").includes(search.toLowerCase()) ||
           item.adhar?.toString().includes(search.toLowerCase())) &&
         isInDateRange &&
-        (!ageFilter || isWithinAgeRange) &&
+        (!ageFilter || isAgeMatch) &&
         isGenderMatch &&
         isSportstypeMatch &&
         isExtraPracticeMatch &&
@@ -393,10 +359,10 @@ const ComponentsDatatablesTrainee = () => {
     genderFilter,
     sportstypeFilter,
     extraPracticeFilter,
-    bloodGroupFilter,
+    bloodGroupFilter
   ]);
 
-  const handleAddCustomerClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleAddCustomerClick = (e) => {
     e.stopPropagation();
     setShowAddCustomer(!showAddCustomer);
   };
@@ -408,11 +374,48 @@ const ComponentsDatatablesTrainee = () => {
     setRecordsData(finalData.slice((page - 1) * pageSize, page * pageSize));
   }, [sortStatus, page, pageSize, initialRecords]);
 
+  const formatDate = (date) => {
+    if (!date) return "No Date Available"; // Handle missing dates
+    
+    let dt;
+  
+    // Check if the date is already a Date object
+    if (date instanceof Date) {
+      dt = date;
+    } else if (typeof date === 'string') {
+      const dateParts = date.split("/");
+      
+      if (dateParts.length === 3) {
+        // Assuming DD/MM/YYYY format
+        const [day, month, year] = dateParts;
+        dt = new Date(`${year}-${month}-${day}`);
+      } else {
+        // Assume it's in a parseable format like YYYY-MM-DD
+        dt = new Date(date);
+      }
+    } else {
+      // Handle unexpected date formats or types
+      return "Invalid Date";
+    }
+  
+    // If the date is still invalid, return a default string
+    if (isNaN(dt.getTime())) {
+      return "Invalid Date";
+    }
+  
+    const month = dt.getMonth() + 1 < 10 ? "0" + (dt.getMonth() + 1) : dt.getMonth() + 1;
+    const day = dt.getDate() < 10 ? "0" + dt.getDate() : dt.getDate();
+    return `${day}/${month}/${dt.getFullYear()}`;
+  };
+  
+  
+  
+
   const handleDeleteData = async () => {
     setModal2(false);
 
     const res = await fetch(`/api/studentform/${deleteid}`, {
-      method: "DELETE",
+      method: "DELETE"
     });
 
     if (res.ok) {
@@ -441,52 +444,50 @@ const ComponentsDatatablesTrainee = () => {
       document: "",
       adhar: "",
       extraPractice: "Yes",
-      joiningdate: formatDate(new Date().toISOString()),
+      joiningdate: formatDate(new Date()),
     });
     const options = customerData.map((customer) => ({
       value: customer._id,
       label: `${customer.firstName} ${
         customer.middleName ? customer.middleName + " " : ""
-      }${customer.lastName} - ${customer.mobile}`,
+      }${customer.lastName} - ${customer.mobile}`
     }));
     setOptions(options);
     setModal1(true);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFile(e.target.files?.[0] ?? null);
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
 
     const selectedFiles = e.target.files;
-    const newFiles = Array.from(selectedFiles ?? []);
+    const newFiles = Array.from(selectedFiles);
 
     if (files.length + newFiles.length > 1) {
       showMessage8();
     } else {
       setFiles([...files, ...newFiles]);
-      setHiddenFileName(newFiles[0]?.name ?? "");
+      setHiddenFileName(newFiles[0].name);
     }
   };
 
-  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDocumentFile(e.target.files?.[0] ?? null);
+  const handleDocumentChange = (e) => {
+    setDocumentFile(e.target.files[0]);
   };
 
-  const handleAdharChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAdharFile(e.target.files?.[0] ?? null);
+  const handleAdharChange = (e) => {
+    setAdharFile(e.target.files[0]);
   };
 
-  const handleDateChange = (date: Date[]) => {
-    const utcDate = new Date(
-      Date.UTC(date[0].getFullYear(), date[0].getMonth(), date[0].getDate())
-    );
-    const formattedDate = formatDate(utcDate.toISOString().split("T")[0]); // Format to 'YYYY-MM-DD'
-    console.log("UTC Date:", utcDate); // Log the UTC date
-    console.log("Formatted Date:", formattedDate); // Log the formatted date
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      date: formattedDate,
-    }));
+  const handleDateChange = (date) => {
+    if (date && date.length > 0) {
+      const formattedDate = dayjs(date[0]).format('DD/MM/YYYY'); // Convert to DD/MM/YYYY format
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        date: formattedDate,
+      }));
+    }
   };
+  
 
   const handleUpload = async () => {
     if (files.length === 0) {
@@ -500,14 +501,14 @@ const ComponentsDatatablesTrainee = () => {
     });
   };
 
-  const removeFile = (index: number) => {
+  const removeFile = (index) => {
     const updatedFiles = [...files];
     updatedFiles.splice(index, 1);
     setFiles(updatedFiles);
     setHiddenFileName("");
   };
 
-  const exportTable = (type: string) => {
+  const exportTable = (type) => {
     let columns = col;
     let records = initialRecords;
     let filename = "table";
@@ -529,7 +530,7 @@ const ComponentsDatatablesTrainee = () => {
           if (index > 0) {
             result += coldelimiter;
           }
-          let val = item[d as keyof Trainee] ? item[d as keyof Trainee] : "";
+          let val = item[d] ? item[d] : "";
           result += val;
         });
         result += linedelimiter;
@@ -552,7 +553,7 @@ const ComponentsDatatablesTrainee = () => {
     }
   };
 
-  const capitalize = (text: string) => {
+  const capitalize = (text) => {
     return text
       .replace("_", " ")
       .replace("-", " ")
@@ -580,75 +581,61 @@ const ComponentsDatatablesTrainee = () => {
     adhar: "",
     joiningdate: "",
     extraPractice: "Yes",
+    joiningdate: "",
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
 
     setFormData((formData) => ({
       ...formData,
-      [name]: value,
+      [name]: value
     }));
   };
 
   useEffect(() => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      id: editid,
+      id: editid
     }));
   }, [editid]);
 
-  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (event) => {
     event.preventDefault();
 
-    // Validate and format dates to DD/MM/YYYY
-    let formattedDate = "";
-    if (formData.date && dayjs(formData.date, "DD/MM/YYYY", true).isValid()) {
-      formattedDate = dayjs(formData.date, "DD/MM/YYYY").format("DD/MM/YYYY");
-    } else {
-      console.error("Invalid date format for 'date'.");
-    }
 
-    let formattedJoiningDate = "";
-    if (
-      formData.joiningdate &&
-      dayjs(formData.joiningdate, "DD/MM/YYYY", true).isValid()
-    ) {
-      formattedJoiningDate = dayjs(formData.joiningdate, "DD/MM/YYYY").format(
-        "DD/MM/YYYY"
-      );
-    } else {
-      // If joiningdate is not set, provide a default value formatted as DD/MM/YYYY
-      formattedJoiningDate = dayjs().format("DD/MM/YYYY");
-    }
 
     const formattedFormData = {
       ...formData,
-      date: formattedDate || "", // Use formatted date or an empty string
-      joiningdate: formattedJoiningDate || "", // Use formatted joining date or an empty string
+      dob: formData.dob ? formData.dob.split("/").reverse().join("-") : "",
+      joiningdate: formData.joiningdate
+        ? formData.joiningdate.split("/").reverse().join("-")
+        : "",
     };
+
+
+
+
 
     let imageName = "";
     let docname = "";
     let adhname = "";
     if (file) {
       const filename = file.name;
-      imageName = `${formData.phoneno}-${filename}`;
-      formattedFormData.image = imageName;
+      imageName = formData.phoneno + "-" + filename;
+      formData.image = imageName;
     }
 
     if (documentfile) {
       const documentfilename = documentfile.name;
-      docname = `${formData.phoneno}-${documentfilename}`;
-      formattedFormData.document = docname;
+      docname = formData.phoneno + "-" + documentfilename;
+      formData.document = docname;
     }
 
     if (adharfile) {
       const adharfilename = adharfile.name;
-      adhname = `${formData.phoneno}-${adharfilename}`;
-      formattedFormData.adhar = adhname;
+      adhname = formData.phoneno + "-" + adharfilename;
+      formData.adhar = adhname;
     }
 
     try {
@@ -658,9 +645,9 @@ const ComponentsDatatablesTrainee = () => {
       const res = await fetch(url, {
         method: method,
         headers: {
-          "Content-type": "application/json",
+          "Content-type": "application/json"
         },
-        body: JSON.stringify(formattedFormData),
+        body: JSON.stringify(formData)
       });
 
       if (res.ok) {
@@ -685,32 +672,47 @@ const ComponentsDatatablesTrainee = () => {
           }
           uploadFormData.append("imageName", imageName);
 
-          await fetch("/api/upload", {
+          const uploadRes = await fetch("/api/upload", {
             method: "POST",
-            body: uploadFormData,
+            body: uploadFormData
           });
         }
 
         if (!editid) {
           const currentDate = new Date();
+
+          // Format the current date to DD/MM/YYYY
           const day = String(currentDate.getDate()).padStart(2, "0");
-          const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+          const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Months are 0-based, so add 1
           const year = currentDate.getFullYear();
           const formattedCurrentDate = `${day}/${month}/${year}`;
 
+          // Now replace formData.joiningdate with the formatted current date
+          const [currentDay, currentMonth, currentYear] =
+            formattedCurrentDate.split("/");
+          const isoDate = `${currentYear}-${currentMonth}-${currentDay}`;
+
           const reportData = {
-            date: formattedCurrentDate,
+            date: isoDate,
             noOfNewTraineeCricket: formData.sportstype === "Cricket" ? 1 : 0,
-            noOfNewTraineeFootball: formData.sportstype === "Football" ? 1 : 0,
+            noOfNewTraineeFootball: formData.sportstype === "Football" ? 1 : 0
           };
 
-          await fetch("/api/reports", {
+          
+
+          const reportRes = await fetch("/api/reports", {
             method: "POST",
             headers: {
-              "Content-type": "application/json",
+              "Content-type": "application/json"
             },
-            body: JSON.stringify(reportData),
+            body: JSON.stringify(reportData)
           });
+
+          if (reportRes.ok) {
+            console.log("Reports updated successfully");
+          } else {
+            console.error("Failed to update reports");
+          }
         }
       } else {
         console.error("Failed to add/update trainee");
@@ -720,10 +722,10 @@ const ComponentsDatatablesTrainee = () => {
     }
   };
 
-  const handleUpdateClick = async (value: string) => {
+  const handleUpdateClick = async (value) => {
     try {
       const res = await fetch(`/api/studentform/${value}`, {
-        method: "GET",
+        method: "GET"
       });
       if (!res.ok) {
         throw new Error(`Failed to fetch data for ID: ${value}`);
@@ -741,13 +743,13 @@ const ComponentsDatatablesTrainee = () => {
           gender: data.student.gender || "",
           address: data.student.address || "",
           phoneno: data.student.phoneno || "",
-          date: data.student.date ? data.student.date : "",
+          date: data.student.date ? data.student.date.split("T")[0] : "",
           nameoftheschool: data.student.nameoftheschool || "",
           bloodgroup: data.student.bloodgroup || "",
           document: data.student.document || "",
           adhar: data.student.adhar || "",
           extraPractice: data.student.extraPractice || "Yes",
-          joiningdate: data.student.joiningdate || "",
+          joiningdate: data.student.joiningdate ? data.student.joiningdate.split("T")[0] : "",
         });
         setEditid(data.student._id);
         setModal1(true);
@@ -769,19 +771,19 @@ const ComponentsDatatablesTrainee = () => {
     setSearch("");
   };
 
-  const RenderImage = ({ row }: { row: Trainee }) => {
+  const RenderImage = ({ row }) => {
     const [imageSrc, setImageSrc] = useState("");
     const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
-      const checkImageExists = async (imageUrl: string) => {
+      const checkImageExists = async (imageUrl) => {
         try {
           const response = await fetch("/api/imagefile", {
             method: "POST",
             headers: {
-              "Content-type": "application/json",
+              "Content-type": "application/json"
             },
-            body: JSON.stringify({ url: imageUrl }),
+            body: JSON.stringify({ url: imageUrl })
           });
 
           if (!response.ok) {
@@ -829,7 +831,7 @@ const ComponentsDatatablesTrainee = () => {
     );
   };
 
-  const handleCheckboxChange = (id: string) => {
+  const handleCheckboxChange = (id) => {
     setSelectedTrainees((prevSelected) =>
       prevSelected.includes(id)
         ? prevSelected.filter((traineeId) => traineeId !== id)
@@ -844,18 +846,18 @@ const ComponentsDatatablesTrainee = () => {
   const handlePrint = () => {
     const printContent = document.getElementById("printableContent");
     const WinPrint = window.open("", "", "width=900,height=650");
-    WinPrint?.document.write(printContent?.innerHTML ?? "");
-    WinPrint?.document.close();
-    WinPrint?.focus();
-    WinPrint?.print();
-    WinPrint?.close();
+    WinPrint.document.write(printContent.innerHTML);
+    WinPrint.document.close();
+    WinPrint.focus();
+    WinPrint.print();
+    WinPrint.close();
   };
 
   const handleRemoveImage = () => {
     setFile(null);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      image: null,
+      image: null
     }));
   };
 
@@ -863,7 +865,7 @@ const ComponentsDatatablesTrainee = () => {
     setDocumentFile(null);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      document: null,
+      document: null
     }));
   };
 
@@ -871,7 +873,7 @@ const ComponentsDatatablesTrainee = () => {
     setAdharFile(null);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      adhar: null,
+      adhar: null
     }));
   };
 
@@ -879,18 +881,18 @@ const ComponentsDatatablesTrainee = () => {
     const doc = new jsPDF();
     const startY = 90;
 
-    const getOrdinalSuffix = (n: number) => {
+    const getOrdinalSuffix = (n) => {
       const s = ["th", "st", "nd", "rd"],
         v = n % 100;
       return n + (s[(v - 20) % 10] || s[v] || s[0]);
     };
 
-    const formatDate = (date: Date) => {
+    const formatDate = (date) => {
       const options = {
         weekday: "long",
         year: "numeric",
         month: "long",
-        day: "numeric",
+        day: "numeric"
       };
       const formattedDate = new Intl.DateTimeFormat("en-US", options).format(
         date
@@ -899,7 +901,7 @@ const ComponentsDatatablesTrainee = () => {
       return formattedDate.replace(day, getOrdinalSuffix(day));
     };
 
-    const formatTraineeDate = (date: string) => {
+    const formatTraineeDate = (date) => {
       const d = new Date(date);
       const day = String(d.getDate()).padStart(2, "0");
       const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -907,7 +909,7 @@ const ComponentsDatatablesTrainee = () => {
       return `${day}/${month}/${year}`;
     };
 
-    const formatTime = (time: string) => {
+    const formatTime = (time) => {
       const [hour, minute] = time.split(":");
       const hourInt = parseInt(hour, 10);
       const ampm = hourInt >= 12 ? "pm" : "am";
@@ -921,24 +923,24 @@ const ComponentsDatatablesTrainee = () => {
     logoImg.onload = () => {
       doc.addImage(logoImg, "PNG", 10, 10, 20, 20);
 
-      doc.setFontSize(22);
-      doc.text("PALLISREE", 105, 10, { align: "center" });
+      doc.setFontSize(18);
+      doc.text("PALLISREE", 105, 30, { align: "center" });
 
       doc.setFontSize(12);
       const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
-      doc.text(additionalText, 105, 15, { align: "center" });
+      doc.text(additionalText, 105, 35, { align: "center" });
 
       doc.setFontSize(10);
       if (eventType === "Tournament") {
         doc.text("Tournament: " + tournamentName, 15, 70);
         doc.text("Ground: " + groundName, 15, 75);
-        doc.text("Date: " + formatDate(tournamentDate!), 15, 80);
+        doc.text("Date: " + formatDate(tournamentDate), 15, 80);
         doc.text("Reporting Time: " + formatTime(time), 15, 85);
         doc.text("Note: " + note, 15, 90);
       } else if (eventType === "Camp") {
         doc.text("Camp: " + campName, 15, 70);
         doc.text("Camp Type: " + campType, 15, 75);
-        doc.text("Date: " + formatDate(campDate!), 15, 80);
+        doc.text("Date: " + formatDate(campDate), 15, 80);
         doc.text("Reporting Time: " + formatTime(time), 15, 85);
         doc.text("Note: " + note, 15, 90);
       }
@@ -949,15 +951,15 @@ const ComponentsDatatablesTrainee = () => {
           index + 1,
           trainee.name,
           trainee.phoneno,
-          trainee.date,
-          trainee.image,
+          formatTraineeDate(trainee.date),
+          trainee.image
         ];
       });
 
       autoTable(doc, {
         startY: startY + 10,
         head: [["No", "Name", "Phone No", "DOB"]],
-        body: rows,
+        body: rows
       });
 
       doc.save("selected_trainees.pdf");
@@ -971,7 +973,7 @@ const ComponentsDatatablesTrainee = () => {
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, delete them!",
+      confirmButtonText: "Yes, delete them!"
     }).then((result) => {
       if (result.isConfirmed) {
         handleDeleteSelectedTrainees();
@@ -983,7 +985,7 @@ const ComponentsDatatablesTrainee = () => {
     try {
       for (let id of selectedTrainees) {
         const res = await fetch(`/api/studentform/${id}`, {
-          method: "DELETE",
+          method: "DELETE"
         });
 
         if (!res.ok) {
@@ -999,7 +1001,7 @@ const ComponentsDatatablesTrainee = () => {
         position: "bottom-start",
         showConfirmButton: false,
         timer: 5000,
-        showCloseButton: true,
+        showCloseButton: true
       });
     } catch (error) {
       console.error(error);
@@ -1011,7 +1013,7 @@ const ComponentsDatatablesTrainee = () => {
         position: "bottom-start",
         showConfirmButton: false,
         timer: 5000,
-        showCloseButton: true,
+        showCloseButton: true
       });
     }
   };
@@ -1084,7 +1086,7 @@ const ComponentsDatatablesTrainee = () => {
                                   <div
                                     style={{
                                       position: "relative",
-                                      display: "flex",
+                                      display: "flex"
                                     }}
                                   >
                                     <img
@@ -1104,7 +1106,7 @@ const ComponentsDatatablesTrainee = () => {
                                         borderRadius: "50%",
                                         width: "24px",
                                         height: "24px",
-                                        cursor: "pointer",
+                                        cursor: "pointer"
                                       }}
                                     >
                                       &times;
@@ -1268,6 +1270,7 @@ const ComponentsDatatablesTrainee = () => {
                                   onChange={handleChange}
                                   className="form-input"
                                   value={formData.phoneno}
+                                  maxLength={10} // Restrict input to 10 digits
                                   required
                                 />
                               </div>
@@ -1277,11 +1280,10 @@ const ComponentsDatatablesTrainee = () => {
                                   id="date"
                                   value={formData.date}
                                   required
+                                  
                                   options={{
                                     dateFormat: "d/m/Y",
-                                    position: isRtl
-                                      ? "auto right"
-                                      : "auto left",
+                                    position: isRtl ? "auto right" : "auto left"
                                   }}
                                   className="form-input"
                                   onChange={handleDateChange}
@@ -1330,17 +1332,15 @@ const ComponentsDatatablesTrainee = () => {
                                   value={formData.joiningdate}
                                   options={{
                                     dateFormat: "d/m/Y",
-                                    position: isRtl
-                                      ? "auto right"
-                                      : "auto left",
+                                    position: isRtl ? "auto right" : "auto left"
                                   }}
                                   className="form-input"
                                   onChange={(date) =>
                                     setFormData((prevFormData) => ({
                                       ...prevFormData,
                                       joiningdate: date[0]
-                                        ? formatDate(date[0].toISOString())
-                                        : "",
+                                        ? formatDate(date[0])
+                                        : ""
                                     }))
                                   }
                                 />
@@ -1351,7 +1351,7 @@ const ComponentsDatatablesTrainee = () => {
                                   <div
                                     style={{
                                       position: "relative",
-                                      display: "flex",
+                                      display: "flex"
                                     }}
                                   >
                                     <a
@@ -1360,7 +1360,7 @@ const ComponentsDatatablesTrainee = () => {
                                       rel="noopener noreferrer"
                                       style={{
                                         textDecoration: "none",
-                                        color: "blue",
+                                        color: "blue"
                                       }}
                                     >
                                       View Document
@@ -1377,7 +1377,7 @@ const ComponentsDatatablesTrainee = () => {
                                         borderRadius: "50%",
                                         width: "24px",
                                         height: "24px",
-                                        cursor: "pointer",
+                                        cursor: "pointer"
                                       }}
                                     >
                                       &times;
@@ -1404,7 +1404,7 @@ const ComponentsDatatablesTrainee = () => {
                                   <div
                                     style={{
                                       position: "relative",
-                                      display: "flex",
+                                      display: "flex"
                                     }}
                                   >
                                     <a
@@ -1413,7 +1413,7 @@ const ComponentsDatatablesTrainee = () => {
                                       rel="noopener noreferrer"
                                       style={{
                                         textDecoration: "none",
-                                        color: "blue",
+                                        color: "blue"
                                       }}
                                     >
                                       View Aadhaar
@@ -1430,7 +1430,7 @@ const ComponentsDatatablesTrainee = () => {
                                         borderRadius: "50%",
                                         width: "24px",
                                         height: "24px",
-                                        cursor: "pointer",
+                                        cursor: "pointer"
                                       }}
                                     >
                                       &times;
@@ -1519,7 +1519,6 @@ const ComponentsDatatablesTrainee = () => {
 
       <div className="mb-4 flex flex-wrap gap-4 sm:flex-col md:flex-row">
         <Flatpickr
-          value={startDate} // Bind to startDate state
           options={{ dateFormat: "d/m/Y" }}
           className="form-input w-full sm:w-auto"
           placeholder="Start Date"
@@ -1527,9 +1526,7 @@ const ComponentsDatatablesTrainee = () => {
             setStartDate(date[0] ? date[0].toISOString() : null)
           }
         />
-
         <Flatpickr
-          value={endDate} // Bind to endDate state
           options={{ dateFormat: "d/m/Y" }}
           className="form-input w-full sm:w-auto"
           placeholder="End Date"
@@ -1597,16 +1594,7 @@ const ComponentsDatatablesTrainee = () => {
 
         <button
           className="btn btn-secondary w-full sm:w-auto"
-          onClick={() => {
-            setStartDate(null);
-            setEndDate(null);
-            setAgeFilter("");
-            setGenderFilter("");
-            setSportstypeFilter("");
-            setExtraPracticeFilter("");
-            setBloodGroupFilter("");
-            setSearch("");
-          }}
+          onClick={handleClearFilters}
         >
           Clear
         </button>
@@ -1627,12 +1615,12 @@ const ComponentsDatatablesTrainee = () => {
                   checked={selectedTrainees.includes(row.id)}
                   onChange={() => handleCheckboxChange(row.id)}
                 />
-              ),
+              )
             },
             {
               accessor: "image",
               sortable: true,
-              render: (row) => <RenderImage row={row} />,
+              render: (row) => <RenderImage row={row} />
             },
             {
               accessor: "name",
@@ -1645,24 +1633,24 @@ const ComponentsDatatablesTrainee = () => {
                 >
                   {row.name}
                 </button>
-              ),
+              )
             },
             { accessor: "sportstype", title: "Sports type", sortable: true },
             {
               accessor: "extraPractice",
               title: "Extra Practice",
-              sortable: true,
+              sortable: true
             },
             { accessor: "fathersname", title: "Fathers Name", sortable: true },
             {
               accessor: "guardiansname",
               title: "Guardians name",
-              sortable: true,
+              sortable: true
             },
             {
               accessor: "guardiansoccupation",
               title: "Occupation",
-              sortable: true,
+              sortable: true
             },
             { accessor: "gender", sortable: true },
             {
@@ -1672,24 +1660,19 @@ const ComponentsDatatablesTrainee = () => {
                 <Tippy content={row.address}>
                   <span>{truncateAddress(row.address)}</span>
                 </Tippy>
-              ),
+              )
             },
             { accessor: "phoneno", sortable: true },
             {
               accessor: "date",
               title: "DOB",
               sortable: true,
-              render: (row) => {
-                const formattedDate = formatDate(row.date);
-                return formattedDate !== "Date not available"
-                  ? formattedDate
-                  : "Date not available";
-              },
+              render: (row) => formatDate(row.date)
             },
 
             { accessor: "nameoftheschool", title: "School", sortable: true },
             { accessor: "bloodgroup", title: "Blood", sortable: true },
-            { accessor: "joiningdate", title: "Joining date", sortable: true },
+            { accessor: "joiningdate", title: "Joining date", sortable: true, },
             {
               accessor: "Certificate",
               sortable: true,
@@ -1710,7 +1693,7 @@ const ComponentsDatatablesTrainee = () => {
                     </button>
                   </Tippy>
                 </div>
-              ),
+              )
             },
             {
               accessor: "adhar",
@@ -1733,7 +1716,7 @@ const ComponentsDatatablesTrainee = () => {
                     </button>
                   </Tippy>
                 </div>
-              ),
+              )
             },
             {
               accessor: "action",
@@ -1771,8 +1754,8 @@ const ComponentsDatatablesTrainee = () => {
                     </button>
                   </Tippy>
                 </div>
-              ),
-            },
+              )
+            }
           ]}
           totalRecords={initialRecords.length}
           recordsPerPage={pageSize}
@@ -1960,7 +1943,7 @@ const ComponentsDatatablesTrainee = () => {
                 as={Fragment}
                 enter="ease-out duration-300"
                 enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
+                enterTo="opacity-100"
                 leave="ease-in duration-200"
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
@@ -1986,23 +1969,130 @@ const ComponentsDatatablesTrainee = () => {
                       </svg>
                     </button>
                   </div>
-                  <div className="p-5">
-                    <ul>
-                      {selectedTrainees.map((traineeId) => {
-                        const trainee = initialRecords.find(
-                          (t) => t.id === traineeId
-                        );
-                        return (
-                          <li key={traineeId} className="mb-2">
-                            <span>{trainee?.name}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    <div className="mt-8 flex items-center justify-end">
+                  <div className="p-5" id="printableContent">
+                    <div className="mb-4">
+                      <label htmlFor="eventType">Event Type</label>
+                      <select
+                        id="eventType"
+                        className="form-select"
+                        value={eventType}
+                        onChange={(e) => setEventType(e.target.value)}
+                      >
+                        <option value="Tournament">Tournament</option>
+                        <option value="Camp">Camp</option>
+                      </select>
+                    </div>
+
+                    {eventType === "Tournament" && (
+                      <>
+                        <div className="mb-4">
+                          <label htmlFor="tournamentName">
+                            Tournament Name
+                          </label>
+                          <input
+                            id="tournamentName"
+                            type="text"
+                            className="form-input"
+                            value={tournamentName}
+                            onChange={(e) => setTournamentName(e.target.value)}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="groundName">Ground Name</label>
+                          <input
+                            id="groundName"
+                            type="text"
+                            className="form-input"
+                            value={groundName}
+                            onChange={(e) => setGroundName(e.target.value)}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="tournamentDate">
+                            Tournament Date
+                          </label>
+                          <DatePicker
+                            id="tournamentDate"
+                            selected={tournamentDate}
+                            onChange={(date) => setTournamentDate(date)}
+                            dateFormat="dd/MM/yyyy"
+                            className="form-input"
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="time">Time</label>
+                          <input
+                            id="time"
+                            type="time"
+                            className="form-input"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {eventType === "Camp" && (
+                      <>
+                        <div className="mb-4">
+                          <label htmlFor="campName">Camp Name</label>
+                          <input
+                            id="campName"
+                            type="text"
+                            className="form-input"
+                            value={campName}
+                            onChange={(e) => setCampName(e.target.value)}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="campType">Camp Type</label>
+                          <select
+                            id="campType"
+                            className="form-select"
+                            value={campType}
+                            onChange={(e) => setCampType(e.target.value)}
+                          >
+                            <option value="18Trial">18 Trial</option>
+                            <option value="15Trial">15 Trial</option>
+                            <option value="Division">Division</option>
+                            <option value="District">District</option>
+                          </select>
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="campDate">Camp Date</label>
+                          <DatePicker
+                            id="campDate"
+                            selected={campDate}
+                            onChange={(date) => setCampDate(date)}
+                            dateFormat="dd/MM/yyyy"
+                            className="form-input"
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="time">Time</label>
+                          <input
+                            id="time"
+                            type="time"
+                            className="form-input"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div className="mb-4">
+                      <label htmlFor="note">Note</label>
+                      <textarea
+                        id="note"
+                        className="form-input"
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex justify-end">
                       <button
-                        type="button"
-                        className="btn btn-outline-danger"
+                        className="btn btn-primary"
                         onClick={handleGeneratePDF}
                       >
                         Generate PDF
