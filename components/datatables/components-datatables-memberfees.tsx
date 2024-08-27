@@ -1073,33 +1073,34 @@ const ComponentsDatatablesMemberfees = () => {
                                 />
                               </div>
                               <div>
-                                <label htmlFor="member">Member</label>
-                                <div>
-                                  <Select
-                                    placeholder="Select an option"
-                                    options={options}
-                                    value={
-                                      formData.member
-                                        ? options.find(
-                                            (option) =>
-                                              option.value === formData.member
-                                          )
-                                        : null
-                                    }
-                                    required
-                                    onChange={(t) => {
-                                      const memberName = getFirstName(t.label);
-                                      setCustomerName(memberName);
-                                      console.log(t.value);
-                                      setCustomerId(t.value);
-                                      setFormData((prevFormData) => ({
-                                        ...prevFormData,
-                                        member: t.value // Correctly update the member in formData
-                                      }));
-                                    }}
-                                  />
-                                </div>
-                              </div>
+  <label htmlFor="member">Member</label>
+  {editId ? (
+    <label>{options.find((option) => option.value === formData.member)?.label}</label>
+  ) : (
+    <div>
+      <Select
+        placeholder="Select an option"
+        options={options}
+        value={
+          formData.member
+            ? options.find((option) => option.value === formData.member)
+            : null
+        }
+        required
+        onChange={(t) => {
+          const memberName = getFirstName(t.label);
+          setCustomerName(memberName);
+          setCustomerId(t.value);
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            member: t.value,
+          }));
+        }}
+      />
+    </div>
+  )}
+</div>
+
 
                               <div>
                                 <label htmlFor="year">Year</label>
