@@ -1,57 +1,41 @@
-import { NextResponse } from "next/server";
-import noticeModel from "@/models/notice";
+import noticeModel from "@/models/notice"; // Update the model import to your Notice model
 import connectDB from "@/config/database";
-import { ObjectId } from "mongodb";
+import { NextResponse } from "next/server";
 
-// Set CORS headers
 async function setCORSHeaders(response: NextResponse) {
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set(
     "Access-Control-Allow-Methods",
-    "GET, PUT, DELETE, OPTIONS"
+    "POST, GET, DELETE, PUT, OPTIONS"
   );
   response.headers.set("Access-Control-Allow-Headers", "Content-Type");
   return response;
 }
 
-// Handle OPTIONS request for CORS preflight
 export async function OPTIONS() {
   let response = NextResponse.json({}, { status: 200 });
   setCORSHeaders(response);
   return response;
 }
 
-// Handle GET request - Retrieve a single notice by ID
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request) {
   try {
+    const requestBody = await request.json();
+    console.log("Received POST request data:", requestBody); // Logging the POST data
+
     await connectDB();
+    const newNotice = await noticeModel.create(requestBody); // Use the notice model for creation
 
-    // Validate the ID format
-    if (!ObjectId.isValid(params.id)) {
-      return NextResponse.json(
-        { message: "Invalid notice ID" },
-        { status: 400 }
-      );
-    }
-
-    const notice = await noticeModel.findById(params.id).populate("trainees");
-    if (!notice) {
-      return NextResponse.json(
-        { message: "Notice not found" },
-        { status: 404 }
-      );
-    }
-
-    let response = NextResponse.json({ notice }, { status: 200 });
+    let response = NextResponse.json(
+      { message: "Notice Created" }, // Adjust the success message
+      { status: 201 }
+    );
     setCORSHeaders(response);
     return response;
   } catch (error) {
-    console.error("Failed to retrieve notice:", error.message, error.stack);
+    console.error("Failed to create notice:", error); // Adjust error logging
     let response = NextResponse.json(
-      { message: "Internal Server Error", error: error.message },
+      { message: "Internal Server Error" },
       { status: 500 }
     );
     setCORSHeaders(response);
@@ -59,48 +43,18 @@ export async function GET(
   }
 }
 
-// Handle PUT request - Update a specific notice by ID
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET() {
   try {
-    const updateData = await req.json();
     await connectDB();
+    const notices = await noticeModel.find(); // Fetch all notices
 
-    // Validate the ID format
-    if (!ObjectId.isValid(params.id)) {
-      return NextResponse.json(
-        { message: "Invalid notice ID" },
-        { status: 400 }
-      );
-    }
-
-    const updatedNotice = await noticeModel.findByIdAndUpdate(
-      params.id,
-      updateData,
-      {
-        new: true,
-      }
-    );
-
-    if (!updatedNotice) {
-      return NextResponse.json(
-        { message: "Notice not found" },
-        { status: 404 }
-      );
-    }
-
-    let response = NextResponse.json(
-      { message: "Notice Updated", notice: updatedNotice },
-      { status: 200 }
-    );
+    let response = NextResponse.json({ notices }, { status: 200 });
     setCORSHeaders(response);
     return response;
   } catch (error) {
-    console.error("Failed to update notice:", error.message, error.stack);
+    console.error("Failed to get notices:", error); // Adjust error logging
     let response = NextResponse.json(
-      { message: "Internal Server Error", error: error.message },
+      { message: "Internal Server Error" },
       { status: 500 }
     );
     setCORSHeaders(response);
@@ -108,30 +62,12 @@ export async function PUT(
   }
 }
 
-// Handle DELETE request - Delete a specific notice by ID
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+// Implement DELETE and PUT methods if needed
+export async function DELETE(request: Request) {
   try {
+    const { id } = await request.json(); // Assuming the request contains the ID of the notice to delete
     await connectDB();
-
-    // Validate the ID format
-    if (!ObjectId.isValid(params.id)) {
-      return NextResponse.json(
-        { message: "Invalid notice ID" },
-        { status: 400 }
-      );
-    }
-
-    const deletedNotice = await noticeModel.findByIdAndDelete(params.id);
-
-    if (!deletedNotice) {
-      return NextResponse.json(
-        { message: "Notice not found" },
-        { status: 404 }
-      );
-    }
+    await noticeModel.findByIdAndDelete(id);
 
     let response = NextResponse.json(
       { message: "Notice Deleted" },
@@ -140,9 +76,34 @@ export async function DELETE(
     setCORSHeaders(response);
     return response;
   } catch (error) {
-    console.error("Failed to delete notice:", error.message, error.stack);
+    console.error("Failed to delete notice:", error);
     let response = NextResponse.json(
-      { message: "Internal Server Error", error: error.message },
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+    setCORSHeaders(response);
+    return response;
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const { id, ...updateData } = await request.json(); // Extracting the ID and update data from the request
+    await connectDB();
+    const updatedNotice = await noticeModel.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    let response = NextResponse.json(
+      { message: "Notice Updated", notice: updatedNotice },
+      { status: 200 }
+    );
+    setCORSHeaders(response);
+    return response;
+  } catch (error) {
+    console.error("Failed to update notice:", error);
+    let response = NextResponse.json(
+      { message: "Internal Server Error" },
       { status: 500 }
     );
     setCORSHeaders(response);
