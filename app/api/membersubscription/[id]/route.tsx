@@ -62,12 +62,9 @@ export async function PUT(
     const { id } = params;
     const {
       billNo,
-      member,
-      memberid,
       year,
       date,
       monthsSelected,
-
       subscriptionType,
       amount,
       paymentType,
@@ -76,16 +73,14 @@ export async function PUT(
     } = await request.json();
 
     await connectDB();
+
     const updatedSubscription = await Subscription.findByIdAndUpdate(
       id,
       {
         billNo,
-        member,
-        memberid,
         year,
         date,
         monthsSelected,
-
         subscriptionType,
         amount,
         paymentType,
@@ -120,6 +115,7 @@ export async function PUT(
     return response;
   }
 }
+
 
 // DELETE method to delete a subscription by ID
 export async function DELETE(
