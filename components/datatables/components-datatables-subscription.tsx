@@ -32,8 +32,8 @@ const initialRowData = [
     monthsSelected: [{ month: "January", amount: 50 }],
     extraPracticeMonthsSelected: [{ month: "January", amount: 30 }],
     subscriptionType: [{ type: "Monthly", amount: 50 }],
-    amount: "O+",
-  },
+    amount: "O+"
+  }
 ];
 
 const col = [
@@ -45,7 +45,7 @@ const col = [
   "monthsSelected",
   "extraPracticeMonthsSelected",
   "subscriptionType",
-  "amount",
+  "amount"
 ];
 
 const years = ["2024", "2025", "2026", "2027", "2028", "2029", "2030"];
@@ -61,7 +61,7 @@ const subscriptionOptions = [
   { value: "Donation", label: "Donation" },
   { value: "Concession", label: "Concession" },
   { value: "Discount", label: "Discount" },
-  { value: "Misc.", label: "Misc." },
+  { value: "Misc.", label: "Misc." }
 ];
 
 const allMonthsOptions = [
@@ -76,7 +76,7 @@ const allMonthsOptions = [
   { value: "September", label: "September" },
   { value: "October", label: "October" },
   { value: "November", label: "November" },
-  { value: "December", label: "December" },
+  { value: "December", label: "December" }
 ];
 
 const ComponentsDatatablesSubscription = () => {
@@ -131,7 +131,7 @@ const ComponentsDatatablesSubscription = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true,
+      showCloseButton: true
     });
   };
 
@@ -142,7 +142,7 @@ const ComponentsDatatablesSubscription = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true,
+      showCloseButton: true
     });
   };
 
@@ -153,7 +153,7 @@ const ComponentsDatatablesSubscription = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true,
+      showCloseButton: true
     });
   };
 
@@ -222,7 +222,7 @@ const ComponentsDatatablesSubscription = () => {
           amount: subscription.amount,
           paymentType: subscription.paymentType,
           transactionNo: subscription.transactionNo,
-          utrNo: subscription.utrNo,
+          utrNo: subscription.utrNo
         })
       );
 
@@ -251,7 +251,7 @@ const ComponentsDatatablesSubscription = () => {
         value: trainee._id,
         label: `${trainee.name} - ${trainee.phoneno}`,
         extraPractice: trainee.extraPractice, // Include extraPractice in options
-        joiningDate: trainee.joiningdate, // Include joiningDate in options
+        joiningDate: trainee.joiningdate // Include joiningDate in options
       }));
       setOptions(options);
     } catch (error) {
@@ -300,7 +300,7 @@ const ComponentsDatatablesSubscription = () => {
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
     columnAccessor: "_id",
-    direction: "desc",
+    direction: "desc"
   });
 
   useEffect(() => {
@@ -366,7 +366,7 @@ const ComponentsDatatablesSubscription = () => {
 
   const handleDeleteData = async () => {
     const resdel = await fetch(`/api/subscription/${deleteid}`, {
-      method: "GET",
+      method: "GET"
     });
     if (!resdel.ok) {
       throw new Error(`Failed to fetch data for ID: ${deleteid}`);
@@ -375,21 +375,21 @@ const ComponentsDatatablesSubscription = () => {
 
     const reportData2 = {
       date: data.subscription.date,
-      expense: parseFloat(data.subscription.amount),
+      expense: parseFloat(data.subscription.amount)
     };
 
     await fetch("/api/reports", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
-      body: JSON.stringify(reportData2),
+      body: JSON.stringify(reportData2)
     });
 
     setModal2(false);
 
     const res = await fetch(`/api/subscription/${deleteid}`, {
-      method: "DELETE",
+      method: "DELETE"
     });
 
     if (res.ok) {
@@ -422,7 +422,7 @@ const ComponentsDatatablesSubscription = () => {
       amount: "",
       paymentType: "cash", // Set default payment type to cash
       transactionNo: "",
-      utrNo: "",
+      utrNo: ""
     });
     setPaymentType("cash"); // Set default payment type to cash
     setTransactionNo("");
@@ -434,7 +434,7 @@ const ComponentsDatatablesSubscription = () => {
   const handleDateChange = (date: any) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      date: date[0] ? formatDate(date[0]) : "",
+      date: date[0] ? formatDate(date[0]) : ""
     }));
   };
 
@@ -506,7 +506,7 @@ const ComponentsDatatablesSubscription = () => {
     amount: "",
     paymentType: "cash", // Set default payment type to cash
     transactionNo: "",
-    utrNo: "",
+    utrNo: ""
   });
 
   const handleChange = (e: any) => {
@@ -514,7 +514,7 @@ const ComponentsDatatablesSubscription = () => {
 
     setFormData((formData) => ({
       ...formData,
-      [name]: value,
+      [name]: value
     }));
   };
 
@@ -523,7 +523,7 @@ const ComponentsDatatablesSubscription = () => {
     updatedMonths[index].amount = value;
     setFormData((prevFormData) => ({
       ...prevFormData,
-      monthsSelected: updatedMonths,
+      monthsSelected: updatedMonths
     }));
   };
 
@@ -532,7 +532,7 @@ const ComponentsDatatablesSubscription = () => {
     updatedMonths[index].amount = value;
     setFormData((prevFormData) => ({
       ...prevFormData,
-      extraPracticeMonthsSelected: updatedMonths,
+      extraPracticeMonthsSelected: updatedMonths
     }));
   };
 
@@ -549,7 +549,7 @@ const ComponentsDatatablesSubscription = () => {
     updatedTypes[index].amount = amount;
     setFormData((prevFormData) => ({
       ...prevFormData,
-      subscriptionType: updatedTypes,
+      subscriptionType: updatedTypes
     }));
   };
 
@@ -557,12 +557,12 @@ const ComponentsDatatablesSubscription = () => {
     const selectedValues = selectedOptions
       ? selectedOptions.map((option: any) => ({
           month: option.value,
-          amount: regularMonthlyFee,
+          amount: regularMonthlyFee
         }))
       : [];
     setFormData((prevFormData) => ({
       ...prevFormData,
-      monthsSelected: selectedValues,
+      monthsSelected: selectedValues
     }));
   };
 
@@ -570,12 +570,12 @@ const ComponentsDatatablesSubscription = () => {
     const selectedValues = selectedOptions
       ? selectedOptions.map((option: any) => ({
           month: option.value,
-          amount: extraPracticeFee,
+          amount: extraPracticeFee
         }))
       : [];
     setFormData((prevFormData) => ({
       ...prevFormData,
-      extraPracticeMonthsSelected: selectedValues,
+      extraPracticeMonthsSelected: selectedValues
     }));
   };
 
@@ -596,20 +596,20 @@ const ComponentsDatatablesSubscription = () => {
           }
           return {
             type: option.value,
-            amount,
+            amount
           };
         })
       : [];
     setFormData((prevFormData) => ({
       ...prevFormData,
-      subscriptionType: selectedValues,
+      subscriptionType: selectedValues
     }));
   };
 
   useEffect(() => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      id: editid,
+      id: editid
     }));
   }, [editid]);
 
@@ -632,12 +632,12 @@ const ComponentsDatatablesSubscription = () => {
     };
     setFormData((prevFormData) => ({
       ...prevFormData,
-      amount: calculateTotalAmount(),
+      amount: calculateTotalAmount()
     }));
   }, [
     formData.monthsSelected,
     formData.extraPracticeMonthsSelected,
-    formData.subscriptionType,
+    formData.subscriptionType
   ]);
 
   const handleFormSubmit = async (event: any) => {
@@ -662,7 +662,7 @@ const ComponentsDatatablesSubscription = () => {
       traineeid: cutomerid,
       paymentType,
       transactionNo,
-      utrNo,
+      utrNo
     };
 
     const reportData = {
@@ -672,7 +672,7 @@ const ComponentsDatatablesSubscription = () => {
       noOfNewTraineeCricket: 0,
       noOfNewTraineeFootball: 0,
       noOfNewClubMember: 0,
-      profitAndLoss: parseFloat(formattedFormData.amount),
+      profitAndLoss: parseFloat(formattedFormData.amount)
     };
 
     if (!editid) {
@@ -680,9 +680,9 @@ const ComponentsDatatablesSubscription = () => {
         const res = await fetch("/api/subscription", {
           method: "POST",
           headers: {
-            "Content-type": "application/json",
+            "Content-type": "application/json"
           },
-          body: JSON.stringify(formattedFormData),
+          body: JSON.stringify(formattedFormData)
         });
 
         if (res.ok) {
@@ -692,9 +692,9 @@ const ComponentsDatatablesSubscription = () => {
           await fetch("/api/reports", {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": "application/json"
             },
-            body: JSON.stringify(reportData),
+            body: JSON.stringify(reportData)
           });
         }
       } catch (error) {
@@ -711,23 +711,23 @@ const ComponentsDatatablesSubscription = () => {
 
         const reportData1 = {
           date: formattedFormData.date,
-          income: parseFloat(newamout),
+          income: parseFloat(newamout)
         };
 
         await fetch("/api/reports", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
           },
-          body: JSON.stringify(reportData1),
+          body: JSON.stringify(reportData1)
         });
 
         const res = await fetch(url, {
           method: "PUT",
           headers: {
-            "Content-type": "application/json",
+            "Content-type": "application/json"
           },
-          body: JSON.stringify(formattedFormData),
+          body: JSON.stringify(formattedFormData)
         });
 
         if (!res.ok) {
@@ -748,7 +748,7 @@ const ComponentsDatatablesSubscription = () => {
     try {
       console.log(value);
       const res = await fetch(`/api/subscription/${value}`, {
-        method: "GET",
+        method: "GET"
       });
       if (!res.ok) {
         throw new Error(`Failed to fetch data for ID: ${value}`);
@@ -775,7 +775,7 @@ const ComponentsDatatablesSubscription = () => {
         monthsSelected: Array.isArray(data.subscription.monthsSelected)
           ? data.subscription.monthsSelected.map((month) => ({
               ...month,
-              amount: month.amount || regularMonthlyFee,
+              amount: month.amount || regularMonthlyFee
             }))
           : [],
         extraPracticeMonthsSelected: Array.isArray(
@@ -783,7 +783,7 @@ const ComponentsDatatablesSubscription = () => {
         )
           ? data.subscription.extraPracticeMonthsSelected.map((month) => ({
               ...month,
-              amount: month.amount || extraPracticeFee,
+              amount: month.amount || extraPracticeFee
             }))
           : [],
         subscriptionType: Array.isArray(data.subscription.subscriptionType)
@@ -794,10 +794,10 @@ const ComponentsDatatablesSubscription = () => {
                   ? admissionFee
                   : type.type === "Development Fees"
                   ? developmentFee
-                  : type.amount,
+                  : type.amount
             }))
           : [],
-        date: formatDate(data.subscription.date),
+        date: formatDate(data.subscription.date)
       });
       setUamount(data.subscription.amount);
 
@@ -862,7 +862,7 @@ const ComponentsDatatablesSubscription = () => {
         doc.addImage(logoImg, "PNG", 15, startY, 20, 20);
         doc.setFontSize(10);
         doc.text(`Bill No: ${row.billNo}`, 190, startY + 5, {
-          align: "right",
+          align: "right"
         });
         doc.text(`Date: ${row.date}`, 190, startY + 10, { align: "right" });
         doc.setFontSize(22);
@@ -910,7 +910,7 @@ const ComponentsDatatablesSubscription = () => {
           headStyles: { fillColor: [0, 0, 139] },
           columnStyles: { 2: { halign: "right" } },
           styles: { fontSize: 10 },
-          alternateRowStyles: { fillColor: [240, 240, 240] },
+          alternateRowStyles: { fillColor: [240, 240, 240] }
         });
 
         const totalAmount =
@@ -932,7 +932,7 @@ const ComponentsDatatablesSubscription = () => {
         doc.setFont("bold");
         doc.text("Total Amount", 15, totalAmountStartY + 5);
         doc.text(`Rs. ${totalAmount} INR`, 190, totalAmountStartY + 5, {
-          align: "right",
+          align: "right"
         });
 
         doc.line(10, totalAmountStartY, 200, totalAmountStartY);
@@ -1173,7 +1173,7 @@ const ComponentsDatatablesSubscription = () => {
                                         setFormData((prevFormData) => ({
                                           ...prevFormData,
                                           trainee: t.value,
-                                          traineeid: t.value,
+                                          traineeid: t.value
                                         }));
                                         await updateUsedMonths(
                                           t.value,
@@ -1187,19 +1187,25 @@ const ComponentsDatatablesSubscription = () => {
 
                               <div>
                                 <label htmlFor="date">Date</label>
-                                <Flatpickr
-                                  id="date"
-                                  value={formData.date}
-                                  options={{
-                                    dateFormat: "d/m/Y",
-                                    position: isRtl
-                                      ? "auto right"
-                                      : "auto left",
-                                  }}
-                                  className="form-input"
-                                  onChange={handleDateChange}
-                                  required
-                                />
+                                <div>
+                                  {editid ? (
+                                    <label>{formData.date}</label> // Display the date as fixed text if in edit mode
+                                  ) : (
+                                    <Flatpickr
+                                      id="date"
+                                      value={formData.date}
+                                      options={{
+                                        dateFormat: "d/m/Y",
+                                        position: isRtl
+                                          ? "auto right"
+                                          : "auto left"
+                                      }}
+                                      className="form-input"
+                                      onChange={handleDateChange}
+                                      required
+                                    />
+                                  )}
+                                </div>
                               </div>
                               <div>
                                 <label htmlFor="monthsSelected">
@@ -1218,7 +1224,7 @@ const ComponentsDatatablesSubscription = () => {
                                   value={formData.monthsSelected.map(
                                     (month) => ({
                                       value: month.month,
-                                      label: month.month,
+                                      label: month.month
                                     })
                                   )}
                                   className="form-select"
@@ -1271,7 +1277,7 @@ const ComponentsDatatablesSubscription = () => {
                                     value={formData.extraPracticeMonthsSelected.map(
                                       (month) => ({
                                         value: month.month,
-                                        label: month.month,
+                                        label: month.month
                                       })
                                     )}
                                     className="form-select"
@@ -1316,7 +1322,7 @@ const ComponentsDatatablesSubscription = () => {
                                   value={formData.subscriptionType.map(
                                     (type) => ({
                                       value: type.type,
-                                      label: type.type,
+                                      label: type.type
                                     })
                                   )}
                                   className="form-select"
@@ -1467,7 +1473,7 @@ const ComponentsDatatablesSubscription = () => {
               render: ({ monthsSelected }) =>
                 monthsSelected
                   .map((month) => `${month.month}: ${month.amount}`)
-                  .join(", "),
+                  .join(", ")
             },
             {
               accessor: "extraPracticeMonthsSelected",
@@ -1476,7 +1482,7 @@ const ComponentsDatatablesSubscription = () => {
               render: ({ extraPracticeMonthsSelected }) =>
                 extraPracticeMonthsSelected
                   .map((month) => `${month.month}: ${month.amount}`)
-                  .join(", "),
+                  .join(", ")
             },
             {
               accessor: "subscriptionType",
@@ -1485,23 +1491,23 @@ const ComponentsDatatablesSubscription = () => {
               render: ({ subscriptionType }) =>
                 subscriptionType
                   .map((type) => `${type.type}: ${type.amount}`)
-                  .join(", "),
+                  .join(", ")
             },
             { accessor: "amount", sortable: true },
             {
               accessor: "paymentType",
               title: "Payment Type",
-              sortable: true,
+              sortable: true
             },
             {
               accessor: "transactionNo",
               title: "Transaction No",
-              sortable: true,
+              sortable: true
             },
             {
               accessor: "utrNo",
               title: "UTR No",
-              sortable: true,
+              sortable: true
             },
             {
               accessor: "action",
@@ -1539,8 +1545,8 @@ const ComponentsDatatablesSubscription = () => {
                     </button>
                   </Tippy>
                 </div>
-              ),
-            },
+              )
+            }
           ]}
           totalRecords={initialRecords.length}
           recordsPerPage={pageSize}
