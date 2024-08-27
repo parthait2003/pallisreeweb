@@ -4,7 +4,10 @@ import { NextResponse } from "next/server";
 
 async function setCORSHeaders(response) {
   response.headers.set("Access-Control-Allow-Origin", "*");
-  response.headers.set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS");
+  response.headers.set(
+    "Access-Control-Allow-Methods",
+    "POST, GET, DELETE, OPTIONS"
+  );
   response.headers.set("Access-Control-Allow-Headers", "Content-Type");
   return response;
 }
@@ -26,7 +29,7 @@ export async function POST(request) {
     } = await request.json();
 
     if (!date) {
-      throw new Error('Date is required');
+      throw new Error("Date is required");
     }
 
     const expenseNumber = Number(expense);
@@ -45,7 +48,8 @@ export async function POST(request) {
       existingReport.noOfNewTraineeCricket += noOfNewTraineeCricketNumber;
       existingReport.noOfNewTraineeFootball += noOfNewTraineeFootballNumber;
       existingReport.noOfNewClubMember += noOfNewClubMemberNumber;
-      existingReport.profitAndLoss = existingReport.income - existingReport.expense;
+      existingReport.profitAndLoss =
+        existingReport.income - existingReport.expense;
 
       await existingReport.save();
 
@@ -81,19 +85,38 @@ export async function POST(request) {
     );
   }
 }
-
-export async function GET() {
+function convertToISODate(dateString: string): string {
+  const [day, month, year] = dateString.split("/");
+  return `${year}-${month}-${day}`;
+}
+// Handle GET request to fetch reports, optionally filtered by date
+export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    const reports = await Report.find();
 
-    const response = NextResponse.json({ reports });
+    const { searchParams } = new URL(request.url);
+    const date = searchParams.get("date");
+
+    console.log("GET" + date);
+    let query = {};
+
+    if (date) {
+      query = {
+        date: convertToISODate(date),
+      };
+    }
+    console.log("GET query:", query);
+
+    const reports = await Report.find(query);
+
+    const response = NextResponse.json({ reports }, { status: 200 });
     return setCORSHeaders(response);
   } catch (error) {
     console.error("Failed to get reports:", error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { message: "Internal Server Error", error: error.message },
       { status: 500 }
     );
+    return setCORSHeaders(response);
   }
 }
