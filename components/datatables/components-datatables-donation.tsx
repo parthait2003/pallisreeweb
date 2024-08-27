@@ -29,7 +29,7 @@ const showMessage8 = () => {
     position: "bottom-start",
     showConfirmButton: false,
     timer: 5000,
-    showCloseButton: true
+    showCloseButton: true,
   });
 };
 
@@ -42,8 +42,8 @@ const initialRowData = [
     date: "2004-05-28",
     purpose: "rtjjkrihj",
     amount: "100",
-    paymentType: "otyhjklrdt"
-  }
+    paymentType: "otyhjklrdt",
+  },
 ];
 
 const col = [
@@ -54,7 +54,7 @@ const col = [
   "date",
   "purpose",
   "amount",
-  "paymentType"
+  "paymentType",
 ];
 
 const ComponentsDatatablesDonation = () => {
@@ -112,7 +112,7 @@ const ComponentsDatatablesDonation = () => {
     if (date && date[0]) {
       setFormData((prevFormData) => ({
         ...prevFormData,
-        date: formatDate(date[0])
+        date: formatDate(date[0]),
       }));
     }
   };
@@ -124,7 +124,7 @@ const ComponentsDatatablesDonation = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true
+      showCloseButton: true,
     });
   };
 
@@ -135,7 +135,7 @@ const ComponentsDatatablesDonation = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true
+      showCloseButton: true,
     });
   };
 
@@ -146,7 +146,7 @@ const ComponentsDatatablesDonation = () => {
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true
+      showCloseButton: true,
     });
   };
 
@@ -190,7 +190,7 @@ const ComponentsDatatablesDonation = () => {
         transactionNo: donation.transactionNo,
         utrNo: donation.utrNo,
         chequeNo: donation.chequeNo,
-        draftNo: donation.draftNo
+        draftNo: donation.draftNo,
       }));
 
       setInitialRecords(formattedDonation);
@@ -212,7 +212,7 @@ const ComponentsDatatablesDonation = () => {
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
     columnAccessor: "_id",
-    direction: "desc"
+    direction: "desc",
   });
 
   useEffect(() => {
@@ -259,7 +259,7 @@ const ComponentsDatatablesDonation = () => {
     setModal2(false);
 
     const res = await fetch(`/api/donation/${deleteid}`, {
-      method: "DELETE"
+      method: "DELETE",
     });
 
     if (res.ok) {
@@ -285,7 +285,7 @@ const ComponentsDatatablesDonation = () => {
       transactionNo: "",
       utrNo: "",
       chequeNo: "",
-      draftNo: ""
+      draftNo: "",
     });
     setModal1(true);
   };
@@ -326,7 +326,7 @@ const ComponentsDatatablesDonation = () => {
     transactionNo: "",
     utrNo: "",
     chequeNo: "",
-    draftNo: ""
+    draftNo: "",
   });
 
   const handleChange = (e) => {
@@ -334,7 +334,7 @@ const ComponentsDatatablesDonation = () => {
 
     setFormData((formData) => ({
       ...formData,
-      [name]: value
+      [name]: value,
     }));
 
     if (name === "paymentType") {
@@ -352,14 +352,14 @@ const ComponentsDatatablesDonation = () => {
       : [];
     setFormData((prevFormData) => ({
       ...prevFormData,
-      monthsSelected: selectedValues
+      monthsSelected: selectedValues,
     }));
   };
 
   useEffect(() => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      id: editid
+      id: editid,
     }));
   }, [editid]);
 
@@ -368,7 +368,7 @@ const ComponentsDatatablesDonation = () => {
 
     const formattedFormData = {
       ...formData,
-      date: formData.date ? formData.date.split("/").reverse().join("-") : ""
+      date: formData.date ? formData.date.split("/").reverse().join("-") : "",
     };
 
     try {
@@ -385,9 +385,9 @@ const ComponentsDatatablesDonation = () => {
         response = await fetch("/api/donation", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify(formattedFormData)
+          body: JSON.stringify(formattedFormData),
         });
 
         if (response.ok) {
@@ -402,7 +402,7 @@ const ComponentsDatatablesDonation = () => {
 
             const res = await fetch("/api/uploadexp", {
               method: "POST",
-              body: uploadFormData
+              body: uploadFormData,
             });
 
             if (res.ok) {
@@ -420,15 +420,15 @@ const ComponentsDatatablesDonation = () => {
             noOfNewTraineeCricket: 0,
             noOfNewTraineeFootball: 0,
             noOfNewClubMember: 0,
-            profitAndLoss: parseFloat(formattedFormData.amount)
+            profitAndLoss: parseFloat(formattedFormData.amount),
           };
 
           await fetch("/api/reports", {
             method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
             },
-            body: JSON.stringify(reportData)
+            body: JSON.stringify(reportData),
           });
         } else {
           console.log("Failed to add new donation:", await response.json());
@@ -440,9 +440,9 @@ const ComponentsDatatablesDonation = () => {
         response = await fetch(url, {
           method: "PUT",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify(formattedFormData)
+          body: JSON.stringify(formattedFormData),
         });
 
         if (response.ok) {
@@ -451,9 +451,7 @@ const ComponentsDatatablesDonation = () => {
           updatedDonation();
 
           // Fetch the report for the specific date to update it
-          const reportResponse = await fetch(
-            `/api/reports?date=${formattedFormData.date}`
-          );
+          const reportResponse = await fetch(`/api/reports?date=${updatedate}`);
           const reportData = await reportResponse.json();
 
           console.log(
@@ -462,8 +460,8 @@ const ComponentsDatatablesDonation = () => {
             reportData
           );
 
-          if (reportData && reportData.length > 0) {
-            const existingReport = reportData[0];
+          if (reportData.reports && reportData.reports.length > 0) {
+            const existingReport = reportData.reports[0];
 
             console.log("Existing report found:", existingReport);
 
@@ -472,7 +470,7 @@ const ComponentsDatatablesDonation = () => {
               ...existingReport,
               income: parseFloat(formattedFormData.amount),
               profitAndLoss:
-                parseFloat(formattedFormData.amount) - existingReport.expense
+                parseFloat(formattedFormData.amount) - existingReport.expense,
             };
 
             const reportUpdateResponse = await fetch(
@@ -480,9 +478,9 @@ const ComponentsDatatablesDonation = () => {
               {
                 method: "PUT",
                 headers: {
-                  "Content-Type": "application/json"
+                  "Content-Type": "application/json",
                 },
-                body: JSON.stringify(updatedReport)
+                body: JSON.stringify(updatedReport),
               }
             );
 
@@ -506,15 +504,15 @@ const ComponentsDatatablesDonation = () => {
               noOfNewTraineeCricket: 0,
               noOfNewTraineeFootball: 0,
               noOfNewClubMember: 0,
-              profitAndLoss: parseFloat(formattedFormData.amount)
+              profitAndLoss: parseFloat(formattedFormData.amount),
             };
 
             const newReportResponse = await fetch("/api/reports", {
               method: "POST",
               headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
               },
-              body: JSON.stringify(newReportData)
+              body: JSON.stringify(newReportData),
             });
 
             if (newReportResponse.ok) {
@@ -539,7 +537,7 @@ const ComponentsDatatablesDonation = () => {
     try {
       console.log("Fetching data for ID:", value);
       const res = await fetch(`/api/donation/${value}`, {
-        method: "GET"
+        method: "GET",
       });
       if (!res.ok) {
         throw new Error(`Failed to fetch data for ID: ${value}`);
@@ -560,7 +558,7 @@ const ComponentsDatatablesDonation = () => {
         utrNo: data.donation.utrNo,
         chequeNo: data.donation.chequeNo,
         draftNo: data.donation.draftNo,
-        date: formatDate(data.donation.date)
+        date: formatDate(data.donation.date),
       });
 
       setPaymentType(data.donation.paymentType || "cash");
@@ -588,7 +586,7 @@ const ComponentsDatatablesDonation = () => {
           transactionNo: donation.transactionNo,
           utrNo: donation.utrNo,
           chequeNo: donation.chequeNo,
-          draftNo: donation.draftNo
+          draftNo: donation.draftNo,
         });
         setPaymentType(donation.paymentType); // Ensure paymentType state is updated when editid changes
       }
@@ -598,7 +596,7 @@ const ComponentsDatatablesDonation = () => {
   const handleAddRow = () => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      things: [...prevFormData.things, { name: "", amount: "" }]
+      things: [...prevFormData.things, { name: "", amount: "" }],
     }));
   };
 
@@ -626,7 +624,7 @@ const ComponentsDatatablesDonation = () => {
         doc.setFontSize(12);
         doc.text(`Bill No: ${row.billNo}`, 200, startY, { align: "right" });
         doc.text(`Date: ${new Date().toLocaleDateString()}`, 200, startY + 5, {
-          align: "right"
+          align: "right",
         });
 
         // Define table data
@@ -636,8 +634,8 @@ const ComponentsDatatablesDonation = () => {
             row.name,
             row.purpose,
             row.type.charAt(0).toUpperCase() + row.type.slice(1),
-            row.amount
-          ]
+            row.amount,
+          ],
         ];
 
         // Add full-width table
@@ -649,9 +647,9 @@ const ComponentsDatatablesDonation = () => {
           tableWidth: doc.internal.pageSize.getWidth() - 20, // Adjust width to be full-page minus margins
           styles: {
             halign: "center",
-            cellWidth: "wrap"
+            cellWidth: "wrap",
           },
-          margin: { left: 10, right: 10 } // Ensuring there is a little margin on each side
+          margin: { left: 10, right: 10 }, // Ensuring there is a little margin on each side
         });
 
         // Get position to add total and payment type
@@ -765,8 +763,6 @@ const ComponentsDatatablesDonation = () => {
                                 </select>
                               </div>
 
-                             
-
                               <div>
                                 <label htmlFor="name">Name</label>
                                 <div>
@@ -800,7 +796,7 @@ const ComponentsDatatablesDonation = () => {
                                         dateFormat: "d/m/Y",
                                         position: isRtl
                                           ? "auto right"
-                                          : "auto left"
+                                          : "auto left",
                                       }}
                                       className="form-input"
                                       onChange={handleDateChange}
@@ -969,7 +965,7 @@ const ComponentsDatatablesDonation = () => {
             {
               accessor: "transactionNo",
               title: "Transaction No",
-              sortable: true
+              sortable: true,
             },
             { accessor: "utrNo", title: "UTR No", sortable: true },
             { accessor: "chequeNo", title: "Cheque No", sortable: true },
@@ -1008,8 +1004,8 @@ const ComponentsDatatablesDonation = () => {
                     </button>
                   </Tippy>
                 </div>
-              )
-            }
+              ),
+            },
           ]}
           totalRecords={initialRecords.length}
           recordsPerPage={pageSize}
