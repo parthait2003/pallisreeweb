@@ -60,7 +60,6 @@ export async function PUT(
     const {
       type,
       name,
-      date,
       purpose,
       amount,
       paymentType,
@@ -72,12 +71,12 @@ export async function PUT(
     } = await request.json();
 
     await connectDB();
+
     const updatedDonation = await Donation.findByIdAndUpdate(
       id,
       {
         type,
         name,
-        date,
         purpose,
         amount,
         paymentType,
@@ -86,6 +85,7 @@ export async function PUT(
         chequeNo,
         draftNo,
         billNo,
+        // date is intentionally omitted to prevent it from being updated
       },
       { new: true }
     );
@@ -115,6 +115,7 @@ export async function PUT(
     return response;
   }
 }
+
 
 // DELETE method to delete a donation by ID
 export async function DELETE(
