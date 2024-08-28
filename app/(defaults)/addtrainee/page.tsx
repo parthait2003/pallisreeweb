@@ -168,11 +168,8 @@ const AddTraineePage = () => {
     }
   
     try {
-      const url = "/api/studentform";
-      const method = "POST";
-  
-      const res = await fetch(url, {
-        method: method,
+      const res = await fetch("/api/studentform", {
+        method: "POST",
         headers: {
           "Content-type": "application/json",
         },
@@ -193,22 +190,14 @@ const AddTraineePage = () => {
           }
           uploadFormData.append("imageName", imageName);
   
-          const uploadRes = await fetch("/api/upload", {
+          await fetch("/api/upload", {
             method: "POST",
             body: uploadFormData,
           });
         }
   
-        const currentDate = new Date();
-        const day = String(currentDate.getDate()).padStart(2, "0");
-        const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-        const year = currentDate.getFullYear();
-        const formattedCurrentDate = `${day}/${month}/${year}`;
-  
-        const isoDate = `${year}-${month}-${day}`;
-  
         const reportData = {
-          date: isoDate,
+          date: formattedFormData.joiningdate, // Use joiningdate here
           noOfNewTraineeCricket: formData.sportstype === "Cricket" ? 1 : 0,
           noOfNewTraineeFootball: formData.sportstype === "Football" ? 1 : 0,
         };
