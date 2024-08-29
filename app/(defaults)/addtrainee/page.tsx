@@ -137,7 +137,33 @@ const AddTraineePage = () => {
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-  
+
+    // Check if the phone number already exists
+    try {
+      const checkRes = await fetch("/api/checktrainee", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify({ phoneno: formData.phoneno }),
+      });
+
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (checkData.exists) {
+          Swal.fire({
+            icon: "error",
+            title: "This trainee already exists",
+            text: "A trainee with this phone number is already in the database.",
+          });
+          return; // Stop the form submission if the trainee exists
+        }
+      }
+    } catch (error) {
+      console.error("Error checking trainee:", error);
+      return;
+    }
+
     const formattedFormData = {
       ...formData,
       dob: formData.dob ? formData.dob.split("/").reverse().join("-") : "",
@@ -338,7 +364,7 @@ const AddTraineePage = () => {
             type="text"
             value={formData.guardiansname}
             onChange={handleChange}
-            className="form-input mt-1 block w/full"
+            className="form-input mt-1 block w-full"
             placeholder="Enter guardian's name"
             required
           />
