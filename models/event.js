@@ -77,6 +77,12 @@ const eventSchema = new mongoose.Schema({
       return this.eventType === 'Notice';
     },
   },
+
+  // Automatically capture the creation date and time
+  createdAt: {
+    type: Date,
+    default: Date.now, // Set the default value to the current date and time
+  },
 });
 
 // Check if the model exists before creating a new one to avoid model compilation errors
