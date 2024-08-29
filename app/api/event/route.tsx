@@ -1,7 +1,7 @@
 // /app/api/event/route.ts
 
 import connectDB from "@/config/database";
-import Event from "@/models/Event";
+import Event from "@/models/event";
 import { NextResponse } from "next/server";
 
 // Set CORS headers
