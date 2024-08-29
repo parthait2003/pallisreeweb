@@ -1,24 +1,13 @@
 import mongoose from 'mongoose';
 
 const eventSchema = new mongoose.Schema({
-  campLocation: {
+  eventType: {
     type: String,
     required: true,
-  },
-  campName: {
-    type: String,
-    required: true,
-  },
-  campNote: {
-    type: String,
-    required: false,
+    enum: ['Camp', 'Tournament', 'Notice'], // Restrict to known event types
   },
   date: {
     type: Date,
-    required: true,
-  },
-  eventType: {
-    type: String,
     required: true,
   },
   time: {
@@ -32,6 +21,62 @@ const eventSchema = new mongoose.Schema({
       required: true,
     },
   ],
+
+  // Fields for Camp events
+  campLocation: {
+    type: String,
+    required: function() {
+      return this.eventType === 'Camp';
+    },
+  },
+  campName: {
+    type: String,
+    required: function() {
+      return this.eventType === 'Camp';
+    },
+  },
+  campNote: {
+    type: String,
+    required: false,
+  },
+
+  // Fields for Tournament events
+  tournamentName: {
+    type: String,
+    required: function() {
+      return this.eventType === 'Tournament';
+    },
+  },
+  tournamentLocation: {
+    type: String,
+    required: function() {
+      return this.eventType === 'Tournament';
+    },
+  },
+  tournamentNote: {
+    type: String,
+    required: false,
+  },
+
+  // Fields for Notice events
+  noticeTitle: {
+    type: String,
+    required: function() {
+      return this.eventType === 'Notice';
+    },
+  },
+  noticeDesc: {
+    type: String,
+    required: function() {
+      return this.eventType === 'Notice';
+    },
+  },
+  assignedBy: {
+    type: String,
+    required: function() {
+      return this.eventType === 'Notice';
+    },
+  },
 });
 
 // Check if the model exists before creating a new one to avoid model compilation errors
