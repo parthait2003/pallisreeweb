@@ -125,7 +125,6 @@ export async function POST(request: Request) {
         case "Camp":
           doc.text(`Camp Name: ${eventData.campName}`, 15, 60);
           doc.text(`Camp Location: ${eventData.campLocation}`, 15, 65);
-
           doc.text(`Camp Note: ${eventData.campNote || "N/A"}`, 15, 70);
           break;
         case "Tournament":
@@ -138,7 +137,7 @@ export async function POST(request: Request) {
           doc.text(`Note: ${eventData.tournamentNote || "N/A"}`, 15, 70);
           break;
         case "Notice":
-          doc.text(`Notice Name: ${eventData.noticeName}`, 15, 60);
+          doc.text(`Notice Title: ${eventData.noticeTitle}`, 15, 60);
           doc.text(
             `Notice Description: ${eventData.noticeDesc || "N/A"}`,
             15,
