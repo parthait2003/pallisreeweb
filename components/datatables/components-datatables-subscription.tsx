@@ -554,31 +554,131 @@ const ComponentsDatatablesSubscription = () => {
   };
 
   const handleMonthsSelectedChange = (selectedOptions: any) => {
+    // Retrieve all available options (filtered options)
+    const allOptions = getMonthOptions(formData.year)
+      .filter((month) => !usedMonths.includes(month.value))
+      .map((month) => ({
+        value: month.value,
+        label: month.label,
+      }));
+
+    // Map selected options to include the month and amount
     const selectedValues = selectedOptions
       ? selectedOptions.map((option: any) => ({
           month: option.value,
-          amount: regularMonthlyFee
+          amount: regularMonthlyFee,
         }))
       : [];
+
+    // Skip the sequential check if in edit mode
+    if (!editid) {
+      // Check if selected options are sequential
+      const isSequential = selectedValues.every((selected, index) => {
+        return selected.month === allOptions[index].value;
+      });
+
+      if (!isSequential) {
+        MySwal.fire({
+          title: "Invalid Selection",
+          text: "Selected months must start sequentially from the first available month.",
+          icon: "warning",
+          showConfirmButton: true,
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "animate__animated animate__shakeX", // Applying shake animation
+          },
+        });
+
+        // Reset the dropdown to the last valid state
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          // Restore to previous valid selection
+          monthsSelected: prevFormData.monthsSelected,
+        }));
+
+        return;
+      }
+    }
+
+    // Update the form data state with the selected values
     setFormData((prevFormData) => ({
       ...prevFormData,
-      monthsSelected: selectedValues
+      monthsSelected: selectedValues,
     }));
+
+    // Call the function to handle all available options
+    handleShowAllOptions(allOptions, selectedValues);
+  };
+
+  // Example function to handle all available options
+  const handleShowAllOptions = (allOptions: any, selectedOptions: any) => {
+    console.log("All available options:", allOptions);
+    console.log("Selected options:", selectedOptions);
+    // Implement your logic here for handling all options
   };
 
   const handleExtraPracticeMonthsSelectedChange = (selectedOptions: any) => {
+    // Retrieve all available options (filtered options) for extra practice
+    const extraAllOptions = getMonthOptions(formData.year)
+      .filter((month) => !usedExtraPracticeMonths.includes(month.value))
+      .map((month) => ({
+        value: month.value,
+        label: month.label,
+      }));
+
+    // Map selected options to include the month and amount for extra practice
     const selectedValues = selectedOptions
       ? selectedOptions.map((option: any) => ({
           month: option.value,
-          amount: extraPracticeFee
+          amount: extraPracticeFee,
         }))
       : [];
+
+    // Skip the sequential check if in edit mode
+    if (!editid) {
+      // Check if selected options are sequential
+      const isSequential = selectedValues.every((selected, index) => {
+        return selected.month === extraAllOptions[index].value;
+      });
+
+      if (!isSequential) {
+        MySwal.fire({
+          title: "Invalid Selection",
+          text: "Selected months for Extra Practice must start sequentially from the first available month.",
+          icon: "warning",
+          showConfirmButton: true,
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "animate__animated animate__shakeX", // Applying animation
+          },
+        });
+
+        // Reset the dropdown to the last valid state
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          // Restore to previous valid selection for extra practice
+          extraPracticeMonthsSelected: prevFormData.extraPracticeMonthsSelected,
+        }));
+
+        return;
+      }
+    }
+
+    // Update the form data state with the selected values
     setFormData((prevFormData) => ({
       ...prevFormData,
-      extraPracticeMonthsSelected: selectedValues
+      extraPracticeMonthsSelected: selectedValues,
     }));
+
+    // Call the function to handle all available options for extra practice
+    handleShowAllOptions(extraAllOptions, selectedValues);
   };
 
+  const handleeShowAllOptions = (allOptions: any, selectedOptions: any) => {
+    console.log("All available options:", allOptions);
+    console.log("Selected options:", selectedOptions);
+    // Implement your logic here for handling all options
+  };
   const handleSubscriptionChange = (selectedOptions: any) => {
     const selectedValues = selectedOptions
       ? selectedOptions.map((option: any) => {
@@ -985,37 +1085,52 @@ const ComponentsDatatablesSubscription = () => {
     const [day, month, year] = dateString.split("/").map(Number);
     return new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
   };
-  const getMonthOptions = (year) => {
+  const getMonthOptions = (year, lastSelectedMonth) => {
     if (joiningDate) {
       const joiningYear = new Date(joiningDate).getFullYear();
       const joiningMonth = new Date(joiningDate).getMonth(); // 0-indexed
-
+  
       if (parseInt(year) < joiningYear) {
         // If the selected year is before the joining year, show no months
         return [];
       }
-
+  
+      let startMonthIndex;
+  
       if (year === "2024") {
         // For 2024, start from April if joiningDate is before April
         const aprilIndex = 3; // April's index
-        const startMonthIndex =
-          joiningMonth > aprilIndex ? joiningMonth + 1 : aprilIndex;
-        return allMonthsOptions.filter(
-          (month, index) => index >= startMonthIndex
-        );
+        startMonthIndex = joiningMonth > aprilIndex ? joiningMonth + 1 : aprilIndex;
       } else if (parseInt(year) === joiningYear) {
         // If the selected year matches the joining year, start from the month after the joining month
-        const startMonthIndex = joiningMonth + 1;
-        return allMonthsOptions.filter(
-          (month, index) => index >= startMonthIndex
-        );
+        startMonthIndex = joiningMonth + 1;
       } else {
         // If the selected year is after the joining year, all months are available
-        return allMonthsOptions;
+        startMonthIndex = 0; // Allow all months
       }
+  
+      let availableMonths = allMonthsOptions.filter(
+        (month, index) => index >= startMonthIndex
+      );
+  
+      if (lastSelectedMonth) {
+        const lastSelectedMonthIndex = allMonthsOptions.findIndex(
+          (month) => month.value === lastSelectedMonth
+        );
+  
+        if (lastSelectedMonthIndex !== -1) {
+          availableMonths = availableMonths.filter(
+            (month, index) => index >= lastSelectedMonthIndex
+          );
+        }
+      }
+  
+      return availableMonths;
     }
+  
     return allMonthsOptions;
   };
+  
 
   return (
     <div className="panel mt-6">
