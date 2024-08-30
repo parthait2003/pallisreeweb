@@ -614,17 +614,44 @@ const ComponentsDatatablesMemberfees = () => {
   };
 
   const handleMonthsSelectedChange = (selectedOptions: any) => {
+    if (selectedOptions && selectedOptions.length > 0) {
+      const firstMonthOption = monthOptions[0]; // Get the first month in the list
+      const selectedMonth = selectedOptions[selectedOptions.length - 1]; // Get the last selected month
+  
+      // Check if the selected month is not the first month
+      if (selectedMonth.value !== firstMonthOption.value) {
+        MySwal.fire({
+          title: "Invalid Selection",
+          text: `Selected months must start sequentially from the first available month.`,
+          icon: "warning",
+          showConfirmButton: true,
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "swal2-custom-popup",
+            icon: "swal2-custom-icon",
+            confirmButton: "swal2-custom-button",
+            title: "swal2-custom-title",
+            htmlContainer: "swal2-custom-text",
+          },
+        });
+        return; // Prevent selection of other months
+      }
+    }
+  
     const selectedValues = selectedOptions
       ? selectedOptions.map((option: any) => ({
           month: option.value,
           amount: settings.membershipfee // Using membershipfee instead of regularmonthlyfee
         }))
       : [];
+  
     setFormData((prevFormData) => ({
       ...prevFormData,
       monthsSelected: selectedValues
     }));
   };
+
+  
 
   const handleSubscriptionChange = (selectedOptions: any) => {
     const selectedValues = selectedOptions
