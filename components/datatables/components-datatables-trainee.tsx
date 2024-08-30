@@ -1,14 +1,17 @@
 "use client";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import { useRouter } from "next/navigation";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useState, Fragment, useRef } from "react";
 import sortBy from "lodash/sortBy";
 import IconFile from "@/components/icon/icon-file";
 import { Dialog, Transition } from "@headlessui/react";
 import IconPrinter from "@/components/icon/icon-printer";
-import IconPlus from "@/components/icon/icon-plus";
-import axios from "axios";
+import IconPlus from "../icon/icon-plus";
+import IconXCircle from "@/components/icon/icon-x-circle";
+import IconPencil from "@/components/icon/icon-pencil";
+import IconBince from "@/components/icon/icon-bookmark";
+import IconAadhaar from "@/components/icon/icon-aadhaar";
+import IconDOB from "@/components/icon/icon-dob";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/flatpickr.css";
 import { useSelector } from "react-redux";
@@ -17,88 +20,94 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
-import IconXCircle from "@/components/icon/icon-x-circle";
-import IconPencil from "@/components/icon/icon-pencil";
-import Select from "react-select";
+import "styles/globals.css";
+import dayjs from "dayjs";
+import Papa from "papaparse";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import IconMagnifyingGlass from "@/components/icon/icon-magnifying-glass";
+import { FaSearch } from "react-icons/fa";
 
 const MySwal = withReactContent(Swal);
 
 const initialRowData = [
   {
     id: "989",
-    billNo: 7500,
-    trainee: "Caroline",
+    image: "iweiofthuji",
+    sportstype: "cricket",
+    name: "Caroline",
+    fathersname: "John",
+    guardiansname: "Rahul",
+    guardiansoccupation: "Service",
+    gender: "Female",
+    address: "kolkata",
+    phoneno: "123456",
     date: "2004-05-28",
-    monthsSelected: [{ month: "January", amount: 50 }],
-    extraPracticeMonthsSelected: [{ month: "January", amount: 30 }],
-    subscriptionType: [{ type: "Monthly", amount: 50 }],
-    amount: "O+"
-  }
+    nameoftheschool: "ABC",
+    bloodgroup: "O+",
+    document: "likgjrtdk",
+    adhar: "hjklfhkjsh",
+    extraPractice: "Yes",
+    joiningdate: "2004-05-28",
+  },
 ];
 
 const col = [
-  "billNo",
   "id",
-  "trainee",
-  "year",
+  "image",
+  "sportstype",
+  "name",
+  "fathersname",
+  "guardiansname",
+  "guardiansoccupation",
+  "gender",
+  "address",
+  "phoneno",
   "date",
-  "monthsSelected",
-  "extraPracticeMonthsSelected",
-  "subscriptionType",
-  "amount"
+  "nameoftheschool",
+  "bloodgroup",
+  "document",
+  "adhar",
+  "extraPractice",
+  "joiningdate",
 ];
 
-const years = ["2024", "2025", "2026", "2027", "2028", "2029", "2030"];
+const Bloods = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-const subscriptionOptions = [
-  { value: "Admission fees", label: "Admission fees" },
-  { value: "Development Fees", label: "Development Fees" },
-  { value: "Ball", label: "Ball" },
-  { value: "Tshirt.", label: "Tshirt" },
-  { value: "Cap", label: "Cap" },
-  { value: "Hat.", label: "Hat" },
-  { value: "Trackpant", label: "Trackpant" },
-  { value: "Donation", label: "Donation" },
-  { value: "Concession", label: "Concession" },
-  { value: "Discount", label: "Discount" },
-  { value: "Misc.", label: "Misc." }
-];
+const Genders = ["Female", "Male"];
 
-const allMonthsOptions = [
-  { value: "January", label: "January" },
-  { value: "February", label: "February" },
-  { value: "March", label: "March" },
-  { value: "April", label: "April" },
-  { value: "May", label: "May" },
-  { value: "June", label: "June" },
-  { value: "July", label: "July" },
-  { value: "August", label: "August" },
-  { value: "September", label: "September" },
-  { value: "October", label: "October" },
-  { value: "November", label: "November" },
-  { value: "December", label: "December" }
-];
+const Sports = ["Cricket", "Football"];
 
-const ComponentsDatatablesSubscription = () => {
-  const currentYear = new Date().getFullYear().toString();
+const truncateAddress = (address) => {
+  const words = address.split(" ");
+  return words.length > 2 ? `${words.slice(0, 2).join(" ")}...` : address;
+};
+
+const parseDate = (dateString) => {
+  const [day, month, year] = dateString.split("/").map(Number);
+  return new Date(year, month - 1, day); // month is 0-indexed in JS Date
+};
+
+const ComponentsDatatablesTrainee = () => {
   const [file, setFile] = useState(null);
+  const [documentfile, setDocumentFile] = useState(null);
+  const [adharfile, setAdharFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [message, setMessage] = useState("");
   const isRtl =
     useSelector((state: IRootState) => state.themeConfig.rtlClass) === "rtl";
   const [date1, setDate1] = useState("2022-07-05");
   const [modal1, setModal1] = useState(false);
-  const [files, setFiles] = useState([]);
-  const fileInputRef = useRef(null);
   const [page, setPage] = useState(1);
-  const PAGE_SIZES = [10, 20, 30, 50, 100];
+  const PAGE_SIZES = [10, 20, 30, 50, 100, 500, 1000];
   const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
   const [initialRecords, setInitialRecords] = useState(
     sortBy(initialRowData, "id")
   );
   const [recordsData, setRecordsData] = useState(initialRecords);
   const [customerData, setCustomerData] = useState([]);
-  const [cutomerid, setcutomerid] = useState("");
-  const [cutomerName, setcutomerName] = useState("");
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -107,133 +116,128 @@ const ComponentsDatatablesSubscription = () => {
   const [recordsDatasort, setRecordsDatashort] = useState("dsc");
   const [modal2, setModal2] = useState(false);
   const [editid, setEditid] = useState("");
-  const [uamount, setUamount] = useState("");
   const [deleteid, setDeleteid] = useState("");
-  const [traineeData, setTraineeData] = useState([]);
-  const [usedMonths, setUsedMonths] = useState([]);
-  const [usedExtraPracticeMonths, setUsedExtraPracticeMonths] = useState([]);
-  const [usedYears, setUsedYears] = useState([]);
-  const [regularMonthlyFee, setRegularMonthlyFee] = useState(0);
-  const [extraPracticeFee, setExtraPracticeFee] = useState(0);
-  const [admissionFee, setAdmissionFee] = useState(0);
-  const [developmentFee, setDevelopmentFee] = useState(0);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [ageFilter, setAgeFilter] = useState("");
+  const [genderFilter, setGenderFilter] = useState("");
+  const [sportstypeFilter, setSportstypeFilter] = useState("");
+  const [extraPracticeFilter, setExtraPracticeFilter] = useState("");
+  const [bloodGroupFilter, setBloodGroupFilter] = useState("");
+  const [showCsvUpload, setShowCsvUpload] = useState(false);
+  const [csvFile, setCsvFile] = useState(null);
+  const [selectedTrainees, setSelectedTrainees] = useState([]);
+  const [showSelectedTrainees, setShowSelectedTrainees] = useState(false);
+  const [tournamentName, setTournamentName] = useState("");
+  const [groundName, setGroundName] = useState("");
+  const [tournamentDate, setTournamentDate] = useState("");
+  const [note, setNote] = useState("");
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [traineeDetails, setTraineeDetails] = useState(null);
+  const [feesDetails, setFeesDetails] = useState(null);
+  const [eventType, setEventType] = useState("Tournament"); // New state for dropdown
+  const [campName, setCampName] = useState("");
+  const [campType, setCampType] = useState("");
+  const [campDate, setCampDate] = useState(null);
+  const [time, setTime] = useState("");
+  const router = useRouter();
 
-  const [paymentType, setPaymentType] = useState("cash");
-  const [transactionNo, setTransactionNo] = useState("");
-  const [utrNo, setUtrNo] = useState("");
-  const [extraPractice, setExtraPractice] = useState(false); // New state for extra practice
-  const [joiningDate, setJoiningDate] = useState<Date | null>(null);
+  const handleViewClick = (id) => {
+    router.push(`/viewtrainee/${id}`);
+  };
+
+  const handleCsvFileChange = (e) => {
+    setCsvFile(e.target.files[0]);
+  };
+
+  const handleCsvUpload = () => {
+    if (!csvFile) return;
+
+    const formData = new FormData();
+    formData.append("file", csvFile);
+
+    fetch("/api/uploadcsv", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.message === "CSV uploaded and student forms created") {
+          MySwal.fire({
+            title: `Total ${data.importedCount} records will be imported`,
+            toast: true,
+            position: "bottom-start",
+            showConfirmButton: false,
+            timer: 5000,
+            showCloseButton: true,
+          });
+          newTraineeadded();
+          fetchTraineeData();
+          setShowCsvUpload(false);
+        } else {
+          console.error("Failed to upload CSV data");
+        }
+      })
+      .catch((error) => {
+        console.error("Error uploading CSV data:", error);
+      });
+  };
 
   const newTraineeadded = () => {
     MySwal.fire({
-      title: "New Fees has been added",
+      title: "New Trainee has been added",
       toast: true,
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true
+      showCloseButton: true,
     });
   };
 
-  const updatedSubscription = () => {
+  const updatedTrainee = () => {
     MySwal.fire({
-      title: "Fees has been updated",
+      title: "Trainee has been updated",
       toast: true,
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true
+      showCloseButton: true,
     });
   };
 
-  const deletedsubscription = () => {
+  const deletedtrainee = () => {
     MySwal.fire({
-      title: "Subscription has been deleted",
+      title: "Trainee has been deleted",
       toast: true,
       position: "bottom-start",
       showConfirmButton: false,
       timer: 5000,
-      showCloseButton: true
+      showCloseButton: true,
     });
   };
 
-  interface Subscription {
+  interface Trainee {
     id: string;
-    billNo: number;
-    trainee: string;
-    year: string;
+    sportstype: string;
+    name: string;
+    fathersname: string;
+    guardiansname: string;
+    guardiansoccupation: string;
+    gender: string;
+    address: string;
+    phoneno: string;
     date: string;
-    monthsSelected: { month: string; amount: number }[];
-    extraPracticeMonthsSelected: { month: string; amount: number }[];
-    subscriptionType: { type: string; amount: number }[];
-    amount: string;
-    paymentType: string;
-    transactionNo: string;
-    utrNo: string;
+    nameoftheschool: string;
+    bloodgroup: string;
+    document: string;
+    adhar: string;
+    extraPractice: string;
+    joiningdate: string;
   }
 
-  const handleDeleteClick = (value: any) => {
+  const handleDeleteClick = (value) => {
     setModal2(true);
     setDeleteid(value);
-  };
-
-  const fetchSettingsData = async () => {
-    try {
-      const response = await fetch("/api/settings");
-      if (!response.ok) {
-        throw new Error("Failed to fetch settings data");
-      }
-      const data = await response.json();
-      setRegularMonthlyFee(data.regularmonthlyfee);
-      setExtraPracticeFee(data.extrapractice);
-      setAdmissionFee(data.admissionfee);
-      setDevelopmentFee(data.developementfee);
-    } catch (error) {
-      setError(error.message);
-    }
-  };
-
-  const fetchSubscriptionData = async () => {
-    try {
-      const response = await fetch("/api/subscription");
-      if (!response.ok) {
-        throw new Error("Failed to fetch fees data");
-      }
-      const data = await response.json();
-
-      const formattedSubscription = data.subscriptions.map(
-        (subscription: Subscription, index: number) => ({
-          id: subscription._id,
-          billNo: subscription.billNo || 75550 + index,
-          trainee: subscription.trainee,
-          year: subscription.year,
-          date: formatDate(subscription.date),
-          monthsSelected: Array.isArray(subscription.monthsSelected)
-            ? subscription.monthsSelected
-            : [],
-          extraPracticeMonthsSelected: Array.isArray(
-            subscription.extraPracticeMonthsSelected
-          )
-            ? subscription.extraPracticeMonthsSelected
-            : [],
-          subscriptionType: Array.isArray(subscription.subscriptionType)
-            ? subscription.subscriptionType
-            : [],
-          amount: subscription.amount,
-          paymentType: subscription.paymentType,
-          transactionNo: subscription.transactionNo,
-          utrNo: subscription.utrNo
-        })
-      );
-
-      setInitialRecords(formattedSubscription);
-      setRecordsData(
-        formattedSubscription.slice((page - 1) * pageSize, page * pageSize)
-      );
-      setLoading(false);
-    } catch (error) {
-      setError(error.message);
-    }
   };
 
   const fetchTraineeData = async () => {
@@ -243,64 +247,46 @@ const ComponentsDatatablesSubscription = () => {
         throw new Error("Failed to fetch trainee data");
       }
       const data = await response.json();
-      const trainees = Array.isArray(data.studentforms)
-        ? data.studentforms
-        : [];
-      setTraineeData(trainees);
-      const options = trainees.map((trainee) => ({
-        value: trainee._id,
-        label: `${trainee.name} - ${trainee.phoneno}`,
-        extraPractice: trainee.extraPractice, // Include extraPractice in options
-        joiningDate: trainee.joiningdate // Include joiningDate in options
+
+      const formattedTrainee = data.studentforms.map((trainee) => ({
+        id: trainee._id,
+        image: trainee.image,
+        sportstype: trainee.sportstype,
+        name: trainee.name,
+        fathersname: trainee.fathersname,
+        guardiansname: trainee.guardiansname,
+        guardiansoccupation: trainee.guardiansoccupation,
+        gender: trainee.gender,
+        address: trainee.address,
+        phoneno: trainee.phoneno,
+        date: trainee.date,
+        nameoftheschool: trainee.nameoftheschool,
+        bloodgroup: trainee.bloodgroup,
+        document: trainee.document,
+        adhar: trainee.adhar,
+        extraPractice: trainee.extraPractice,
+        joiningdate: formatDate(trainee.joiningdate),
       }));
-      setOptions(options);
-    } catch (error) {
-      setError(error.message);
-    }
-  };
 
-  const fetchTraineeSubscriptionData = async (traineeId, year) => {
-    try {
-      const response = await fetch(
-        `/api/subscription?traineeid=${traineeId}&year=${year}`
+      setInitialRecords(formattedTrainee);
+      setRecordsData(
+        formattedTrainee.slice((page - 1) * pageSize, page * pageSize)
       );
-      if (!response.ok) {
-        throw new Error("Failed to fetch trainee subscription data");
-      }
-      const data = await response.json();
-      return data.subscriptions;
+      setLoading(false);
     } catch (error) {
+      console.error(error);
       setError(error.message);
-      return [];
     }
-  };
-
-  const updateUsedMonths = async (traineeId, year) => {
-    const subscriptions = await fetchTraineeSubscriptionData(traineeId, year);
-    const usedMonths = subscriptions.flatMap((sub) =>
-      Array.isArray(sub.monthsSelected)
-        ? sub.monthsSelected.map((month) => month.month)
-        : []
-    );
-    const usedExtraPracticeMonths = subscriptions.flatMap((sub) =>
-      Array.isArray(sub.extraPracticeMonthsSelected)
-        ? sub.extraPracticeMonthsSelected.map((month) => month.month)
-        : []
-    );
-    setUsedMonths(usedMonths);
-    setUsedExtraPracticeMonths(usedExtraPracticeMonths);
   };
 
   useEffect(() => {
-    fetchSettingsData();
-    fetchSubscriptionData();
     fetchTraineeData();
   }, []);
 
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
     columnAccessor: "_id",
-    direction: "desc"
+    direction: "desc",
   });
 
   useEffect(() => {
@@ -314,34 +300,76 @@ const ComponentsDatatablesSubscription = () => {
   }, [page, pageSize, initialRecords]);
 
   useEffect(() => {
-    const filteredRecords = initialRecords.filter((item: any) => {
+    const filteredRecords = initialRecords.filter((item) => {
+      const itemDate = parseDate(item.date);
+      const isInDateRange =
+        (!startDate || itemDate >= parseDate(startDate)) &&
+        (!endDate || itemDate <= parseDate(endDate));
+
+      const age = ageFilter
+        ? Math.floor(dayjs().diff(parseDate(item.date), "year"))
+        : null;
+      const isAgeMatch =
+        ageFilter &&
+        age >= parseInt(ageFilter.split("-")[0]) &&
+        age <= parseInt(ageFilter.split("-")[1]);
+
+      const isGenderMatch = !genderFilter || item.gender === genderFilter;
+      const isSportstypeMatch =
+        !sportstypeFilter || item.sportstype === sportstypeFilter;
+      const isExtraPracticeMatch =
+        !extraPracticeFilter || item.extraPractice === extraPracticeFilter;
+      const isBloodGroupMatch =
+        !bloodGroupFilter || item.bloodgroup === bloodGroupFilter;
+
       return (
-        item.billNo.toString().includes(search) ||
-        item.trainee.toLowerCase().includes(search.toLowerCase()) ||
-        item.year.toString().includes(search.toLowerCase()) ||
-        item.date.toString().includes(search.toLowerCase()) ||
-        item.monthsSelected.some((month) =>
-          month.month.toLowerCase().includes(search.toLowerCase())
-        ) ||
-        item.extraPracticeMonthsSelected.some((month) =>
-          month.month.toLowerCase().includes(search.toLowerCase())
-        ) ||
-        item.subscriptionType.some((type) =>
-          type.type.toLowerCase().includes(search.toLowerCase())
-        ) ||
-        item.amount.toString().includes(search.toLowerCase()) ||
-        item.paymentType.toLowerCase().includes(search.toLowerCase()) ||
-        item.transactionNo.toLowerCase().includes(search.toLowerCase()) ||
-        item.utrNo.toLowerCase().includes(search.toLowerCase())
+        (search === "" ||
+          item.id.toString().includes(search.toLowerCase()) ||
+          item.image.toString().includes(search.toLowerCase()) ||
+          item.sportstype.toString().includes(search.toLowerCase()) ||
+          item.name.toLowerCase().includes(search.toLowerCase()) ||
+          item.fathersname.toLowerCase().includes(search.toLowerCase()) ||
+          item.guardiansname.toLowerCase().includes(search.toLowerCase()) ||
+          item.guardiansoccupation
+            .toLowerCase()
+            .includes(search.toLowerCase()) ||
+          item.gender.toLowerCase().includes(search.toLowerCase()) ||
+          item.address.toLowerCase().includes(search.toLowerCase()) ||
+          item.phoneno.toString().includes(search.toLowerCase()) ||
+          item.date.toString().includes(search.toLowerCase()) ||
+          item.nameoftheschool.toString().includes(search.toLowerCase()) ||
+          item.bloodgroup.toLowerCase().includes(search.toLowerCase()) ||
+          item.extraPractice.toLowerCase().includes(search.toLowerCase()) ||
+          item.document?.toString().includes(search.toLowerCase()) ||
+          (item.joiningdate?.toString() || "").includes(search.toLowerCase()) ||
+          item.adhar?.toString().includes(search.toLowerCase())) &&
+        isInDateRange &&
+        (!ageFilter || isAgeMatch) &&
+        isGenderMatch &&
+        isSportstypeMatch &&
+        isExtraPracticeMatch &&
+        isBloodGroupMatch
       );
     });
 
     setRecordsData(
       filteredRecords.slice((page - 1) * pageSize, page * pageSize)
     );
-  }, [search, initialRecords, page, pageSize]);
+  }, [
+    search,
+    initialRecords,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    ageFilter,
+    genderFilter,
+    sportstypeFilter,
+    extraPracticeFilter,
+    bloodGroupFilter,
+  ]);
 
-  const handleAddCustomerClick = (e: any) => {
+  const handleAddCustomerClick = (e) => {
     e.stopPropagation();
     setShowAddCustomer(!showAddCustomer);
   };
@@ -353,110 +381,156 @@ const ComponentsDatatablesSubscription = () => {
     setRecordsData(finalData.slice((page - 1) * pageSize, page * pageSize));
   }, [sortStatus, page, pageSize, initialRecords]);
 
-  const formatDate = (date: any) => {
-    if (date) {
-      const dt = new Date(date);
-      const month =
-        dt.getMonth() + 1 < 10 ? "0" + (dt.getMonth() + 1) : dt.getMonth() + 1;
-      const day = dt.getDate() < 10 ? "0" + dt.getDate() : dt.getDate();
-      return day + "/" + month + "/" + dt.getFullYear();
+  const formatDate = (date) => {
+    if (!date) return "No Date Available"; // Handle missing dates
+
+    let dt;
+
+    // Check if the date is already a Date object
+    if (date instanceof Date) {
+      dt = date;
+    } else if (typeof date === "string") {
+      const dateParts = date.split("/");
+
+      if (dateParts.length === 3) {
+        // Assuming DD/MM/YYYY format
+        const [day, month, year] = dateParts;
+        dt = new Date(`${year}-${month}-${day}`);
+      } else {
+        // Assume it's in a parseable format like YYYY-MM-DD
+        dt = new Date(date);
+      }
+    } else {
+      // Handle unexpected date formats or types
+      return "Invalid Date";
     }
-    return "";
+
+    // If the date is still invalid, return a default string
+    if (isNaN(dt.getTime())) {
+      return "Invalid Date";
+    }
+
+    const month =
+      dt.getMonth() + 1 < 10 ? "0" + (dt.getMonth() + 1) : dt.getMonth() + 1;
+    const day = dt.getDate() < 10 ? "0" + dt.getDate() : dt.getDate();
+    return `${day}/${month}/${dt.getFullYear()}`;
   };
 
   const handleDeleteData = async () => {
-    const resdel = await fetch(`/api/subscription/${deleteid}`, {
-      method: "GET"
-    });
-    if (!resdel.ok) {
-      throw new Error(`Failed to fetch data for ID: ${deleteid}`);
-    }
-    const data = await resdel.json();
-
-    const reportData2 = {
-      date: data.subscription.date,
-      expense: parseFloat(data.subscription.amount)
-    };
-
-    await fetch("/api/reports", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(reportData2)
-    });
-
     setModal2(false);
 
-    const res = await fetch(`/api/subscription/${deleteid}`, {
-      method: "DELETE"
+    const res = await fetch(`/api/studentform/${deleteid}`, {
+      method: "DELETE",
     });
 
     if (res.ok) {
-      fetchSubscriptionData();
-      deletedsubscription();
+      fetchTraineeData();
+      deletedtrainee();
     }
   };
 
-  const getFirstName = (label: string) => label.split(" - ")[0];
-
   const getcustomeval = () => {
-    setUsedYears([]);
     setEditid("");
     setFiles([]);
-    const maxBillNo = Math.max(
-      ...initialRecords.map((record) => record.billNo),
-      75550
-    ); // Calculate the maximum bill number
-    const newBillNo = maxBillNo + 1; // Update bill number
     setFormData({
       id: "",
-      billNo: newBillNo,
-      trainee: "",
-      traineeid: "",
-      year: currentYear,
-      date: formatDate(new Date()),
-      monthsSelected: [],
-      extraPracticeMonthsSelected: [],
-      subscriptionType: [],
-      amount: "",
-      paymentType: "cash", // Set default payment type to cash
-      transactionNo: "",
-      utrNo: ""
+      image: "",
+      sportstype: "",
+      name: "",
+      fathersname: "",
+      guardiansname: "",
+      guardiansoccupation: "",
+      gender: "",
+      address: "",
+      phoneno: "",
+      date: "",
+      nameoftheschool: "",
+      bloodgroup: "",
+      document: "",
+      adhar: "",
+      extraPractice: "Yes",
+      joiningdate: formatDate(new Date()),
     });
-    setPaymentType("cash"); // Set default payment type to cash
-    setTransactionNo("");
-    setUtrNo("");
-    setEditid("");
+    const options = customerData.map((customer) => ({
+      value: customer._id,
+      label: `${customer.firstName} ${
+        customer.middleName ? customer.middleName + " " : ""
+      }${customer.lastName} - ${customer.mobile}`,
+    }));
+    setOptions(options);
     setModal1(true);
   };
 
-  const handleDateChange = (date: any) => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      date: date[0] ? formatDate(date[0]) : ""
-    }));
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+
+    const selectedFiles = e.target.files;
+    const newFiles = Array.from(selectedFiles);
+
+    if (files.length + newFiles.length > 1) {
+      showMessage8();
+    } else {
+      setFiles([...files, ...newFiles]);
+      setHiddenFileName(newFiles[0].name);
+    }
   };
 
-  const exportTable = (type: any) => {
-    let columns: any = col;
+  const handleDocumentChange = (e) => {
+    setDocumentFile(e.target.files[0]);
+  };
+
+  const handleAdharChange = (e) => {
+    setAdharFile(e.target.files[0]);
+  };
+
+  const handleDateChange = (date) => {
+    if (date && date.length > 0) {
+      const formattedDate = dayjs(date[0]).format("DD/MM/YYYY"); // Convert to DD/MM/YYYY format
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        date: formattedDate,
+      }));
+    }
+  };
+
+  const handleUpload = async () => {
+    if (files.length === 0) {
+      console.error("No files selected");
+      return;
+    }
+
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+  };
+
+  const removeFile = (index) => {
+    const updatedFiles = [...files];
+    updatedFiles.splice(index, 1);
+    setFiles(updatedFiles);
+    setHiddenFileName("");
+  };
+
+  const exportTable = (type) => {
+    let columns = col;
     let records = initialRecords;
     let filename = "table";
 
-    let newVariable: any;
+    let newVariable;
     newVariable = window.navigator;
 
     if (type === "csv") {
       let coldelimiter = ";";
       let linedelimiter = "\n";
       let result = columns
-        .map((d: any) => {
+        .map((d) => {
           return capitalize(d);
         })
         .join(coldelimiter);
       result += linedelimiter;
-      records.map((item: any) => {
-        columns.map((d: any, index: any) => {
+      records.map((item) => {
+        columns.map((d, index) => {
           if (index > 0) {
             result += coldelimiter;
           }
@@ -483,451 +557,200 @@ const ComponentsDatatablesSubscription = () => {
     }
   };
 
-  const capitalize = (text: any) => {
+  const capitalize = (text) => {
     return text
-      .replace(/_/g, " ")
-      .replace(/-/g, " ")
+      .replace("_", " ")
+      .replace("-", " ")
       .toLowerCase()
       .split(" ")
-      .map((s: any) => s.charAt(0).toUpperCase() + s.substring(1))
+      .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
       .join(" ");
   };
 
   const [formData, setFormData] = useState({
     id: "",
-    billNo: "",
-    trainee: "",
-    traineeid: cutomerid,
-    year: currentYear,
-    date: formatDate(new Date()),
-    monthsSelected: [],
-    extraPracticeMonthsSelected: [],
-    subscriptionType: [],
-    amount: "",
-    paymentType: "cash", // Set default payment type to cash
-    transactionNo: "",
-    utrNo: ""
+    image: "",
+    sportstype: "",
+    name: "",
+    fathersname: "",
+    guardiansname: "",
+    guardiansoccupation: "",
+    gender: "",
+    address: "",
+    phoneno: "",
+    date: "",
+    nameoftheschool: "",
+    bloodgroup: "",
+    document: "",
+    adhar: "",
+    joiningdate: "",
+    extraPractice: "Yes",
+    joiningdate: "",
   });
 
-  const handleChange = (e: any) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
 
     setFormData((formData) => ({
       ...formData,
-      [name]: value
-    }));
-  };
-
-  const handleMonthAmountChange = (index, value) => {
-    const updatedMonths = [...formData.monthsSelected];
-    updatedMonths[index].amount = value;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      monthsSelected: updatedMonths
-    }));
-  };
-
-  const handleExtraPracticeMonthAmountChange = (index, value) => {
-    const updatedMonths = [...formData.extraPracticeMonthsSelected];
-    updatedMonths[index].amount = value;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      extraPracticeMonthsSelected: updatedMonths
-    }));
-  };
-
-  const handleTypeAmountChange = (index, value) => {
-    const updatedTypes = [...formData.subscriptionType];
-    const type = updatedTypes[index].type;
-
-    let amount = parseFloat(value);
-    if (type === "Concession" || type === "Discount") {
-      // Convert to negative value
-      amount = -Math.abs(amount);
-    }
-
-    updatedTypes[index].amount = amount;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      subscriptionType: updatedTypes
-    }));
-  };
-
-  const handleMonthsSelectedChange = (selectedOptions: any) => {
-    // Retrieve all available options (filtered options)
-    const allOptions = getMonthOptions(formData.year)
-      .filter((month) => !usedMonths.includes(month.value))
-      .map((month) => ({
-        value: month.value,
-        label: month.label,
-      }));
-
-    // Map selected options to include the month and amount
-    const selectedValues = selectedOptions
-      ? selectedOptions.map((option: any) => ({
-          month: option.value,
-          amount: regularMonthlyFee,
-        }))
-      : [];
-
-    // Skip the sequential check if in edit mode
-    if (!editid) {
-      // Check if selected options are sequential
-      const isSequential = selectedValues.every((selected, index) => {
-        return selected.month === allOptions[index].value;
-      });
-
-      if (!isSequential) {
-        MySwal.fire({
-          title: "Invalid Selection",
-          text: "Selected months must start sequentially from the first available month.",
-          icon: "warning",
-          showConfirmButton: true,
-          confirmButtonText: "OK",
-          customClass: {
-            popup: "animate__animated animate__shakeX", // Applying shake animation
-          },
-        });
-
-        // Reset the dropdown to the last valid state
-        setFormData((prevFormData) => ({
-          ...prevFormData,
-          // Restore to previous valid selection
-          monthsSelected: prevFormData.monthsSelected,
-        }));
-
-        return;
-      }
-    }
-
-    // Update the form data state with the selected values
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      monthsSelected: selectedValues,
-    }));
-
-    // Call the function to handle all available options
-    handleShowAllOptions(allOptions, selectedValues);
-  };
-
-  // Example function to handle all available options
-  const handleShowAllOptions = (allOptions: any, selectedOptions: any) => {
-    console.log("All available options:", allOptions);
-    console.log("Selected options:", selectedOptions);
-    // Implement your logic here for handling all options
-  };
-
-  const handleExtraPracticeMonthsSelectedChange = (selectedOptions: any) => {
-    // Retrieve all available options (filtered options) for extra practice
-    const extraAllOptions = getMonthOptions(formData.year)
-      .filter((month) => !usedExtraPracticeMonths.includes(month.value))
-      .map((month) => ({
-        value: month.value,
-        label: month.label,
-      }));
-
-    // Map selected options to include the month and amount for extra practice
-    const selectedValues = selectedOptions
-      ? selectedOptions.map((option: any) => ({
-          month: option.value,
-          amount: extraPracticeFee,
-        }))
-      : [];
-
-    // Skip the sequential check if in edit mode
-    if (!editid) {
-      // Check if selected options are sequential
-      const isSequential = selectedValues.every((selected, index) => {
-        return selected.month === extraAllOptions[index].value;
-      });
-
-      if (!isSequential) {
-        MySwal.fire({
-          title: "Invalid Selection",
-          text: "Selected months for Extra Practice must start sequentially from the first available month.",
-          icon: "warning",
-          showConfirmButton: true,
-          confirmButtonText: "OK",
-          customClass: {
-            popup: "animate__animated animate__shakeX", // Applying animation
-          },
-        });
-
-        // Reset the dropdown to the last valid state
-        setFormData((prevFormData) => ({
-          ...prevFormData,
-          // Restore to previous valid selection for extra practice
-          extraPracticeMonthsSelected: prevFormData.extraPracticeMonthsSelected,
-        }));
-
-        return;
-      }
-    }
-
-    // Update the form data state with the selected values
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      extraPracticeMonthsSelected: selectedValues,
-    }));
-
-    // Call the function to handle all available options for extra practice
-    handleShowAllOptions(extraAllOptions, selectedValues);
-  };
-
-  const handleeShowAllOptions = (allOptions: any, selectedOptions: any) => {
-    console.log("All available options:", allOptions);
-    console.log("Selected options:", selectedOptions);
-    // Implement your logic here for handling all options
-  };
-  const handleSubscriptionChange = (selectedOptions: any) => {
-    const selectedValues = selectedOptions
-      ? selectedOptions.map((option: any) => {
-          let amount = 0;
-          if (option.value === "Admission fees") {
-            amount = admissionFee;
-          } else if (option.value === "Development Fees") {
-            amount = developmentFee;
-          } else if (
-            option.value === "Concession" ||
-            option.value === "Discount"
-          ) {
-            // Set negative amount for Concession and Discount
-            amount = -Math.abs(parseFloat(option.amount || 0));
-          }
-          return {
-            type: option.value,
-            amount
-          };
-        })
-      : [];
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      subscriptionType: selectedValues
+      [name]: value,
     }));
   };
 
   useEffect(() => {
     setFormData((prevFormData) => ({
       ...prevFormData,
-      id: editid
+      id: editid,
     }));
   }, [editid]);
 
-  useEffect(() => {
-    const calculateTotalAmount = () => {
-      const totalMonthAmount = formData.monthsSelected.reduce(
-        (total, month) => total + parseFloat(month.amount || 0),
-        0
-      );
-      const totalExtraPracticeMonthAmount =
-        formData.extraPracticeMonthsSelected.reduce(
-          (total, month) => total + parseFloat(month.amount || 0),
-          0
-        );
-      const totalTypeAmount = formData.subscriptionType.reduce(
-        (total, type) => total + parseFloat(type.amount || 0),
-        0
-      );
-      return totalMonthAmount + totalExtraPracticeMonthAmount + totalTypeAmount;
-    };
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      amount: calculateTotalAmount()
-    }));
-  }, [
-    formData.monthsSelected,
-    formData.extraPracticeMonthsSelected,
-    formData.subscriptionType
-  ]);
-
-  const handleFormSubmit = async (event: any) => {
+  const handleFormSubmit = async (event) => {
     event.preventDefault();
-
-    const hasValidAmount =
-      formData.monthsSelected.some((month) => month.amount > 0) ||
-      formData.extraPracticeMonthsSelected.some((month) => month.amount > 0) ||
-      formData.subscriptionType.some((type) => type.amount > 0);
-
-    if (!hasValidAmount) {
-      alert(
-        "Please select at least one of the Monthly Fees, Extra Practice Monthly Fees, or Other Fees"
-      );
-      return;
-    }
 
     const formattedFormData = {
       ...formData,
-      date: formData.date ? formData.date.split("/").reverse().join("-") : "",
-      trainee: cutomerName,
-      traineeid: cutomerid,
-      paymentType,
-      transactionNo,
-      utrNo
+      dob: formData.dob ? formData.dob.split("/").reverse().join("-") : "",
+      joiningdate: formData.joiningdate
+        ? formData.joiningdate.split("/").reverse().join("-")
+        : "",
     };
 
-    const reportData = {
-      date: formattedFormData.date,
-      income: parseFloat(formattedFormData.amount),
-      expense: 0,
-      noOfNewTraineeCricket: 0,
-      noOfNewTraineeFootball: 0,
-      noOfNewClubMember: 0,
-      profitAndLoss: parseFloat(formattedFormData.amount)
-    };
+    let imageName = "";
+    let docname = "";
+    let adhname = "";
+    if (file) {
+      const filename = file.name;
+      imageName = formData.phoneno + "-" + filename;
+      formData.image = imageName;
+    }
 
-    if (!editid) {
-      try {
-        const res = await fetch("/api/subscription", {
-          method: "POST",
-          headers: {
-            "Content-type": "application/json"
-          },
-          body: JSON.stringify(formattedFormData)
-        });
+    if (documentfile) {
+      const documentfilename = documentfile.name;
+      docname = formData.phoneno + "-" + documentfilename;
+      formData.document = docname;
+    }
 
-        if (res.ok) {
-          newTraineeadded();
-          fetchSubscriptionData();
-          setModal1(false);
-          await fetch("/api/reports", {
+    if (adharfile) {
+      const adharfilename = adharfile.name;
+      adhname = formData.phoneno + "-" + adharfilename;
+      formData.adhar = adhname;
+    }
+
+    try {
+      const url = editid ? `/api/studentform/${editid}` : "/api/studentform";
+      const method = editid ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method: method,
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        if (editid) {
+          updatedTrainee(); // show trainee updated message
+        } else {
+          newTraineeadded(); // show new trainee added message
+        }
+        fetchTraineeData();
+        setModal1(false);
+
+        const uploadFormData = new FormData();
+        if (file) {
+          uploadFormData.append("file", file);
+          if (documentfile) {
+            uploadFormData.append("documentfile", documentfile);
+            uploadFormData.append("documentfilename", docname);
+          }
+          if (adharfile) {
+            uploadFormData.append("adharfile", adharfile);
+            uploadFormData.append("adharname", adhname);
+          }
+          uploadFormData.append("imageName", imageName);
+
+          const uploadRes = await fetch("/api/upload", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(reportData)
+            body: uploadFormData,
           });
         }
-      } catch (error) {
-        console.log(error);
-      }
-    } else {
-      try {
-        console.log("old amnount" + uamount);
-        console.log("new amnount" + formattedFormData.amount);
-        var newamout = formattedFormData.amount - uamount;
-        console.log("change amount" + newamout);
-        console.log("change date" + formattedFormData.date);
-        const url = `/api/subscription/${editid}`;
 
-        const reportData1 = {
-          date: formattedFormData.date,
-          income: parseFloat(newamout)
-        };
+        if (!editid) {
+          const currentDate = new Date();
 
-        await fetch("/api/reports", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(reportData1)
-        });
+          // Format the current date to DD/MM/YYYY
+          const day = String(currentDate.getDate()).padStart(2, "0");
+          const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Months are 0-based, so add 1
+          const year = currentDate.getFullYear();
+          const formattedCurrentDate = `${day}/${month}/${year}`;
 
-        const res = await fetch(url, {
-          method: "PUT",
-          headers: {
-            "Content-type": "application/json"
-          },
-          body: JSON.stringify(formattedFormData)
-        });
+          // Now replace formData.joiningdate with the formatted current date
+          const [currentDay, currentMonth, currentYear] =
+            formattedCurrentDate.split("/");
+          const isoDate = `${currentYear}-${currentMonth}-${currentDay}`;
 
-        if (!res.ok) {
-          throw new Error("failed to update fees");
+          const reportData = {
+            date: isoDate,
+            noOfNewTraineeCricket: formData.sportstype === "Cricket" ? 1 : 0,
+            noOfNewTraineeFootball: formData.sportstype === "Football" ? 1 : 0,
+          };
+
+          const reportRes = await fetch("/api/reports", {
+            method: "POST",
+            headers: {
+              "Content-type": "application/json",
+            },
+            body: JSON.stringify(reportData),
+          });
+
+          if (reportRes.ok) {
+            console.log("Reports updated successfully");
+          } else {
+            console.error("Failed to update reports");
+          }
         }
-        if (res.ok) {
-          setModal1(false);
-          fetchSubscriptionData();
-          updatedSubscription();
-        }
-      } catch (error) {
-        console.log(error);
+      } else {
+        console.error("Failed to add/update trainee");
       }
+    } catch (error) {
+      console.log("Error in form submission:", error);
     }
   };
 
-  const handleUpdateClick = async (value: any) => {
+  const handleUpdateClick = async (value) => {
     try {
-      console.log(value);
-      const res = await fetch(`/api/subscription/${value}`, {
-        method: "GET"
+      const res = await fetch(`/api/studentform/${value}`, {
+        method: "GET",
       });
       if (!res.ok) {
         throw new Error(`Failed to fetch data for ID: ${value}`);
       }
       const data = await res.json();
-
-      const traineeOption = options.find(
-        (option) => option.label.split(" - ")[0] === data.subscription.trainee
-      );
-
-      const maxBillNo = Math.max(
-        ...initialRecords.map((record) => record.billNo),
-        75550
-      ); // Calculate the maximum bill number
-      const newBillNo = maxBillNo + 1; // Update bill number
-      setcutomerid(data.subscription.traineeid);
-      setcutomerName(data.subscription.trainee);
-      setExtraPractice(traineeOption.extraPractice === "Yes"); // Update extraPractice state
-      setFormData({
-        ...data.subscription,
-        trainee: data.subscription.trainee,
-        traineeid: data.subscription.traineeid,
-        billNo: data.subscription.billNo,
-        monthsSelected: Array.isArray(data.subscription.monthsSelected)
-          ? data.subscription.monthsSelected.map((month) => ({
-              ...month,
-              amount: month.amount || regularMonthlyFee
-            }))
-          : [],
-        extraPracticeMonthsSelected: Array.isArray(
-          data.subscription.extraPracticeMonthsSelected
-        )
-          ? data.subscription.extraPracticeMonthsSelected.map((month) => ({
-              ...month,
-              amount: month.amount || extraPracticeFee
-            }))
-          : [],
-        subscriptionType: Array.isArray(data.subscription.subscriptionType)
-          ? data.subscription.subscriptionType.map((type) => ({
-              ...type,
-              amount:
-                type.type === "Admission fees"
-                  ? admissionFee
-                  : type.type === "Development Fees"
-                  ? developmentFee
-                  : type.amount
-            }))
-          : [],
-        date: formatDate(data.subscription.date)
-      });
-      setUamount(data.subscription.amount);
-
-      setEditid(data.subscription._id);
-      setPaymentType(data.subscription.paymentType || "cash");
-      setTransactionNo(data.subscription.transactionNo || "");
-      setUtrNo(data.subscription.utrNo || "");
-
-      const existingData = await fetchTraineeSubscriptionData(
-        data.subscription.traineeid,
-        data.subscription.year
-      );
-      const usedMonths = existingData.flatMap((sub) =>
-        Array.isArray(sub.monthsSelected)
-          ? sub.monthsSelected.map((month) => month.month)
-          : []
-      );
-      const usedExtraPracticeMonths = existingData.flatMap((sub) =>
-        Array.isArray(sub.extraPracticeMonthsSelected)
-          ? sub.extraPracticeMonthsSelected.map((month) => month.month)
-          : []
-      );
-      const usedYears = existingData.map((sub) => sub.year);
-      setUsedMonths(usedMonths);
-      setUsedExtraPracticeMonths(usedExtraPracticeMonths);
-      setUsedYears(usedYears);
-
-      setModal1(true);
-      if (res.ok) {
-        fetchSubscriptionData();
+      if (data && data.student) {
+        setFormData({
+          id: data.student._id || "",
+          image: data.student.image || "",
+          sportstype: data.student.sportstype || "",
+          name: data.student.name || "",
+          fathersname: data.student.fathersname || "",
+          guardiansname: data.student.guardiansname || "",
+          guardiansoccupation: data.student.guardiansoccupation || "",
+          gender: data.student.gender || "",
+          address: data.student.address || "",
+          phoneno: data.student.phoneno || "",
+          date: data.student.date ? data.student.date.split("T")[0] : "",
+          nameoftheschool: data.student.nameoftheschool || "",
+          bloodgroup: data.student.bloodgroup || "",
+          document: data.student.document || "",
+          adhar: data.student.adhar || "",
+          extraPractice: data.student.extraPractice || "Yes",
+          joiningdate: data.student.joiningdate
+            ? data.student.joiningdate.split("T")[0]
+            : "",
+        });
+        setEditid(data.student._id);
+        setModal1(true);
       }
     } catch (error) {
       console.error("Fetch error:", error);
@@ -935,206 +758,269 @@ const ComponentsDatatablesSubscription = () => {
     }
   };
 
-  const generatePdf = (row) => {
+  const handleClearFilters = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setAgeFilter("");
+    setGenderFilter("");
+    setSportstypeFilter("");
+    setExtraPracticeFilter("");
+    setBloodGroupFilter("");
+    setSearch("");
+  };
+
+  const RenderImage = ({ row }) => {
+    const [imageSrc, setImageSrc] = useState("");
+    const [isHovered, setIsHovered] = useState(false);
+
+    useEffect(() => {
+      const checkImageExists = async (imageUrl) => {
+        try {
+          const response = await fetch("/api/imagefile", {
+            method: "POST",
+            headers: {
+              "Content-type": "application/json",
+            },
+            body: JSON.stringify({ url: imageUrl }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Image check failed");
+          }
+
+          const data = await response.json();
+          if (data.exists) {
+            setImageSrc(imageUrl);
+          } else {
+            setImageSrc(
+              `/assets/images/trainee_${row.gender.toLowerCase()}.png`
+            );
+          }
+        } catch (error) {
+          setImageSrc(`/assets/images/trainee_${row.gender.toLowerCase()}.png`);
+        }
+      };
+
+      const imageUrl = `https://pallisree.blr1.cdn.digitaloceanspaces.com/${row.image}`;
+      checkImageExists(imageUrl);
+    }, [row.image, row.gender]);
+
+    return (
+      <div
+        className="relative flex items-center gap-2"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <img
+          src={imageSrc}
+          className="h-9 w-9 max-w-none rounded-full"
+          alt=""
+        />
+        {isHovered && (
+          <div className="bottom-1/8 absolute left-12 z-50">
+            <img
+              src={imageSrc}
+              className="h-40 w-40 max-w-none rounded-lg shadow-lg"
+              alt=""
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const handleCheckboxChange = (id) => {
+    setSelectedTrainees((prevSelected) =>
+      prevSelected.includes(id)
+        ? prevSelected.filter((traineeId) => traineeId !== id)
+        : [...prevSelected, id]
+    );
+  };
+
+  const handleShowSelectedTrainees = () => {
+    setShowSelectedTrainees(true);
+  };
+
+  const handlePrint = () => {
+    const printContent = document.getElementById("printableContent");
+    const WinPrint = window.open("", "", "width=900,height=650");
+    WinPrint.document.write(printContent.innerHTML);
+    WinPrint.document.close();
+    WinPrint.focus();
+    WinPrint.print();
+    WinPrint.close();
+  };
+
+  const handleRemoveImage = () => {
+    setFile(null);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      image: null,
+    }));
+  };
+
+  const handleRemoveDocument = () => {
+    setDocumentFile(null);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      document: null,
+    }));
+  };
+
+  const handleRemoveAdhar = () => {
+    setAdharFile(null);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      adhar: null,
+    }));
+  };
+
+  const handleGeneratePDF = () => {
     const doc = new jsPDF();
-    const marginY = 138;
-    const shiftY = 5;
-    const maxRowsPerPage = 7;
+    const startY = 90;
 
-    const loadLogo = (logoUrl) => {
-      return new Promise((resolve, reject) => {
-        const logoImg = new Image();
-        logoImg.src = logoUrl;
-        logoImg.onload = () => resolve(logoImg);
-        logoImg.onerror = (err) => reject(err);
-      });
+    const getOrdinalSuffix = (n) => {
+      const s = ["th", "st", "nd", "rd"],
+        v = n % 100;
+      return n + (s[(v - 20) % 10] || s[v] || s[0]);
     };
 
-    const addBillContent = async (startY, isNewPage) => {
-      const logoUrl = "/assets/images/logo.png";
-      try {
-        const logoImg = await loadLogo(logoUrl);
-        if (isNewPage) {
-          doc.addPage();
-          startY = 10; // Reset startY for the new page
-        }
-
-        doc.addImage(logoImg, "PNG", 15, startY, 20, 20);
-        doc.setFontSize(10);
-        doc.text(`Bill No: ${row.billNo}`, 190, startY + 5, {
-          align: "right"
-        });
-        doc.text(`Date: ${row.date}`, 190, startY + 10, { align: "right" });
-        doc.setFontSize(22);
-        doc.text("PALLISREE", 105, startY + 10, { align: "center" });
-
-        const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
-        doc.setFontSize(8);
-        doc.text(additionalText, 105, startY + 15, { align: "center" });
-        doc.setFontSize(12);
-        doc.setFont("bold");
-        doc.text(`Name: ${row.trainee}`, 15, startY + 30);
-
-        let tableRows = [];
-
-        if (row.monthsSelected.length > 0) {
-          tableRows.push(["Monthly Fees", row.year, ""]);
-          tableRows = tableRows.concat(
-            row.monthsSelected.map((month) => [month.month, "", month.amount])
-          );
-        }
-
-        if (row.extraPracticeMonthsSelected.some((month) => month.amount)) {
-          tableRows.push(["Extra Practice Monthly Fees", row.year, ""]);
-          tableRows = tableRows.concat(
-            row.extraPracticeMonthsSelected
-              .filter((month) => month.amount)
-              .map((month) => [month.month, "", month.amount])
-          );
-        }
-
-        if (row.subscriptionType.some((type) => type.amount)) {
-          tableRows.push(["Other", row.year, ""]);
-          tableRows = tableRows.concat(
-            row.subscriptionType
-              .filter((type) => type.amount)
-              .map((type) => [type.type, "", type.amount])
-          );
-        }
-
-        autoTable(doc, {
-          startY: startY + 35,
-          head: [["Description", "Year", "Amount"]],
-          body: tableRows,
-          theme: "grid",
-          headStyles: { fillColor: [0, 0, 139] },
-          columnStyles: { 2: { halign: "right" } },
-          styles: { fontSize: 10 },
-          alternateRowStyles: { fillColor: [240, 240, 240] }
-        });
-
-        const totalAmount =
-          row.monthsSelected.reduce(
-            (total, month) => total + parseFloat(month.amount || 0),
-            0
-          ) +
-          row.extraPracticeMonthsSelected.reduce(
-            (total, month) => total + parseFloat(month.amount || 0),
-            0
-          ) +
-          row.subscriptionType.reduce(
-            (total, type) => total + parseFloat(type.amount || 0),
-            0
-          );
-
-        const totalAmountStartY = doc.autoTable.previous.finalY + 2;
-        doc.setFontSize(10);
-        doc.setFont("bold");
-        doc.text("Total Amount", 15, totalAmountStartY + 5);
-        doc.text(`Rs. ${totalAmount} INR`, 190, totalAmountStartY + 5, {
-          align: "right"
-        });
-
-        doc.line(10, totalAmountStartY, 200, totalAmountStartY);
-        doc.line(10, totalAmountStartY + 10, 200, totalAmountStartY + 10);
-
-        doc.setFontSize(8);
-        doc.setFont("italic");
-        let paymentDetails = `Payment Type: ${row.paymentType}`;
-        if (row.paymentType === "upi") {
-          if (row.transactionNo) {
-            paymentDetails += `, Transaction No: ${row.transactionNo}`;
-          }
-          if (row.utrNo) {
-            paymentDetails += `, UTR No: ${row.utrNo}`;
-          }
-        }
-        doc.text(paymentDetails, 15, totalAmountStartY + 15);
-
-        const pageHeight = doc.internal.pageSize.height;
-        doc.setFontSize(12);
-        doc.text("Collector", 15, pageHeight - 10, { align: "left" });
-        doc.text("General Secretary", 190, pageHeight - 10, { align: "right" });
-      } catch (error) {
-        console.error("Error loading logo image:", error);
-      }
-    };
-
-    const generateAllBills = async () => {
-      const totalTableRows =
-        row.monthsSelected.length +
-        row.extraPracticeMonthsSelected.length +
-        row.subscriptionType.length;
-      const isNewPageNeeded = totalTableRows > maxRowsPerPage;
-      if (isNewPageNeeded) {
-        const pmarginY = 10;
-        await addBillContent(pmarginY, false);
-        await addBillContent(shiftY, isNewPageNeeded);
-        doc.save(`subscription_${row.trainee}.pdf`);
-      } else {
-        const pmarginY = 138;
-        await addBillContent(pmarginY, false);
-        await addBillContent(shiftY, isNewPageNeeded);
-        doc.save(`subscription_${row.trainee}.pdf`);
-      }
-    };
-
-    generateAllBills();
-  };
-  const parseDate = (dateString: string) => {
-    const [day, month, year] = dateString.split("/").map(Number);
-    return new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
-  };
-  const getMonthOptions = (year, lastSelectedMonth) => {
-    if (joiningDate) {
-      const joiningYear = new Date(joiningDate).getFullYear();
-      const joiningMonth = new Date(joiningDate).getMonth(); // 0-indexed
-  
-      if (parseInt(year) < joiningYear) {
-        // If the selected year is before the joining year, show no months
-        return [];
-      }
-  
-      let startMonthIndex;
-  
-      if (year === "2024") {
-        // For 2024, start from April if joiningDate is before April
-        const aprilIndex = 3; // April's index
-        startMonthIndex = joiningMonth > aprilIndex ? joiningMonth + 1 : aprilIndex;
-      } else if (parseInt(year) === joiningYear) {
-        // If the selected year matches the joining year, start from the month after the joining month
-        startMonthIndex = joiningMonth + 1;
-      } else {
-        // If the selected year is after the joining year, all months are available
-        startMonthIndex = 0; // Allow all months
-      }
-  
-      let availableMonths = allMonthsOptions.filter(
-        (month, index) => index >= startMonthIndex
+    const formatDate = (date) => {
+      const options = {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      };
+      const formattedDate = new Intl.DateTimeFormat("en-US", options).format(
+        date
       );
-  
-      if (lastSelectedMonth) {
-        const lastSelectedMonthIndex = allMonthsOptions.findIndex(
-          (month) => month.value === lastSelectedMonth
-        );
-  
-        if (lastSelectedMonthIndex !== -1) {
-          availableMonths = availableMonths.filter(
-            (month, index) => index >= lastSelectedMonthIndex
-          );
+      const day = date.getDate();
+      return formattedDate.replace(day, getOrdinalSuffix(day));
+    };
+
+    const formatTime = (time) => {
+      const [hour, minute] = time.split(":");
+      const hourInt = parseInt(hour, 10);
+      const ampm = hourInt >= 12 ? "pm" : "am";
+      const formattedHour = hourInt % 12 || 12; // Convert to 12-hour format
+      return `${formattedHour}:${minute} ${ampm}`;
+    };
+
+    const logoUrl = "/assets/images/logo.png";
+    const logoImg = new Image();
+    logoImg.src = logoUrl;
+    logoImg.onload = () => {
+      doc.addImage(logoImg, "PNG", 10, 10, 20, 20);
+
+      doc.setFontSize(18);
+      doc.text("PALLISREE", 105, 30, { align: "center" });
+
+      doc.setFontSize(12);
+      const additionalText = `ESTD: 1946\nRegd. Under Societies Act. XXVI of 1961 • Regd. No. S/5614\nAffiliated to North 24 Parganas District Sports Association through BBSZSA\nBIDHANPALLY • MADHYAMGRAM • KOLKATA - 700129`;
+      doc.text(additionalText, 105, 35, { align: "center" });
+
+      doc.setFontSize(10);
+      if (eventType === "Tournament") {
+        doc.text("Tournament: " + tournamentName, 15, 70);
+        doc.text("Ground: " + groundName, 15, 75);
+        doc.text("Date: " + formatDate(tournamentDate), 15, 80);
+        doc.text("Reporting Time: " + formatTime(time), 15, 85);
+        doc.text("Note: " + note, 15, 90);
+      } else if (eventType === "Camp") {
+        doc.text("Camp: " + campName, 15, 70);
+        doc.text("Camp Type: " + campType, 15, 75);
+        doc.text("Date: " + formatDate(campDate), 15, 80);
+        doc.text("Reporting Time: " + formatTime(time), 15, 85);
+        doc.text("Note: " + note, 15, 90);
+      }
+      const formatTraineeDate = (dateStr) => {
+        const [day, month, year] = dateStr.split("/");
+        const d = new Date(`${year}-${month}-${day}`);
+        const dayFormatted = String(d.getDate()).padStart(2, "0");
+        const monthFormatted = String(d.getMonth() + 1).padStart(2, "0");
+        const yearFormatted = d.getFullYear();
+        return `${dayFormatted}/${monthFormatted}/${yearFormatted}`;
+      };
+
+      const rows = selectedTrainees.map((id, index) => {
+        const trainee = initialRecords.find((t) => t.id === id);
+        return [
+          index + 1,
+          trainee.name,
+          trainee.phoneno,
+          formatTraineeDate(trainee.date),
+          trainee.image,
+        ];
+      });
+
+      autoTable(doc, {
+        startY: startY + 10,
+        head: [["No", "Name", "Phone No", "DOB"]],
+        body: rows,
+      });
+
+      doc.save("selected_trainees.pdf");
+    };
+  };
+
+  const handleDeleteAllClick = () => {
+    MySwal.fire({
+      title: "Do you want to delete the selected Trainees?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete them!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleDeleteSelectedTrainees();
+      }
+    });
+  };
+
+  const handleDeleteSelectedTrainees = async () => {
+    try {
+      for (let id of selectedTrainees) {
+        const res = await fetch(`/api/studentform/${id}`, {
+          method: "DELETE",
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to delete trainee with ID: ${id}`);
         }
       }
-  
-      return availableMonths;
+
+      fetchTraineeData();
+      setSelectedTrainees([]);
+      MySwal.fire({
+        title: "Selected Trainees have been deleted",
+        toast: true,
+        position: "bottom-start",
+        showConfirmButton: false,
+        timer: 5000,
+        showCloseButton: true,
+      });
+    } catch (error) {
+      console.error(error);
+      MySwal.fire({
+        title: "Error deleting trainees",
+        text: error.message,
+        icon: "error",
+        toast: true,
+        position: "bottom-start",
+        showConfirmButton: false,
+        timer: 5000,
+        showCloseButton: true,
+      });
     }
-  
-    return allMonthsOptions;
   };
-  
 
   return (
     <div className="panel mt-6">
-      <h5 className="mb-5 text-lg font-semibold dark:text-white-light">Fees</h5>
+      <h5 className="mb-5 text-lg font-semibold dark:text-white-light">
+        Trainees
+      </h5>
 
       <div className="mb-4.5 flex flex-col justify-between gap-5 md:flex-row md:items-center">
         <div className="flex flex-wrap items-center">
@@ -1170,7 +1056,7 @@ const ComponentsDatatablesSubscription = () => {
                       >
                         <div className="flex items-center justify-between bg-[#fbfbfb] px-5 py-3 dark:bg-[#121c2c]">
                           <div className="text-lg font-bold">
-                            {editid ? "Update Fees" : "Add Fees"}
+                            {editid ? "Update Trainees" : "Add Trainees"}
                           </div>
                           <button
                             type="button"
@@ -1194,341 +1080,379 @@ const ComponentsDatatablesSubscription = () => {
                               onSubmit={handleFormSubmit}
                             >
                               <div>
-                                <label htmlFor="billNo">Bill No</label>
-                                <input
-                                  id="billNo"
-                                  type="text"
-                                  name="billNo"
-                                  placeholder="Enter Bill No"
-                                  onChange={handleChange}
-                                  className="form-input"
-                                  value={formData.billNo}
-                                  readOnly
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <label htmlFor="year">Year</label>
-                                <select
-                                  id="year"
-                                  name="year"
-                                  className="form-select"
-                                  onChange={async (e) => {
-                                    handleChange(e);
-                                    await updateUsedMonths(
-                                      formData.traineeid,
-                                      e.target.value
-                                    );
-                                  }}
-                                  value={formData.year}
-                                  required
-                                >
-                                  <option value="">Select Year</option>
-
-                                  {editid
-                                    ? years
-                                        .filter((year) =>
-                                          usedYears.includes(year)
-                                        )
-                                        .map((year) => (
-                                          <option key={year} value={year}>
-                                            {year}
-                                          </option>
-                                        ))
-                                    : years
-                                        .filter(
-                                          (year) => !usedYears.includes(year)
-                                        )
-                                        .map((year) => (
-                                          <option key={year} value={year}>
-                                            {year}
-                                          </option>
-                                        ))}
-                                </select>
-                              </div>
-
-                              <div>
-                                {editid ? (
-                                  <div>
-                                    <label htmlFor="trainee">Trainee</label>
-                                    <div className="form-input">
-                                      {formData.trainee}
-                                    </div>{" "}
-                                    {/* Display the trainee's name */}
+                                {formData.image ? (
+                                  <div
+                                    style={{
+                                      position: "relative",
+                                      display: "flex",
+                                    }}
+                                  >
+                                    <img
+                                      src={`https://pallisree.blr1.cdn.digitaloceanspaces.com/${formData.image}`}
+                                      alt="Uploaded"
+                                      style={{ maxWidth: "30%" }}
+                                    />
+                                    <button
+                                      onClick={handleRemoveImage}
+                                      style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        right: 0,
+                                        backgroundColor: "red",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "50%",
+                                        width: "24px",
+                                        height: "24px",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      &times;
+                                    </button>
                                   </div>
                                 ) : (
                                   <div>
-                                    <label htmlFor="trainee">Trainee</label>
-                                    <Select
-                                      required
-                                      placeholder="Select an option"
-                                      options={options}
-                                      value={
-                                        formData.trainee
-                                          ? options.find(
-                                              (option) =>
-                                                option.value ===
-                                                formData.trainee
-                                            )
-                                          : null
-                                      }
-                                      onChange={async (t) => {
-                                        const traineeName = getFirstName(
-                                          t.label
-                                        );
-                                        console.log("Training" + t.joiningDate);
-                                        setcutomerName(traineeName);
-                                        setcutomerid(t.value);
-                                        setJoiningDate(
-                                          parseDate(t.joiningDate)
-                                        );
-                                        setExtraPractice(
-                                          t.extraPractice === "Yes"
-                                        ); // Set extraPractice state based on selection
-                                        setFormData((prevFormData) => ({
-                                          ...prevFormData,
-                                          trainee: t.value,
-                                          traineeid: t.value
-                                        }));
-                                        await updateUsedMonths(
-                                          t.value,
-                                          formData.year
-                                        );
-                                      }}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-
-                              <div>
-                                <label htmlFor="date">Date</label>
-                                <div>
-                                  {editid ? (
-                                    <label>{formData.date}</label> // Display the date as fixed text if in edit mode
-                                  ) : (
-                                    <Flatpickr
-                                      id="date"
-                                      value={formData.date}
-                                      options={{
-                                        dateFormat: "d/m/Y",
-                                        position: isRtl
-                                          ? "auto right"
-                                          : "auto left"
-                                      }}
-                                      className="form-input"
-                                      onChange={handleDateChange}
-                                      required
-                                    />
-                                  )}
-                                </div>
-                              </div>
-                              <div>
-                                <label htmlFor="monthsSelected">
-                                  Regular Monthly
-                                </label>
-                                <Select
-                                  id="monthsSelected"
-                                  name="monthsSelected"
-                                  options={getMonthOptions(
-                                    formData.year
-                                  ).filter(
-                                    (month) => !usedMonths.includes(month.value)
-                                  )}
-                                  isMulti
-                                  onChange={handleMonthsSelectedChange}
-                                  value={formData.monthsSelected.map(
-                                    (month) => ({
-                                      value: month.month,
-                                      label: month.month
-                                    })
-                                  )}
-                                  className="form-select"
-                                />
-                                {formData.monthsSelected.map((month, index) => (
-                                  <div key={index}>
-                                    <label htmlFor={`monthAmount-${index}`}>
-                                      {month.month} Amount
-                                    </label>
+                                    <label htmlFor="image">Upload Image</label>
                                     <input
-                                      id={`monthAmount-${index}`}
-                                      type="number"
-                                      name={`monthAmount-${index}`}
-                                      placeholder="Enter amount"
-                                      onChange={(e) =>
-                                        handleMonthAmountChange(
-                                          index,
-                                          e.target.value
-                                        )
-                                      }
+                                      id="image"
+                                      type="file"
+                                      name="image"
+                                      accept="image/*"
+                                      onChange={handleFileChange}
                                       className="form-input"
-                                      value={month.amount}
-                                      required
                                     />
                                   </div>
-                                ))}
-                              </div>
-
-                              {/* Conditional rendering based on extraPractice value */}
-                              {extraPractice && (
-                                <div>
-                                  <label htmlFor="extraPracticeMonthsSelected">
-                                    Extra Practice Monthly Fees
-                                  </label>
-                                  <Select
-                                    id="extraPracticeMonthsSelected"
-                                    name="extraPracticeMonthsSelected"
-                                    options={getMonthOptions(
-                                      formData.year
-                                    ).filter(
-                                      (month) =>
-                                        !usedExtraPracticeMonths.includes(
-                                          month.value
-                                        )
-                                    )}
-                                    isMulti
-                                    onChange={
-                                      handleExtraPracticeMonthsSelectedChange
-                                    }
-                                    value={formData.extraPracticeMonthsSelected.map(
-                                      (month) => ({
-                                        value: month.month,
-                                        label: month.month
-                                      })
-                                    )}
-                                    className="form-select"
-                                  />
-                                  {formData.extraPracticeMonthsSelected.map(
-                                    (month, index) => (
-                                      <div key={index}>
-                                        <label
-                                          htmlFor={`extraPracticeMonthAmount-${index}`}
-                                        >
-                                          {month.month} Amount
-                                        </label>
-                                        <input
-                                          id={`extraPracticeMonthAmount-${index}`}
-                                          type="number"
-                                          name={`extraPracticeMonthAmount-${index}`}
-                                          placeholder="Enter amount"
-                                          onChange={(e) =>
-                                            handleExtraPracticeMonthAmountChange(
-                                              index,
-                                              e.target.value
-                                            )
-                                          }
-                                          className="form-input"
-                                          value={month.amount}
-                                          required
-                                        />
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              )}
-
-                              <div>
-                                <label htmlFor="subscriptionType">Other </label>
-                                <Select
-                                  id="subscriptionType"
-                                  name="subscriptionType"
-                                  options={subscriptionOptions}
-                                  isMulti
-                                  onChange={handleSubscriptionChange}
-                                  value={formData.subscriptionType.map(
-                                    (type) => ({
-                                      value: type.type,
-                                      label: type.type
-                                    })
-                                  )}
-                                  className="form-select"
-                                />
-                                {formData.subscriptionType.map(
-                                  (type, index) => (
-                                    <div key={index}>
-                                      <label htmlFor={`typeAmount-${index}`}>
-                                        {type.type} Amount
-                                      </label>
-                                      <input
-                                        id={`typeAmount-${index}`}
-                                        type="number"
-                                        name={`typeAmount-${index}`}
-                                        placeholder="Enter amount"
-                                        onChange={(e) =>
-                                          handleTypeAmountChange(
-                                            index,
-                                            e.target.value
-                                          )
-                                        }
-                                        className="form-input"
-                                        value={type.amount}
-                                      />
-                                    </div>
-                                  )
                                 )}
                               </div>
+
                               <div>
-                                <label htmlFor="paymentType">
-                                  Payment Type
-                                </label>
+                                <label htmlFor="sportstype">Sports Type</label>
                                 <select
-                                  id="paymentType"
-                                  name="paymentType"
+                                  id="sportstype"
+                                  name="sportstype"
                                   className="form-select"
-                                  onChange={(e) =>
-                                    setPaymentType(e.target.value)
-                                  }
-                                  value={paymentType}
+                                  onChange={handleChange}
+                                  value={formData.sportstype}
+                                  required
                                 >
-                                  <option value="cash">Cash</option>
-                                  <option value="upi">UPI</option>
+                                  <option value="">Select Sports Type</option>
+                                  {Sports.map((type) => (
+                                    <option key={type} value={type}>
+                                      {type}
+                                    </option>
+                                  ))}
                                 </select>
                               </div>
 
-                              {paymentType === "upi" && (
+                              {formData.sportstype === "Cricket" && (
                                 <div>
-                                  <label htmlFor="transactionNo">
-                                    Transaction No
+                                  <label htmlFor="extraPractice">
+                                    Extra Practice
                                   </label>
-                                  <input
-                                    id="transactionNo"
-                                    type="text"
-                                    name="transactionNo"
-                                    className="form-input"
-                                    onChange={(e) => {
-                                      setTransactionNo(e.target.value);
-                                    }}
-                                    value={transactionNo}
-                                  />
-                                </div>
-                              )}
-
-                              {paymentType === "upi" && (
-                                <div>
-                                  <label htmlFor="utrNo">UTR No</label>
-                                  <input
-                                    id="utrNo"
-                                    type="text"
-                                    name="utrNo"
-                                    className="form-input"
-                                    onChange={(e) => setUtrNo(e.target.value)}
-                                    value={utrNo}
-                                  />
+                                  <select
+                                    id="extraPractice"
+                                    name="extraPractice"
+                                    className="form-select"
+                                    onChange={handleChange}
+                                    value={formData.extraPractice}
+                                  >
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                  </select>
                                 </div>
                               )}
 
                               <div>
-                                <label htmlFor="amount">Total Amount</label>
+                                <label htmlFor="name">Name</label>
+                                {editid ? (
+                                  <label>{formData.name}</label> // Display the name as a label if in edit mode
+                                ) : (
+                                  <input
+                                    id="name"
+                                    type="text"
+                                    name="name"
+                                    placeholder="Enter name"
+                                    onChange={handleChange}
+                                    className="form-input"
+                                    value={formData.name}
+                                    required
+                                  />
+                                )}
+                              </div>
+
+                              <div>
+                                <label htmlFor="fathersname">
+                                  Father's Name
+                                </label>
                                 <input
-                                  id="amount"
+                                  id="fathersname"
                                   type="text"
-                                  name="amount"
-                                  placeholder="Enter amount"
+                                  name="fathersname"
+                                  placeholder="Enter father's name"
                                   onChange={handleChange}
                                   className="form-input"
-                                  value={formData.amount}
-                                  readOnly
+                                  value={formData.fathersname}
+                                  required
                                 />
                               </div>
+                              <div>
+                                <label htmlFor="guardiansname">
+                                  Guardian's Name
+                                </label>
+                                <input
+                                  id="guardiansname"
+                                  type="text"
+                                  name="guardiansname"
+                                  placeholder="Enter guardian's name"
+                                  onChange={handleChange}
+                                  className="form-input"
+                                  value={formData.guardiansname}
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label htmlFor="guardiansoccupation">
+                                  Guardian's Occupation
+                                </label>
+                                <input
+                                  id="guardiansoccupation"
+                                  type="text"
+                                  name="guardiansoccupation"
+                                  placeholder="Enter guardian's occupation"
+                                  onChange={handleChange}
+                                  className="form-input"
+                                  value={formData.guardiansoccupation}
+                                  required
+                                />
+                              </div>
+
+                              <div>
+                                <label htmlFor="gender">Gender</label>
+                                <select
+                                  id="gender"
+                                  name="gender"
+                                  className="form-select"
+                                  onChange={handleChange}
+                                  value={formData.gender}
+                                  required
+                                >
+                                  <option value="">Select Gender</option>
+                                  {Genders.map((type) => (
+                                    <option key={type} value={type}>
+                                      {type}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label htmlFor="address">Address</label>
+                                <input
+                                  id="address"
+                                  type="text"
+                                  name="address"
+                                  placeholder="Enter address"
+                                  onChange={handleChange}
+                                  className="form-input"
+                                  value={formData.address}
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label htmlFor="phoneno">Phone Number</label>
+                                <input
+                                  id="phoneno"
+                                  type="text"
+                                  name="phoneno"
+                                  placeholder="Enter phone number"
+                                  onChange={handleChange}
+                                  className="form-input"
+                                  value={formData.phoneno}
+                                  maxLength={10} // Restrict input to 10 digits
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label htmlFor="date">Date of birth</label>
+                                <Flatpickr
+                                  id="date"
+                                  value={formData.date}
+                                  required
+                                  options={{
+                                    dateFormat: "d/m/Y",
+                                    position: isRtl
+                                      ? "auto right"
+                                      : "auto left",
+                                  }}
+                                  className="form-input"
+                                  onChange={handleDateChange}
+                                />
+                              </div>
+                              <div>
+                                <label htmlFor="nameoftheschool">
+                                  Name of the School
+                                </label>
+                                <input
+                                  id="nameoftheschool"
+                                  type="text"
+                                  name="nameoftheschool"
+                                  placeholder="Enter name of the school"
+                                  onChange={handleChange}
+                                  className="form-input"
+                                  value={formData.nameoftheschool}
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label htmlFor="bloodgroup">Blood Group</label>
+                                <select
+                                  id="bloodgroup"
+                                  name="bloodgroup"
+                                  className="form-select"
+                                  onChange={handleChange}
+                                  value={formData.bloodgroup}
+                                  required
+                                >
+                                  <option value="">Select Blood Group</option>
+                                  {Bloods.map((type) => (
+                                    <option key={type} value={type}>
+                                      {type}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label htmlFor="joiningdate">
+                                  Joining Date
+                                </label>
+                                <Flatpickr
+                                  id="joiningdate"
+                                  value={formData.joiningdate}
+                                  options={{
+                                    dateFormat: "d/m/Y",
+                                    position: isRtl
+                                      ? "auto right"
+                                      : "auto left",
+                                  }}
+                                  className="form-input"
+                                  onChange={(date) =>
+                                    setFormData((prevFormData) => ({
+                                      ...prevFormData,
+                                      joiningdate: date[0]
+                                        ? formatDate(date[0])
+                                        : "",
+                                    }))
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                {formData.document ? (
+                                  <div
+                                    style={{
+                                      position: "relative",
+                                      display: "flex",
+                                    }}
+                                  >
+                                    <a
+                                      href={`https://pallisree.blr1.cdn.digitaloceanspaces.com/${formData.document}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        textDecoration: "none",
+                                        color: "blue",
+                                      }}
+                                    >
+                                      View Document
+                                    </a>
+                                    <button
+                                      onClick={handleRemoveDocument}
+                                      style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        right: 0,
+                                        backgroundColor: "red",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "50%",
+                                        width: "24px",
+                                        height: "24px",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      &times;
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <label htmlFor="document">
+                                      Upload Document
+                                    </label>
+                                    <input
+                                      id="document"
+                                      type="file"
+                                      name="document"
+                                      onChange={handleDocumentChange}
+                                      className="form-input"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+
+                              <div>
+                                {formData.adhar ? (
+                                  <div
+                                    style={{
+                                      position: "relative",
+                                      display: "flex",
+                                    }}
+                                  >
+                                    <a
+                                      href={`https://pallisree.blr1.cdn.digitaloceanspaces.com/${formData.adhar}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        textDecoration: "none",
+                                        color: "blue",
+                                      }}
+                                    >
+                                      View Aadhaar
+                                    </a>
+                                    <button
+                                      onClick={handleRemoveAdhar}
+                                      style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        right: 0,
+                                        backgroundColor: "red",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "50%",
+                                        width: "24px",
+                                        height: "24px",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      &times;
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <label htmlFor="adhar">
+                                      Upload Aadhaar
+                                    </label>
+                                    <input
+                                      id="adhar"
+                                      type="file"
+                                      name="adhar"
+                                      onChange={handleAdharChange}
+                                      className="form-input"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+
                               <button
                                 type="submit"
                                 className="btn btn-primary !mt-6"
@@ -1551,7 +1475,15 @@ const ComponentsDatatablesSubscription = () => {
             onClick={() => getcustomeval()}
           >
             <IconPlus className="ltr:mr-2 rtl:ml-2" />
-            Fees
+            Trainee
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary my-5 ml-2"
+            onClick={() => setShowCsvUpload(true)}
+          >
+            <IconFile className="h-5 w-5 ltr:mr-2 rtl:ml-2" />
+            Upload CSV
           </button>
           <button
             type="button"
@@ -1560,6 +1492,20 @@ const ComponentsDatatablesSubscription = () => {
           >
             <IconFile className="h-5 w-5 ltr:mr-2 rtl:ml-2" />
             CSV
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary my-5 ml-2"
+            onClick={handleShowSelectedTrainees}
+          >
+            Show Selected Trainees
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger my-5 ml-2"
+            onClick={handleDeleteAllClick}
+          >
+            Delete All
           </button>
         </div>
 
@@ -1571,58 +1517,211 @@ const ComponentsDatatablesSubscription = () => {
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
+
+      <div className="mb-4 flex flex-wrap gap-4 sm:flex-col md:flex-row">
+        <Flatpickr
+          options={{ dateFormat: "d/m/Y" }}
+          className="form-input w-full sm:w-auto"
+          placeholder="Start Date"
+          value={startDate} // Use the state variable here
+          onChange={(date) =>
+            setStartDate(
+              date.length ? dayjs(date[0]).format("DD/MM/YYYY") : null
+            )
+          }
+        />
+        <Flatpickr
+          options={{ dateFormat: "d/m/Y" }}
+          className="form-input w-full sm:w-auto"
+          placeholder="End Date"
+          value={endDate} // Use the state variable here
+          onChange={(date) =>
+            setEndDate(date.length ? dayjs(date[0]).format("DD/MM/YYYY") : null)
+          }
+        />
+        <select
+          className="form-input w-full sm:w-auto"
+          value={ageFilter}
+          onChange={(e) => setAgeFilter(e.target.value)}
+        >
+          <option value="">Select Age</option>
+          {[...Array(76)].map((_, index) => (
+            <option key={index} value={`${index + 4}-${index + 5}`}>
+              {index + 4} - {index + 5} years
+            </option>
+          ))}
+        </select>
+        <select
+          className="form-input w-full sm:w-auto"
+          value={genderFilter}
+          onChange={(e) => setGenderFilter(e.target.value)}
+        >
+          <option value="">Select Gender</option>
+          {Genders.map((gender) => (
+            <option key={gender} value={gender}>
+              {gender}
+            </option>
+          ))}
+        </select>
+        <select
+          className="form-input w-full sm:w-auto"
+          value={sportstypeFilter}
+          onChange={(e) => setSportstypeFilter(e.target.value)}
+        >
+          <option value="">Select Sportstype</option>
+          {Sports.map((sportstype) => (
+            <option key={sportstype} value={sportstype}>
+              {sportstype}
+            </option>
+          ))}
+        </select>
+        <select
+          className="form-input w-full sm:w-auto"
+          value={extraPracticeFilter}
+          onChange={(e) => setExtraPracticeFilter(e.target.value)}
+        >
+          <option value="">Select Extra Practice</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+        <select
+          className="form-input w-full sm:w-auto"
+          value={bloodGroupFilter}
+          onChange={(e) => setBloodGroupFilter(e.target.value)}
+        >
+          <option value="">Select Blood Group</option>
+          {Bloods.map((blood) => (
+            <option key={blood} value={blood}>
+              {blood}
+            </option>
+          ))}
+        </select>
+
+        <button
+          className="btn btn-secondary w-full sm:w-auto"
+          onClick={handleClearFilters}
+        >
+          Clear
+        </button>
+      </div>
+
       <div className="datatables">
         <DataTable
           highlightOnHover
           className="table-hover whitespace-nowrap"
           records={recordsData}
           columns={[
-            { accessor: "billNo", title: "Bill No", sortable: true },
-            { accessor: "trainee", sortable: true },
-            { accessor: "year", sortable: true },
-            { accessor: "date", sortable: true },
             {
-              accessor: "monthsSelected",
-              title: "Monthly Fees",
+              accessor: "checkbox",
+              title: "",
+              render: (row) => (
+                <input
+                  type="checkbox"
+                  checked={selectedTrainees.includes(row.id)}
+                  onChange={() => handleCheckboxChange(row.id)}
+                />
+              ),
+            },
+            {
+              accessor: "image",
               sortable: true,
-              render: ({ monthsSelected }) =>
-                monthsSelected
-                  .map((month) => `${month.month}: ${month.amount}`)
-                  .join(", ")
+              render: (row) => <RenderImage row={row} />,
             },
             {
-              accessor: "extraPracticeMonthsSelected",
-              title: "Extra Monthly fees",
+              accessor: "name",
               sortable: true,
-              render: ({ extraPracticeMonthsSelected }) =>
-                extraPracticeMonthsSelected
-                  .map((month) => `${month.month}: ${month.amount}`)
-                  .join(", ")
+              render: (row) => (
+                <button
+                  type="button"
+                  className="text-blue-500 underline"
+                  onClick={() => handleViewClick(row.id)}
+                >
+                  {row.name}
+                </button>
+              ),
             },
+            { accessor: "sportstype", title: "Sports type", sortable: true },
             {
-              accessor: "subscriptionType",
-              title: "Other",
+              accessor: "extraPractice",
+              title: "Extra Practice",
               sortable: true,
-              render: ({ subscriptionType }) =>
-                subscriptionType
-                  .map((type) => `${type.type}: ${type.amount}`)
-                  .join(", ")
             },
-            { accessor: "amount", sortable: true },
+            { accessor: "fathersname", title: "Fathers Name", sortable: true },
             {
-              accessor: "paymentType",
-              title: "Payment Type",
-              sortable: true
+              accessor: "guardiansname",
+              title: "Guardians name",
+              sortable: true,
             },
             {
-              accessor: "transactionNo",
-              title: "Transaction No",
-              sortable: true
+              accessor: "guardiansoccupation",
+              title: "Occupation",
+              sortable: true,
+            },
+            { accessor: "gender", sortable: true },
+            {
+              accessor: "address",
+              sortable: true,
+              render: (row) => (
+                <Tippy content={row.address}>
+                  <span>{truncateAddress(row.address)}</span>
+                </Tippy>
+              ),
+            },
+            { accessor: "phoneno", sortable: true },
+            {
+              accessor: "date",
+              title: "DOB",
+              sortable: true,
+              render: (row) => formatDate(row.date),
+            },
+
+            { accessor: "nameoftheschool", title: "School", sortable: true },
+            { accessor: "bloodgroup", title: "Blood", sortable: true },
+            { accessor: "joiningdate", title: "Joining date", sortable: true },
+            {
+              accessor: "Certificate",
+              sortable: true,
+              render: (row) => (
+                <div className="mx-auto flex w-max items-center gap-4">
+                  <Tippy content="Birth Certificate">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.open(
+                          `https://pallisree.blr1.cdn.digitaloceanspaces.com/${row.document}`,
+                          "_blank"
+                        );
+                      }}
+                      className="btn"
+                    >
+                      <IconDOB />
+                    </button>
+                  </Tippy>
+                </div>
+              ),
             },
             {
-              accessor: "utrNo",
-              title: "UTR No",
-              sortable: true
+              accessor: "adhar",
+              title: "Aadhaar",
+              sortable: true,
+              render: (row) => (
+                <div className="mx-auto flex w-max items-center gap-4">
+                  <Tippy content="Aadhaar">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.open(
+                          `https://pallisree.blr1.cdn.digitaloceanspaces.com/${row.adhar}`,
+                          "_blank"
+                        );
+                      }}
+                      className="btn"
+                    >
+                      <IconAadhaar />
+                    </button>
+                  </Tippy>
+                </div>
+              ),
             },
             {
               accessor: "action",
@@ -1630,7 +1729,7 @@ const ComponentsDatatablesSubscription = () => {
               titleClassName: "!text-center",
               render: (row) => (
                 <div className="mx-auto flex w-max items-center gap-4">
-                  <Tippy content="Edit Fees">
+                  <Tippy content="Edit Trainee">
                     <button
                       type="button"
                       onClick={() => handleUpdateClick(row.id)}
@@ -1640,7 +1739,7 @@ const ComponentsDatatablesSubscription = () => {
                     </button>
                   </Tippy>
 
-                  <Tippy content="Delete Fees">
+                  <Tippy content="Delete Trainee">
                     <button
                       type="button"
                       onClick={() => handleDeleteClick(row.id)}
@@ -1650,18 +1749,18 @@ const ComponentsDatatablesSubscription = () => {
                     </button>
                   </Tippy>
 
-                  <Tippy content="Download PDF">
+                  <Tippy content="View Trainee">
                     <button
                       type="button"
-                      onClick={() => generatePdf(row)}
+                      onClick={() => handleViewClick(row.id)}
                       className="btn btn-primary bg-blue-500"
                     >
-                      <IconFile />
+                      <FaSearch />
                     </button>
                   </Tippy>
                 </div>
-              )
-            }
+              ),
+            },
           ]}
           totalRecords={initialRecords.length}
           recordsPerPage={pageSize}
@@ -1674,6 +1773,9 @@ const ComponentsDatatablesSubscription = () => {
           minHeight={200}
           paginationText={({ from, to, totalRecords }) =>
             `Showing ${from} to ${to} of ${totalRecords} entries`
+          }
+          rowClassName={(row) =>
+            selectedTrainees.includes(row.id) ? "bg-blue-100" : ""
           }
         />
       </div>
@@ -1715,7 +1817,7 @@ const ComponentsDatatablesSubscription = () => {
                     ></button>
                   </div>
                   <div className="p-5">
-                    <p>Do you want to delete this Fees?</p>
+                    <p>Do you want to delete this Trainee?</p>
                     <div className="mt-8 flex items-center justify-end">
                       <button
                         type="button"
@@ -1727,9 +1829,313 @@ const ComponentsDatatablesSubscription = () => {
                       <button
                         type="button"
                         className="btn btn-primary ltr:ml-4 rtl:mr-4"
-                        onClick={handleDeleteData}
+                        onClick={() => handleDeleteData()}
                       >
                         Delete
+                      </button>
+                    </div>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      <Transition appear show={showCsvUpload} as={Fragment}>
+        <Dialog
+          as="div"
+          open={showCsvUpload}
+          onClose={() => setShowCsvUpload(false)}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0" />
+          </Transition.Child>
+          <div className="fixed inset-0 z-[999] overflow-y-auto bg-[black]/60">
+            <div className="flex min-h-screen items-center justify-center px-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel
+                  as="div"
+                  className="panel my-8 w-full max-w-lg overflow-hidden rounded-lg border-0 p-0 text-black dark:text-white-dark"
+                >
+                  <div className="flex items-center justify-between bg-[#fbfbfb] px-5 py-3 dark:bg-[#121c2c]">
+                    <div className="text-lg font-bold">Upload CSV</div>
+                    <button
+                      type="button"
+                      className="text-white-dark hover:text-dark"
+                      onClick={() => setShowCsvUpload(false)}
+                      onSubmit={handleCsvUpload}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="p-5">
+                    <div className="mb-5">
+                      <form
+                        className="space-y-5"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleCsvUpload();
+                        }}
+                      >
+                        <div>
+                          <label htmlFor="csvFile">Upload CSV</label>
+                          <input
+                            id="csvFile"
+                            type="file"
+                            name="csvFile"
+                            accept=".csv"
+                            onChange={handleCsvFileChange}
+                            className="form-input"
+                          />
+                        </div>
+                        <button type="submit" className="btn btn-primary !mt-6">
+                          Submit
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      <Transition appear show={showSelectedTrainees} as={Fragment}>
+        <Dialog
+          as="div"
+          open={showSelectedTrainees}
+          onClose={() => setShowSelectedTrainees(false)}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0" />
+          </Transition.Child>
+          <div className="fixed inset-0 z-[999] overflow-y-auto bg-[black]/60">
+            <div className="flex min-h-screen items-center justify-center px-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel
+                  as="div"
+                  className="panel my-8 w-full max-w-lg overflow-hidden rounded-lg border-0 p-0 text-black dark:text-white-dark"
+                >
+                  <div className="flex items-center justify-between bg-[#fbfbfb] px-5 py-3 dark:bg-[#121c2c]">
+                    <div className="text-lg font-bold">Selected Trainees</div>
+                    <button
+                      type="button"
+                      className="text-white-dark hover:text-dark"
+                      onClick={() => setShowSelectedTrainees(false)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="p-5" id="printableContent">
+                    <div className="mb-4">
+                      <label htmlFor="eventType">Event Type</label>
+                      <select
+                        id="eventType"
+                        className="form-select"
+                        value={eventType}
+                        onChange={(e) => setEventType(e.target.value)}
+                      >
+                        <option value="Tournament">Tournament</option>
+                        <option value="Camp">Camp</option>
+                      </select>
+                    </div>
+
+                    {/* Existing fields for tournament or camp details */}
+                    {eventType === "Tournament" && (
+                      <>
+                        <div className="mb-4">
+                          <label htmlFor="tournamentName">
+                            Tournament Name
+                          </label>
+                          <input
+                            id="tournamentName"
+                            type="text"
+                            className="form-input"
+                            value={tournamentName}
+                            onChange={(e) => setTournamentName(e.target.value)}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="groundName">Ground Name</label>
+                          <input
+                            id="groundName"
+                            type="text"
+                            className="form-input"
+                            value={groundName}
+                            onChange={(e) => setGroundName(e.target.value)}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="tournamentDate">
+                            Tournament Date
+                          </label>
+                          <DatePicker
+                            id="tournamentDate"
+                            selected={tournamentDate}
+                            onChange={(date) => setTournamentDate(date)}
+                            dateFormat="dd/MM/yyyy"
+                            className="form-input"
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="time">Time</label>
+                          <input
+                            id="time"
+                            type="time"
+                            className="form-input"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {eventType === "Camp" && (
+                      <>
+                        <div className="mb-4">
+                          <label htmlFor="campName">Camp Name</label>
+                          <input
+                            id="campName"
+                            type="text"
+                            className="form-input"
+                            value={campName}
+                            onChange={(e) => setCampName(e.target.value)}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="campType">Camp Type</label>
+                          <select
+                            id="campType"
+                            className="form-select"
+                            value={campType}
+                            onChange={(e) => setCampType(e.target.value)}
+                          >
+                            <option value="18Trial">18 Trial</option>
+                            <option value="15Trial">15 Trial</option>
+                            <option value="Division">Division</option>
+                            <option value="District">District</option>
+                          </select>
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="campDate">Camp Date</label>
+                          <DatePicker
+                            id="campDate"
+                            selected={campDate}
+                            onChange={(date) => setCampDate(date)}
+                            dateFormat="dd/MM/yyyy"
+                            className="form-input"
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="time">Time</label>
+                          <input
+                            id="time"
+                            type="time"
+                            className="form-input"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div className="mb-4">
+                      <label htmlFor="note">Note</label>
+                      <textarea
+                        id="note"
+                        className="form-input"
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                      />
+                    </div>
+
+                    {/* New section to display selected trainees */}
+                    <div className="mb-4">
+                      <h3 className="text-lg font-bold">Selected Trainees</h3>
+                      <div className="space-y-4">
+                        {selectedTrainees.map((id) => {
+                          const trainee = initialRecords.find(
+                            (t) => t.id === id
+                          );
+                          if (!trainee) return null;
+                          return (
+                            <div
+                              key={trainee.id}
+                              className="flex items-center space-x-4"
+                            >
+                              <img
+                                src={`https://pallisree.blr1.cdn.digitaloceanspaces.com/${trainee.image}`}
+                                alt={trainee.name}
+                                className="h-12 w-12 rounded-full"
+                              />
+                              <div>
+                                <div className="font-medium">
+                                  {trainee.name}
+                                </div>
+                                <div className="text-gray-500">
+                                  DOB: {formatDate(trainee.date)}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        className="btn btn-primary"
+                        onClick={handleGeneratePDF}
+                      >
+                        Generate PDF
                       </button>
                     </div>
                   </div>
@@ -1743,4 +2149,4 @@ const ComponentsDatatablesSubscription = () => {
   );
 };
 
-export default ComponentsDatatablesSubscription;
+export default ComponentsDatatablesTrainee;
