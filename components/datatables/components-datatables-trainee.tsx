@@ -91,6 +91,7 @@ const parseDate = (dateString) => {
 };
 
 const ComponentsDatatablesTrainee = () => {
+  const [events, setEvents] = useState([]);
   const [file, setFile] = useState(null);
   const [documentfile, setDocumentFile] = useState(null);
   const [adharfile, setAdharFile] = useState(null);
@@ -130,6 +131,7 @@ const ComponentsDatatablesTrainee = () => {
   const [showSelectedTrainees, setShowSelectedTrainees] = useState(false);
   const [tournamentName, setTournamentName] = useState("");
   const [groundName, setGroundName] = useState("");
+  const [tournamentlocation, setTournamentLocation] = useState("");
   const [tournamentDate, setTournamentDate] = useState("");
   const [note, setNote] = useState("");
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -139,6 +141,7 @@ const ComponentsDatatablesTrainee = () => {
   const [campName, setCampName] = useState("");
   const [campType, setCampType] = useState("");
   const [campDate, setCampDate] = useState(null);
+  const [camplocation, setCampLocation] = useState("");
   const [time, setTime] = useState("");
   const router = useRouter();
 
@@ -606,7 +609,7 @@ const ComponentsDatatablesTrainee = () => {
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-
+  
     const formattedFormData = {
       ...formData,
       dob: formData.dob ? formData.dob.split("/").reverse().join("-") : "",
@@ -614,7 +617,7 @@ const ComponentsDatatablesTrainee = () => {
         ? formData.joiningdate.split("/").reverse().join("-")
         : "",
     };
-
+  
     let imageName = "";
     let docname = "";
     let adhname = "";
@@ -623,23 +626,23 @@ const ComponentsDatatablesTrainee = () => {
       imageName = formData.phoneno + "-" + filename;
       formData.image = imageName;
     }
-
+  
     if (documentfile) {
       const documentfilename = documentfile.name;
       docname = formData.phoneno + "-" + documentfilename;
       formData.document = docname;
     }
-
+  
     if (adharfile) {
       const adharfilename = adharfile.name;
       adhname = formData.phoneno + "-" + adharfilename;
       formData.adhar = adhname;
     }
-
+  
     try {
       const url = editid ? `/api/studentform/${editid}` : "/api/studentform";
       const method = editid ? "PUT" : "POST";
-
+  
       const res = await fetch(url, {
         method: method,
         headers: {
@@ -647,7 +650,7 @@ const ComponentsDatatablesTrainee = () => {
         },
         body: JSON.stringify(formData),
       });
-
+  
       if (res.ok) {
         if (editid) {
           updatedTrainee(); // show trainee updated message
@@ -656,7 +659,7 @@ const ComponentsDatatablesTrainee = () => {
         }
         fetchTraineeData();
         setModal1(false);
-
+  
         const uploadFormData = new FormData();
         if (file) {
           uploadFormData.append("file", file);
@@ -669,33 +672,22 @@ const ComponentsDatatablesTrainee = () => {
             uploadFormData.append("adharname", adhname);
           }
           uploadFormData.append("imageName", imageName);
-
+  
           const uploadRes = await fetch("/api/upload", {
             method: "POST",
             body: uploadFormData,
           });
         }
-
+  
         if (!editid) {
-          const currentDate = new Date();
-
-          // Format the current date to DD/MM/YYYY
-          const day = String(currentDate.getDate()).padStart(2, "0");
-          const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Months are 0-based, so add 1
-          const year = currentDate.getFullYear();
-          const formattedCurrentDate = `${day}/${month}/${year}`;
-
-          // Now replace formData.joiningdate with the formatted current date
-          const [currentDay, currentMonth, currentYear] =
-            formattedCurrentDate.split("/");
-          const isoDate = `${currentYear}-${currentMonth}-${currentDay}`;
-
+          const currentDate = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+  
           const reportData = {
-            date: isoDate,
+            date: currentDate, // Use today's date
             noOfNewTraineeCricket: formData.sportstype === "Cricket" ? 1 : 0,
             noOfNewTraineeFootball: formData.sportstype === "Football" ? 1 : 0,
           };
-
+  
           const reportRes = await fetch("/api/reports", {
             method: "POST",
             headers: {
@@ -703,7 +695,7 @@ const ComponentsDatatablesTrainee = () => {
             },
             body: JSON.stringify(reportData),
           });
-
+  
           if (reportRes.ok) {
             console.log("Reports updated successfully");
           } else {
@@ -717,6 +709,7 @@ const ComponentsDatatablesTrainee = () => {
       console.log("Error in form submission:", error);
     }
   };
+  
 
   const handleUpdateClick = async (value) => {
     try {
@@ -828,6 +821,35 @@ const ComponentsDatatablesTrainee = () => {
       </div>
     );
   };
+
+
+
+  const fetchEventData = async () => {
+    try {
+      const response = await fetch("/api/event"); // Assuming you have an API endpoint to fetch event data
+      if (!response.ok) {
+        throw new Error("Failed to fetch event data");
+      }
+      const data = await response.json();
+      setEvents(data);
+    } catch (error) {
+      console.error(error);
+      MySwal.fire({
+        title: "Error fetching events",
+        text: error.message,
+        icon: "error",
+        toast: true,
+        position: "bottom-start",
+        showConfirmButton: false,
+        timer: 5000,
+        showCloseButton: true,
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchEventData();
+  }, []);
 
   const handleCheckboxChange = (id) => {
     setSelectedTrainees((prevSelected) =>
@@ -963,7 +985,6 @@ const ComponentsDatatablesTrainee = () => {
       doc.save("selected_trainees.pdf");
     };
   };
-
   const handleDeleteAllClick = () => {
     MySwal.fire({
       title: "Do you want to delete the selected Trainees?",
@@ -2014,6 +2035,16 @@ const ComponentsDatatablesTrainee = () => {
                           />
                         </div>
                         <div className="mb-4">
+                          <label htmlFor="tournamentlocation">Tournament Location</label>
+                          <input
+                            id="tournamentlocation"
+                            type="text"
+                            className="form-input"
+                            value={tournamentlocation}
+                            onChange={(e) => setTournamentLocation(e.target.value)}
+                          />
+                        </div>
+                        <div className="mb-4">
                           <label htmlFor="tournamentDate">
                             Tournament Date
                           </label>
@@ -2064,6 +2095,19 @@ const ComponentsDatatablesTrainee = () => {
                             <option value="District">District</option>
                           </select>
                         </div>
+
+                        <div className="mb-4">
+                          <label htmlFor="camplocation">Camp Location</label>
+                          <input
+                            id="camplocation"
+                            type="text"
+                            className="form-input"
+                            value={camplocation}
+                            onChange={(e) => setCampLocation(e.target.value)}
+                          />
+                        </div>
+
+
                         <div className="mb-4">
                           <label htmlFor="campDate">Camp Date</label>
                           <DatePicker
