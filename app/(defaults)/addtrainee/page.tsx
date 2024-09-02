@@ -113,28 +113,6 @@ const AddTraineePage = () => {
     }
   };
 
-  const uploadFile = async (file: File, type: string): Promise<string | null> => {
-    const formData = new FormData();
-    formData.append("file", file);
-  
-    try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Failed to upload ${type}`);
-      }
-  
-      const data = await response.json();
-      return data.fileUrl || null;
-    } catch (error) {
-      console.error("Upload error:", error);
-      return null;
-    }
-  };
-
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
@@ -222,8 +200,9 @@ const AddTraineePage = () => {
           });
         }
   
+        // Use the current date for the report
         const reportData = {
-          date: formattedFormData.joiningdate, // Use joiningdate here
+          date: new Date().toISOString().split("T")[0], // Use today's date in YYYY-MM-DD format
           noOfNewTraineeCricket: formData.sportstype === "Cricket" ? 1 : 0,
           noOfNewTraineeFootball: formData.sportstype === "Football" ? 1 : 0,
         };
