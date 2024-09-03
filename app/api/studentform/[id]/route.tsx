@@ -37,6 +37,8 @@ export async function PUT(
       date,
       nameoftheschool,
       bloodgroup,
+      document,
+      adhar,
       extraPractice, // Nouveau champ ajouté
       joiningdate,
     } = await request.json();
@@ -58,6 +60,8 @@ export async function PUT(
         nameoftheschool,
         bloodgroup,
         extraPractice, 
+        document,
+        adhar,
         joiningdate,
       },
       { new: true }
