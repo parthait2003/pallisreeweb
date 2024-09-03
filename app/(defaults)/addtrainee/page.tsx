@@ -505,7 +505,7 @@ const AddTraineePage = () => {
 
         <div className="mb-4">
           <label htmlFor="document" className="block text-sm font-medium">
-            Upload Document
+            Upload Birth certificate
           </label>
           <input
             id="document"
