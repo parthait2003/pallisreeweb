@@ -328,7 +328,7 @@ const ComponentsDatatablesTrainee = () => {
       return (
         (search === "" ||
           item.id.toString().includes(search.toLowerCase()) ||
-          item.image.toString().includes(search.toLowerCase()) ||
+         
           item.sportstype.toString().includes(search.toLowerCase()) ||
           item.name.toLowerCase().includes(search.toLowerCase()) ||
           item.fathersname.toLowerCase().includes(search.toLowerCase()) ||
@@ -343,9 +343,8 @@ const ComponentsDatatablesTrainee = () => {
           item.nameoftheschool.toString().includes(search.toLowerCase()) ||
           item.bloodgroup.toLowerCase().includes(search.toLowerCase()) ||
           item.extraPractice.toLowerCase().includes(search.toLowerCase()) ||
-          item.document?.toString().includes(search.toLowerCase()) ||
-          (item.joiningdate?.toString() || "").includes(search.toLowerCase()) ||
-          item.adhar?.toString().includes(search.toLowerCase())) &&
+         
+          (item.joiningdate?.toString() || "").includes(search.toLowerCase())) &&
         isInDateRange &&
         (!ageFilter || isAgeMatch) &&
         isGenderMatch &&
