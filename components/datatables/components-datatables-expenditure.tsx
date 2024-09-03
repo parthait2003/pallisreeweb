@@ -22,13 +22,7 @@ import autoTable from "jspdf-autotable";
 
 const MySwal = withReactContent(Swal);
 
-const handleRemoveDocument = () => {
-  setDocumentFile(null);
-  setFormData((prevFormData) => ({
-    ...prevFormData,
-    document: null,
-  }));
-};
+
 
 const showMessage8 = () => {
   MySwal.fire({
@@ -126,6 +120,16 @@ const ComponentsDatatablesExpenditure = () => {
       showCloseButton: true,
     });
   };
+
+
+
+  const handleRemoveDocument = () => {
+  setDocumentFile(null);
+  setFormData((prevFormData) => ({
+    ...prevFormData,
+    document: null,
+  }));
+};
 
   const deletedexpenditure = () => {
     MySwal.fire({
