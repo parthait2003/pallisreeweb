@@ -465,7 +465,7 @@ const AddTraineePage = () => {
             value={formData.bloodgroup}
             onChange={handleChange}
             className="form-select mt-1 block w/full"
-            required
+            
           >
             <option value="">Select Blood Group</option>
             {Bloods.map((blood) => (
