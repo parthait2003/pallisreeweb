@@ -33,6 +33,7 @@ const AddTraineePage = () => {
     image: "",
     document: "",
     adhar: "",
+  
   });
 
   const router = useRouter();
@@ -61,7 +62,9 @@ const AddTraineePage = () => {
           );
         }
       } catch (error) {
-        setImageSrc(`/assets/images/trainee_${formData.gender.toLowerCase()}.png`);
+        setImageSrc(
+          `/assets/images/trainee_${formData.gender.toLowerCase()}.png`
+        );
       }
     };
 
@@ -149,7 +152,7 @@ const AddTraineePage = () => {
         ? formData.joiningdate.split("/").reverse().join("-")
         : "",
     };
-  
+
     let imageName = "";
     let docname = "";
     let adhname = "";
@@ -158,19 +161,19 @@ const AddTraineePage = () => {
       imageName = formData.phoneno + "-" + filename;
       formData.image = imageName;
     }
-  
+
     if (documentfile) {
       const documentfilename = documentfile.name;
       docname = formData.phoneno + "-" + documentfilename;
       formData.document = docname;
     }
-  
+
     if (adharfile) {
       const adharfilename = adharfile.name;
       adhname = formData.phoneno + "-" + adharfilename;
       formData.adhar = adhname;
     }
-  
+
     try {
       const res = await fetch("/api/studentform", {
         method: "POST",
@@ -179,7 +182,7 @@ const AddTraineePage = () => {
         },
         body: JSON.stringify(formData),
       });
-  
+
       if (res.ok) {
         const uploadFormData = new FormData();
         if (file) {
@@ -193,20 +196,20 @@ const AddTraineePage = () => {
             uploadFormData.append("adharname", adhname);
           }
           uploadFormData.append("imageName", imageName);
-  
+
           await fetch("/api/upload", {
             method: "POST",
             body: uploadFormData,
           });
         }
-  
+
         // Use the current date for the report
         const reportData = {
           date: new Date().toISOString().split("T")[0], // Use today's date in YYYY-MM-DD format
           noOfNewTraineeCricket: formData.sportstype === "Cricket" ? 1 : 0,
           noOfNewTraineeFootball: formData.sportstype === "Football" ? 1 : 0,
         };
-  
+
         const reportRes = await fetch("/api/reports", {
           method: "POST",
           headers: {
@@ -214,13 +217,13 @@ const AddTraineePage = () => {
           },
           body: JSON.stringify(reportData),
         });
-  
+
         if (reportRes.ok) {
           console.log("Reports updated successfully");
         } else {
           console.error("Failed to update reports");
         }
-  
+
         // Reset form data
         setFormData({
           sportstype: "",
@@ -240,11 +243,18 @@ const AddTraineePage = () => {
           document: "",
           adhar: "",
         });
-  
+
         setFile(null);
         setDocumentFile(null);
         setAdharFile(null);
-  
+
+        // Show success alert
+        Swal.fire({
+          icon: "success",
+          title: "Trainee Added",
+          text: "The trainee has been added to the database successfully!",
+        });
+
         // Refresh the page
         router.refresh();
       } else {
@@ -254,11 +264,12 @@ const AddTraineePage = () => {
       console.log("Error in form submission:", error);
     }
   };
-  
+
   return (
     <div className="container mx-auto p-8">
       <h1 className="mb-6 text-2xl font-semibold">Add Trainee</h1>
       <form onSubmit={handleFormSubmit}>
+        {/* Sports Type */}
         <div className="mb-4">
           <label htmlFor="sportstype" className="block text-sm font-medium">
             Sports Type
@@ -280,6 +291,7 @@ const AddTraineePage = () => {
           </select>
         </div>
 
+        {/* Extra Practice (visible if Cricket is selected) */}
         {formData.sportstype === "Cricket" && (
           <div className="mb-4">
             <label
@@ -301,6 +313,7 @@ const AddTraineePage = () => {
           </div>
         )}
 
+        {/* Name */}
         <div className="mb-4">
           <label htmlFor="name" className="block text-sm font-medium">
             Name
@@ -317,6 +330,7 @@ const AddTraineePage = () => {
           />
         </div>
 
+        {/* Father's Name */}
         <div className="mb-4">
           <label htmlFor="fathersname" className="block text-sm font-medium">
             Father's Name
@@ -333,6 +347,7 @@ const AddTraineePage = () => {
           />
         </div>
 
+        {/* Guardian's Name */}
         <div className="mb-4">
           <label htmlFor="guardiansname" className="block text-sm font-medium">
             Guardian's Name
@@ -349,6 +364,7 @@ const AddTraineePage = () => {
           />
         </div>
 
+        {/* Guardian's Occupation */}
         <div className="mb-4">
           <label
             htmlFor="guardiansoccupation"
@@ -362,12 +378,13 @@ const AddTraineePage = () => {
             type="text"
             value={formData.guardiansoccupation}
             onChange={handleChange}
-            className="form-input mt-1 block w/full"
+            className="w/full form-input mt-1 block"
             placeholder="Enter guardian's occupation"
             required
           />
         </div>
 
+        {/* Gender */}
         <div className="mb-4">
           <label htmlFor="gender" className="block text-sm font-medium">
             Gender
@@ -377,7 +394,7 @@ const AddTraineePage = () => {
             name="gender"
             value={formData.gender}
             onChange={handleChange}
-            className="form-select mt-1 block w/full"
+            className="w/full form-select mt-1 block"
             required
           >
             <option value="">Select Gender</option>
@@ -389,6 +406,7 @@ const AddTraineePage = () => {
           </select>
         </div>
 
+        {/* Address */}
         <div className="mb-4">
           <label htmlFor="address" className="block text-sm font-medium">
             Address
@@ -399,12 +417,13 @@ const AddTraineePage = () => {
             type="text"
             value={formData.address}
             onChange={handleChange}
-            className="form-input mt-1 block w/full"
+            className="w/full form-input mt-1 block"
             placeholder="Enter address"
             required
           />
         </div>
 
+        {/* Phone Number */}
         <div className="mb-4">
           <label htmlFor="phoneno" className="block text-sm font-medium">
             Phone Number
@@ -415,13 +434,14 @@ const AddTraineePage = () => {
             type="text"
             value={formData.phoneno}
             onChange={handleChange}
-            className="form-input mt-1 block w/full"
+            className="w/full form-input mt-1 block"
             placeholder="Enter phone number"
             maxLength={10}
             required
           />
         </div>
 
+        {/* Date of Birth */}
         <div className="mb-4">
           <label htmlFor="date" className="block text-sm font-medium">
             Date of Birth
@@ -431,11 +451,12 @@ const AddTraineePage = () => {
             value={formData.date}
             onChange={handleDateChange}
             options={{ dateFormat: "d/m/Y" }}
-            className="form-input mt-1 block w/full"
+            className="w/full form-input mt-1 block"
             required
           />
         </div>
 
+        {/* Name of the School */}
         <div className="mb-4">
           <label
             htmlFor="nameoftheschool"
@@ -449,12 +470,13 @@ const AddTraineePage = () => {
             type="text"
             value={formData.nameoftheschool}
             onChange={handleChange}
-            className="form-input mt-1 block w/full"
+            className="w/full form-input mt-1 block"
             placeholder="Enter name of the school"
             required
           />
         </div>
 
+        {/* Blood Group */}
         <div className="mb-4">
           <label htmlFor="bloodgroup" className="block text-sm font-medium">
             Blood Group
@@ -464,8 +486,7 @@ const AddTraineePage = () => {
             name="bloodgroup"
             value={formData.bloodgroup}
             onChange={handleChange}
-            className="form-select mt-1 block w/full"
-            
+            className="w/full form-select mt-1 block"
           >
             <option value="">Select Blood Group</option>
             {Bloods.map((blood) => (
@@ -476,6 +497,7 @@ const AddTraineePage = () => {
           </select>
         </div>
 
+        {/* Joining Date */}
         <div className="mb-4">
           <label htmlFor="joiningdate" className="block text-sm font-medium">
             Joining Date
@@ -485,10 +507,11 @@ const AddTraineePage = () => {
             value={formData.joiningdate}
             onChange={handleJoiningDateChange}
             options={{ dateFormat: "d/m/Y" }}
-            className="form-input mt-1 block w/full"
+            className="w/full form-input mt-1 block"
           />
         </div>
 
+        {/* Upload Image */}
         <div className="mb-4">
           <label htmlFor="image" className="block text-sm font-medium">
             Upload Image
@@ -499,23 +522,25 @@ const AddTraineePage = () => {
             name="image"
             accept="image/*"
             onChange={handleFileChange}
-            className="form-input mt-1 block w/full"
+            className="w/full form-input mt-1 block"
           />
         </div>
 
+        {/* Upload Birth Certificate */}
         <div className="mb-4">
           <label htmlFor="document" className="block text-sm font-medium">
-            Upload Birth certificate
+            Upload Birth Certificate
           </label>
           <input
             id="document"
             type="file"
             name="document"
             onChange={handleDocumentChange}
-            className="form-input mt-1 block w/full"
+            className="w/full form-input mt-1 block"
           />
         </div>
 
+        {/* Upload Aadhaar */}
         <div className="mb-4">
           <label htmlFor="adhar" className="block text-sm font-medium">
             Upload Aadhaar
@@ -525,10 +550,11 @@ const AddTraineePage = () => {
             type="file"
             name="adhar"
             onChange={handleAdharChange}
-            className="form-input mt-1 block w/full"
+            className="w/full form-input mt-1 block"
           />
         </div>
 
+        {/* Submit Button */}
         <button type="submit" className="btn btn-primary mt-6">
           Submit
         </button>
