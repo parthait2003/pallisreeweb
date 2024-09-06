@@ -47,7 +47,7 @@ const studentformSchema = new mongoose.Schema({
   },
   bloodgroup: {
     type: String,
-    required: true,
+    required: false,
   },
   document: {
     type: String,
