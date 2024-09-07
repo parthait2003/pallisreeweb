@@ -1,161 +1,94 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import multer from 'multer';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { v4 as uuidv4 } from 'uuid';
-import dbConnect from "@/config/database";
 
-
-const s3Client = new S3Client({ region: process.env.AWS_REGION });
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
-export const config = () => ({
-  api: {
-    bodyParser: false, // Disables body parsing, allowing multer to handle the request body
+const s3 = new S3Client({
+  endpoint: 'https://blr1.digitaloceanspaces.com',
+  region: 'blr1',
+  credentials: {
+    accessKeyId: 'DO00ZKVH67MAVWTMY433',
+    secretAccessKey: 'kvXOFmo6fiJqNv/klNVZsMk7sCDxFhsE8CuMEg6uDE0',
   },
 });
 
-export async function POST(req, { params }) {
-  await dbConnect(); // Ensure database connection is established
+export async function POST(req: NextRequest) {
+  if (!req.headers.get('content-type')?.startsWith('multipart/form-data')) {
+    return NextResponse.json({ error: 'Invalid content type' }, { status: 400 });
+  }
 
   try {
-    // Ensure the user is authenticated
-    const session = await getServerSession(req, authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const formData = await req.formData();
 
-    const id = params.id;
+    // Logging to ensure FormData contains the expected files
+    console.log('Received FormData:', formData);
 
-    // Multer middleware for file handling
-    await new Promise((resolve, reject) => {
-      upload.fields([{ name: 'file' }, { name: 'documentfile' }, { name: 'adharfile' }])(req, {}, (err) => {
-        if (err) {
-          reject(err);
-        }
-        resolve();
-      });
-    });
+    const file = formData.get('file') as File | null;
+    const documentfile = formData.get('documentfile') as File | null;
+    const adharfile = formData.get('adharfile') as File | null;
 
-    const { file, documentfile, adharfile } = req.files;
+    const imageName = formData.get('imageName') as string | null;
+    const documentfilename = formData.get('documentfilename') as string | null;
+    const adharfilename = formData.get('adharname') as string | null;
 
-    if (!file && !documentfile && !adharfile) {
-      return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
-    }
+    // Logging to verify file names and contents
+    console.log('Received files:', { file, documentfile, adharfile });
+    console.log('File names:', { imageName, documentfilename, adharfilename });
 
-    const uploadedFiles = {};
+    const fileUploads = [];
 
-    const uploadFileToS3 = async (file, filename) => {
+    // Upload file to S3
+    if (file && imageName) {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
       const params = {
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: filename,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-        ACL: 'public-read', // Make the file publicly readable
+        Bucket: 'pallisree',
+        Key: imageName,
+        Body: buffer,
+        ACL: 'public-read',
+        ContentType: file.type,
       };
       const command = new PutObjectCommand(params);
-      await s3Client.send(command);
-    };
-
-    // Upload image file
-    if (file && file[0]) {
-      const imageName = `images/${uuidv4()}-${file[0].originalname}`;
-      await uploadFileToS3(file[0], imageName);
-      uploadedFiles.image = imageName;
+      fileUploads.push(s3.send(command));
+      console.log(`File saved as ${imageName}`);
     }
 
-    // Upload document file
-    if (documentfile && documentfile[0]) {
-      const documentName = `documents/${uuidv4()}-${documentfile[0].originalname}`;
-      await uploadFileToS3(documentfile[0], documentName);
-      uploadedFiles.document = documentName;
+    // Upload document file to S3
+    if (documentfile && documentfilename) {
+      const arrayBuffer = await documentfile.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const params = {
+        Bucket: 'pallisree',
+        Key: documentfilename,
+        Body: buffer,
+        ACL: 'public-read',
+        ContentType: documentfile.type,
+      };
+      const command = new PutObjectCommand(params);
+      fileUploads.push(s3.send(command));
+      console.log(`Document saved as ${documentfilename}`);
     }
 
-    // Upload Aadhaar file
-    if (adharfile && adharfile[0]) {
-      const adharName = `aadhaar/${uuidv4()}-${adharfile[0].originalname}`;
-      await uploadFileToS3(adharfile[0], adharName);
-      uploadedFiles.adhar = adharName;
+    // Upload Aadhaar file to S3
+    if (adharfile && adharfilename) {
+      const arrayBuffer = await adharfile.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const params = {
+        Bucket: 'pallisree',
+        Key: adharfilename,
+        Body: buffer,
+        ACL: 'public-read',
+        ContentType: adharfile.type,
+      };
+      const command = new PutObjectCommand(params);
+      fileUploads.push(s3.send(command));
+      console.log(`Aadhaar saved as ${adharfilename}`);
     }
 
-    console.log('Uploaded Files:', uploadedFiles);
-
-    // Now, update the database with the new file paths
-    const updatedTrainee = await updateTraineeFiles(id, uploadedFiles);
-
-    if (!updatedTrainee) {
-      return NextResponse.json({ error: 'Failed to update trainee' }, { status: 500 });
-    }
-
-    return NextResponse.json({ message: 'Files uploaded successfully', trainee: updatedTrainee });
+    await Promise.all(fileUploads);
+    console.log('Files uploaded successfully');
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error uploading files:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-export async function GET(req, { params }) {
-  await dbConnect(); // Ensure database connection is established
-
-  try {
-    const id = params.id;
-
-    // Fetch the trainee's information from the database
-    const trainee = await Trainee.findById(id);
-
-    if (!trainee) {
-      return NextResponse.json({ error: 'Trainee not found' }, { status: 404 });
-    }
-
-    // Prepare the file URLs (assuming they are stored as paths in the database)
-    const fileUrls = {
-      image: trainee.image ? `https://pallisree.blr1.cdn.digitaloceanspaces.com/${trainee.image}` : null,
-      document: trainee.document ? `https://pallisree.blr1.cdn.digitaloceanspaces.com/${trainee.document}` : null,
-      adhar: trainee.adhar ? `https://pallisree.blr1.cdn.digitaloceanspaces.com/${trainee.adhar}` : null,
-    };
-
-    return NextResponse.json({ trainee, fileUrls });
-  } catch (error) {
-    console.error('Error fetching trainee data:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-async function updateTraineeFiles(id, uploadedFiles) {
-  try {
-    // Ensure uploadedFiles contains only the fields that need to be updated
-    const updateData = {};
-
-    if (uploadedFiles.image) {
-      updateData.image = uploadedFiles.image;
-    }
-
-    if (uploadedFiles.document) {
-      updateData.document = uploadedFiles.document;
-    }
-
-    if (uploadedFiles.adhar) {
-      updateData.adhar = uploadedFiles.adhar;
-    }
-
-    console.log('Updating Trainee with data:', updateData);
-
-    // Update the trainee in the database
-    const updatedTrainee = await Trainee.findByIdAndUpdate(id, updateData, { new: true });
-
-    if (!updatedTrainee) {
-      throw new Error('Trainee not found or update failed');
-    }
-
-    console.log('Update successful:', updatedTrainee);
-
-    return updatedTrainee;
-  } catch (error) {
-    console.error('Error updating trainee files:', error);
-    return null;
+    return NextResponse.json({ error: `Something went wrong: ${error.message}` }, { status: 500 });
   }
 }
 
