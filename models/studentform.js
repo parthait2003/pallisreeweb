@@ -1,5 +1,13 @@
 import mongoose from 'mongoose';
 
+// Helper function to format date as DD/MM/YYYY
+function formatToDDMMYYYY(date) {
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0"); // Months are 0-based, so add 1
+  const year = date.getUTCFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 const studentformSchema = new mongoose.Schema({
   image: {
     type: String,
@@ -63,8 +71,17 @@ const studentformSchema = new mongoose.Schema({
     default: 'Yes',
   },
   joiningdate: {
-    type: String, // Store joiningdate in DD/MM/YYYY format
+    type: String, // Store joining date in DD/MM/YYYY format
     required: true,
+  },
+  traineeType: {
+    type: String, // New field for trainee type
+    required: false,
+  },
+  entrydate: {
+    type: String, // Automatically generated current date in DD/MM/YYYY format
+    required: false,
+    default: () => formatToDDMMYYYY(new Date()), // Set default to the current date in DD/MM/YYYY format
   },
 });
 
