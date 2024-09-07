@@ -12,11 +12,11 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION });
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-export const config = {
+export const config = () => ({
   api: {
     bodyParser: false, // Disables body parsing, allowing multer to handle the request body
   },
-};
+});
 
 export async function POST(req, { params }) {
   await dbConnect(); // Ensure database connection is established
