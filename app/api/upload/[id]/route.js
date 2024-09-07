@@ -5,7 +5,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import Trainee from '@/models/Trainee';
-import dbConnect from '@/lib/dbConnect'; // Assuming you have a Mongoose connection handler
+import dbConnect from "@/config/database";
+
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
