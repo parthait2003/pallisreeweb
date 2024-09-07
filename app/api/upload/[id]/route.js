@@ -4,7 +4,6 @@ import multer from 'multer';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
-import Trainee from '@/models/Trainee';
 import dbConnect from "@/config/database";
 
 
