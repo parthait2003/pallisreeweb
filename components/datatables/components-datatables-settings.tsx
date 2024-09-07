@@ -10,6 +10,10 @@ const ComponentsDatatablesSettings = () => {
   const [couches, setCouches] = useState([
     { name: "", fee: "", mobile: "", designation: "" },
   ]);
+  const [trainees, setTrainees] = useState([
+    { type: "", payment: "", extraPracticePayment: "" },
+  ]);
+  const [expenditures, setExpenditures] = useState([{ head: "", amount: "" }]); // State for expenditure heads
   const [settings, setSettings] = useState({
     regularmonthlyfee: "",
     extrapractice: "",
@@ -39,6 +43,8 @@ const ComponentsDatatablesSettings = () => {
           admissionfee: data.admissionfee,
         });
         setCouches(data.couches);
+        setTrainees(data.trainees || []);
+        setExpenditures(data.expenditures || []);
       })
       .catch((error) => {
         console.error("There was a problem with the fetch operation:", error);
@@ -62,6 +68,17 @@ const ComponentsDatatablesSettings = () => {
     ]);
   };
 
+  const addNewTraineeRow = () => {
+    setTrainees([
+      ...trainees,
+      { type: "", payment: "", extraPracticePayment: "" },
+    ]);
+  };
+
+  const addNewExpenditureRow = () => {
+    setExpenditures([...expenditures, { head: "", amount: "" }]);
+  };
+
   const handleInputChange = (
     index: number,
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -70,6 +87,26 @@ const ComponentsDatatablesSettings = () => {
     const updatedCouches = [...couches];
     updatedCouches[index][name] = value;
     setCouches(updatedCouches);
+  };
+
+  const handleTraineeInputChange = (
+    index: number,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = event.target;
+    const updatedTrainees = [...trainees];
+    updatedTrainees[index][name] = value;
+    setTrainees(updatedTrainees);
+  };
+
+  const handleExpenditureInputChange = (
+    index: number,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = event.target;
+    const updatedExpenditures = [...expenditures];
+    updatedExpenditures[index][name] = value;
+    setExpenditures(updatedExpenditures);
   };
 
   const handleSettingsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,6 +120,16 @@ const ComponentsDatatablesSettings = () => {
   const deleteRow = (index: number) => {
     const updatedCouches = couches.filter((_, i) => i !== index);
     setCouches(updatedCouches);
+  };
+
+  const deleteTraineeRow = (index: number) => {
+    const updatedTrainees = trainees.filter((_, i) => i !== index);
+    setTrainees(updatedTrainees);
+  };
+
+  const deleteExpenditureRow = (index: number) => {
+    const updatedExpenditures = expenditures.filter((_, i) => i !== index);
+    setExpenditures(updatedExpenditures);
   };
 
   const saveSettings = async () => {
@@ -103,6 +150,8 @@ const ComponentsDatatablesSettings = () => {
           developementfee: settings.developementfee,
           admissionfee: settings.admissionfee,
           couches,
+          trainees,
+          expenditures,
         }),
       });
 
@@ -172,14 +221,14 @@ const ComponentsDatatablesSettings = () => {
       </div>
       <div>
         <ul className="mb-5 overflow-y-auto whitespace-nowrap border-b border-[#ebedf2] font-semibold dark:border-[#191e3a] sm:flex">
-          {/* Vos onglets ici */}
+          {/* Your Tabs Here */}
         </ul>
       </div>
 
       {/* Display stable message for backup */}
       {stableMessage && (
-        <div className="relative flex items-center border p-3.5 rounded text-primary bg-primary-light !border-primary ltr:border-l-[64px] rtl:border-r-[64px] dark:bg-primary-dark-light">
-          <span className="absolute ltr:-left-11 rtl:-right-11 inset-y-0 text-white w-6 h-6 m-auto">
+        <div className="relative flex items-center rounded border !border-primary bg-primary-light p-3.5 text-primary dark:bg-primary-dark-light ltr:border-l-[64px] rtl:border-r-[64px]">
+          <span className="absolute inset-y-0 m-auto h-6 w-6 text-white ltr:-left-11 rtl:-right-11">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6"
@@ -199,10 +248,10 @@ const ComponentsDatatablesSettings = () => {
             <strong className="ltr:mr-1 rtl:ml-1">Status:</strong>
             {stableMessage}
           </span>
-          
         </div>
       )}
 
+      {/* Income Settings Section */}
       <div>
         <form className="mb-5 rounded-md border border-[#ebedf2] bg-white p-4 dark:border-[#191e3a] dark:bg-black">
           <h6 className="mb-5 text-lg font-bold">Income Settings</h6>
@@ -280,13 +329,14 @@ const ComponentsDatatablesSettings = () => {
           </div>
         </form>
 
+        {/* Coaches Payment Section */}
         <form className="mb-5 rounded-md border border-[#ebedf2] bg-white p-4 dark:border-[#191e3a] dark:bg-black">
           <h6 className="mb-5 text-lg font-bold">Coaches Payment</h6>
           {couches && couches.length > 0 ? (
             couches.map((couch, index) => (
               <div
                 key={index}
-                className="grid grid-cols-1 gap-5 sm:grid-cols-2 items-center"
+                className="grid grid-cols-1 items-center gap-5 sm:grid-cols-2"
               >
                 <div>
                   <label htmlFor={`couchName-${index}`}>Coach Name</label>
@@ -350,7 +400,7 @@ const ComponentsDatatablesSettings = () => {
                     </option>
                   </select>
                 </div>
-                <div className="sm:col-span-2 flex justify-end">
+                <div className="flex justify-end sm:col-span-2">
                   <button
                     type="button"
                     className="btn btn-danger"
@@ -375,7 +425,76 @@ const ComponentsDatatablesSettings = () => {
           </div>
         </form>
 
-        <div className="flex justify-end mt-5">
+        {/* Trainee Types Section */}
+        <form className="mb-5 rounded-md border border-[#ebedf2] bg-white p-4 dark:border-[#191e3a] dark:bg-black">
+          <h6 className="mb-5 text-lg font-bold">Trainee Types</h6>
+          {trainees && trainees.length > 0 ? (
+            trainees.map((trainee, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-1 items-center gap-5 sm:grid-cols-2"
+              >
+                <div>
+                  <label htmlFor={`traineeType-${index}`}>Trainee Type</label>
+                  <input
+                    id={`traineeType-${index}`}
+                    name="type"
+                    type="text"
+                    className="form-input"
+                    value={trainee.type}
+                    onChange={(e) => handleTraineeInputChange(index, e)}
+                  />
+                </div>
+                <div>
+                  <label htmlFor={`traineePayment-${index}`}>Payment</label>
+                  <input
+                    id={`traineePayment-${index}`}
+                    name="payment"
+                    type="text"
+                    className="form-input"
+                    value={trainee.payment}
+                    onChange={(e) => handleTraineeInputChange(index, e)}
+                  />
+                </div>
+                <div>
+                  <label htmlFor={`traineeExtraPractice-${index}`}>
+                    Extra Practice Payment
+                  </label>
+                  <input
+                    id={`traineeExtraPractice-${index}`}
+                    name="extraPracticePayment"
+                    type="text"
+                    className="form-input"
+                    value={trainee.extraPracticePayment}
+                    onChange={(e) => handleTraineeInputChange(index, e)}
+                  />
+                </div>
+                <div className="flex justify-end sm:col-span-2">
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => deleteTraineeRow(index)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>No trainee types available.</p>
+          )}
+          <div className="mt-3">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={addNewTraineeRow}
+            >
+              Add New Row
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-5 flex justify-end">
           <button
             type="button"
             className="btn btn-success"
@@ -388,7 +507,7 @@ const ComponentsDatatablesSettings = () => {
 
       {/* Popup notification for data update */}
       {popupVisible && (
-         <div className="fixed bottom-5 right-5 bg-gray-800 text-white p-3 rounded shadow-lg flex items-center justify-between">
+        <div className="fixed bottom-5 right-5 flex items-center justify-between rounded bg-gray-800 p-3 text-white shadow-lg">
           <span>Data updated successfully</span>
           <button
             onClick={() => setPopupVisible(false)}
