@@ -144,6 +144,35 @@ const ComponentsDatatablesTrainee = () => {
   const [camplocation, setCampLocation] = useState("");
   const [time, setTime] = useState("");
   const router = useRouter();
+  const [traineeTypes, setTraineeTypes] = useState([]); // Trainee types from API
+  const [noticeTitle, setNoticeTitle] = useState("");
+  const [noticeLocation, setNoticeLocation] = useState("");
+  const [noticeDescription, setNoticeDescription] = useState("");
+  const [noticeDate, setNoticeDate] = useState(null);
+  const [assignByOptions, setAssignByOptions] = useState([]);
+  const [assignBy, setAssignBy] = useState("");
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch("/api/settings");
+        if (!response.ok) throw new Error("Failed to fetch settings");
+        const data = await response.json();
+
+        // Set trainee types and coaches from API
+        setTraineeTypes(data.trainees); // Assuming `trainees` is an array
+        const coaches = data.couches.map((coach) => ({
+          id: coach._id,
+          name: coach.name,
+        }));
+        setAssignByOptions(coaches); // Assuming `setAssignByOptions` is used for coaches dropdown
+      } catch (error) {
+        console.error("Error fetching settings data: ", error.message);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   const handleViewClick = (id) => {
     router.push(`/viewtrainee/${id}`);
@@ -328,7 +357,6 @@ const ComponentsDatatablesTrainee = () => {
       return (
         (search === "" ||
           item.id.toString().includes(search.toLowerCase()) ||
-         
           item.sportstype.toString().includes(search.toLowerCase()) ||
           item.name.toLowerCase().includes(search.toLowerCase()) ||
           item.fathersname.toLowerCase().includes(search.toLowerCase()) ||
@@ -343,8 +371,9 @@ const ComponentsDatatablesTrainee = () => {
           item.nameoftheschool.toString().includes(search.toLowerCase()) ||
           item.bloodgroup.toLowerCase().includes(search.toLowerCase()) ||
           item.extraPractice.toLowerCase().includes(search.toLowerCase()) ||
-         
-          (item.joiningdate?.toString() || "").includes(search.toLowerCase())) &&
+          (item.joiningdate?.toString() || "").includes(
+            search.toLowerCase()
+          )) &&
         isInDateRange &&
         (!ageFilter || isAgeMatch) &&
         isGenderMatch &&
@@ -420,14 +449,103 @@ const ComponentsDatatablesTrainee = () => {
 
   const handleDeleteData = async () => {
     setModal2(false);
+    console.log("handleDeleteData" + deleteid);
+    try {
+      // Fetch the trainee details before deletion
 
-    const res = await fetch(`/api/studentform/${deleteid}`, {
-      method: "DELETE",
-    });
+      const traineeResponse = await fetch(`/api/studentform/${deleteid}`, {
+        method: "GET",
+      });
 
-    if (res.ok) {
+      if (!traineeResponse.ok) {
+        throw new Error("Failed to fetch trainee data");
+      }
+
+      const traineeData = await traineeResponse.json();
+      const { entrydate, sportstype } = traineeData.student;
+
+      // Function to convert DD/MM/YYYY to YYYY-MM-DD
+      function convertToYYYYMMDD(dateString) {
+        if (!dateString || typeof dateString !== "string") {
+          console.error("Invalid dateString:", dateString);
+          return null;
+        }
+
+        const [day, month, year] = dateString.split("/");
+
+        if (!day || !month || !year) {
+          console.error("Date format is invalid:", dateString);
+          return null;
+        }
+
+        return `${year}-${month}-${day}`; // Return as YYYY-MM-DD
+      }
+
+      const formattedEntryDate = convertToYYYYMMDD(entrydate);
+
+      // If the sportstype is "Cricket" and entrydate is not null, update the report
+      if (sportstype === "Cricket" && entrydate) {
+        const reportData = {
+          date: formattedEntryDate,
+          noOfNewTraineeCricket: -1, // Decrease cricket trainee count by 1
+        };
+
+        const reportResponse = await fetch("/api/reports", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(reportData),
+        });
+
+        if (!reportResponse.ok) {
+          throw new Error("Failed to update the reports");
+        }
+        const deleteResponse = await fetch(`/api/studentform/${deleteid}`, {
+          method: "DELETE",
+        });
+
+        if (!deleteResponse.ok) {
+          throw new Error("Failed to delete trainee");
+        }
+
+        console.log("Cricket report updated successfully");
+      }
+
+      // If the sportstype is "Football" and entrydate is not null, update the report
+      if (sportstype === "Football" && entrydate) {
+        const reportData = {
+          date: formattedEntryDate,
+          noOfNewTraineeFootball: -1, // Decrease football trainee count by 1
+        };
+
+        const reportResponse = await fetch("/api/reports", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(reportData),
+        });
+
+        if (!reportResponse.ok) {
+          throw new Error("Failed to update the reports");
+        }
+        const deleteResponse = await fetch(`/api/studentform/${deleteid}`, {
+          method: "DELETE",
+        });
+
+        if (!deleteResponse.ok) {
+          throw new Error("Failed to delete trainee");
+        }
+
+        console.log("Football report updated successfully");
+      }
+
+      // After successful deletion, fetch updated trainee data
       fetchTraineeData();
       deletedtrainee();
+    } catch (error) {
+      console.error("Error during deletion:", error);
     }
   };
 
@@ -588,6 +706,7 @@ const ComponentsDatatablesTrainee = () => {
     joiningdate: "",
     extraPractice: "Yes",
     joiningdate: "",
+    traineeType: "", // New traineeType field
   });
 
   const handleChange = (e) => {
@@ -608,7 +727,7 @@ const ComponentsDatatablesTrainee = () => {
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-  
+
     const formattedFormData = {
       ...formData,
       dob: formData.dob ? formData.dob.split("/").reverse().join("-") : "",
@@ -616,77 +735,100 @@ const ComponentsDatatablesTrainee = () => {
         ? formData.joiningdate.split("/").reverse().join("-")
         : "",
     };
-  
+
     let imageName = "";
     let docname = "";
     let adhname = "";
+
+    // Handle file upload
     if (file) {
       const filename = file.name;
       imageName = formData.phoneno + "-" + filename;
-      formData.image = imageName;
+      formattedFormData.image = imageName;
     }
-  
+
     if (documentfile) {
       const documentfilename = documentfile.name;
       docname = formData.phoneno + "-" + documentfilename;
-      formData.document = docname;
+      formattedFormData.document = docname;
     }
-  
+
     if (adharfile) {
       const adharfilename = adharfile.name;
       adhname = formData.phoneno + "-" + adharfilename;
-      formData.adhar = adhname;
+      formattedFormData.adhar = adhname;
     }
-  
+
     try {
       const url = editid ? `/api/studentform/${editid}` : "/api/studentform";
       const method = editid ? "PUT" : "POST";
-  
+
       const res = await fetch(url, {
         method: method,
         headers: {
           "Content-type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formattedFormData),
       });
-  
+
       if (res.ok) {
         if (editid) {
           updatedTrainee(); // show trainee updated message
         } else {
           newTraineeadded(); // show new trainee added message
         }
-        fetchTraineeData();
         setModal1(false);
-  
+
+        // After form data is saved successfully, proceed with file uploads
         const uploadFormData = new FormData();
         if (file) {
           uploadFormData.append("file", file);
-          if (documentfile) {
-            uploadFormData.append("documentfile", documentfile);
-            uploadFormData.append("documentfilename", docname);
-          }
-          if (adharfile) {
-            uploadFormData.append("adharfile", adharfile);
-            uploadFormData.append("adharname", adhname);
-          }
           uploadFormData.append("imageName", imageName);
-  
+        }
+        if (documentfile) {
+          uploadFormData.append("documentfile", documentfile);
+          uploadFormData.append("documentfilename", docname);
+        }
+        if (adharfile) {
+          uploadFormData.append("adharfile", adharfile);
+          uploadFormData.append("adharname", adhname);
+        }
+
+        if (
+          uploadFormData.has("file") ||
+          uploadFormData.has("documentfile") ||
+          uploadFormData.has("adharfile")
+        ) {
           const uploadRes = await fetch("/api/upload", {
             method: "POST",
             body: uploadFormData,
           });
+
+          if (uploadRes.ok) {
+            // Update the formData state with the new URLs
+            setFormData((prevFormData) => ({
+              ...prevFormData,
+              image: imageName,
+              document: docname,
+              adhar: adhname,
+            }));
+
+            // Refresh the datatable to show the updated files
+            fetchTraineeData();
+          } else {
+            console.error("Failed to upload files");
+          }
         }
-  
+
         if (!editid) {
           const currentDate = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
-  
+
           const reportData = {
             date: currentDate, // Use today's date
             noOfNewTraineeCricket: formData.sportstype === "Cricket" ? 1 : 0,
             noOfNewTraineeFootball: formData.sportstype === "Football" ? 1 : 0,
           };
-  
+
           const reportRes = await fetch("/api/reports", {
             method: "POST",
             headers: {
@@ -694,7 +836,7 @@ const ComponentsDatatablesTrainee = () => {
             },
             body: JSON.stringify(reportData),
           });
-  
+
           if (reportRes.ok) {
             console.log("Reports updated successfully");
           } else {
@@ -708,7 +850,6 @@ const ComponentsDatatablesTrainee = () => {
       console.log("Error in form submission:", error);
     }
   };
-  
 
   const handleUpdateClick = async (value) => {
     try {
@@ -740,6 +881,7 @@ const ComponentsDatatablesTrainee = () => {
           joiningdate: data.student.joiningdate
             ? data.student.joiningdate.split("T")[0]
             : "",
+          traineeType: data.student.traineeType || "",
         });
         setEditid(data.student._id);
         setModal1(true);
@@ -821,8 +963,6 @@ const ComponentsDatatablesTrainee = () => {
     );
   };
 
-
-
   const fetchEventData = async () => {
     try {
       const response = await fetch("/api/event"); // Assuming you have an API endpoint to fetch event data
@@ -896,28 +1036,15 @@ const ComponentsDatatablesTrainee = () => {
     }));
   };
 
-  const handleGeneratePDF = () => {
+  const handleGeneratePDF = async () => {
     const doc = new jsPDF();
     const startY = 90;
 
-    const getOrdinalSuffix = (n) => {
-      const s = ["th", "st", "nd", "rd"],
-        v = n % 100;
-      return n + (s[(v - 20) % 10] || s[v] || s[0]);
-    };
-
     const formatDate = (date) => {
-      const options = {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      };
-      const formattedDate = new Intl.DateTimeFormat("en-US", options).format(
-        date
-      );
-      const day = date.getDate();
-      return formattedDate.replace(day, getOrdinalSuffix(day));
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     };
 
     const formatTime = (time) => {
@@ -942,19 +1069,86 @@ const ComponentsDatatablesTrainee = () => {
       doc.text(additionalText, 105, 35, { align: "center" });
 
       doc.setFontSize(10);
+      let eventData;
+
+      const traineeIds = selectedTrainees
+        .map((id) => {
+          const trainee = initialRecords.find((t) => t.id === id);
+          return trainee ? trainee.id : null;
+        })
+        .filter((id) => id !== null);
+
+      // Handle different event types
       if (eventType === "Tournament") {
         doc.text("Tournament: " + tournamentName, 15, 70);
         doc.text("Ground: " + groundName, 15, 75);
         doc.text("Date: " + formatDate(tournamentDate), 15, 80);
         doc.text("Reporting Time: " + formatTime(time), 15, 85);
         doc.text("Note: " + note, 15, 90);
+
+        eventData = {
+          eventType: "Tournament",
+          date: formatDate(tournamentDate),
+          time: formatTime(time),
+          traineeIds,
+          tournamentName,
+          tournamentLocation: groundName,
+          tournamentNote: note,
+          createdAt: formatDate(new Date()),
+        };
       } else if (eventType === "Camp") {
         doc.text("Camp: " + campName, 15, 70);
         doc.text("Camp Type: " + campType, 15, 75);
         doc.text("Date: " + formatDate(campDate), 15, 80);
         doc.text("Reporting Time: " + formatTime(time), 15, 85);
         doc.text("Note: " + note, 15, 90);
+
+        eventData = {
+          eventType: "Camp",
+          date: formatDate(campDate),
+          time: formatTime(time),
+          traineeIds,
+          campName,
+          campLocation: camplocation,
+          campNote: note,
+          createdAt: formatDate(new Date()),
+        };
+      } else if (eventType === "Notice") {
+        doc.text("Notice Title: " + noticeTitle, 15, 70);
+        doc.text("Date: " + formatDate(noticeDate), 15, 75);
+        doc.text("Time: " + formatTime(time), 15, 80);
+        doc.text("Description: " + noticeDescription, 15, 85);
+        doc.text("Assigned By: " + assignBy, 15, 90);
+
+        eventData = {
+          eventType: "Notice",
+          date: formatDate(noticeDate),
+          time: formatTime(time),
+          traineeIds,
+          noticeTitle,
+          noticeDesc: noticeDescription,
+          assignedBy: assignBy,
+          createdAt: formatDate(new Date()),
+        };
       }
+
+      if (eventData) {
+        fetch("/api/event", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(eventData),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Event created successfully:", data);
+          })
+          .catch((error) => {
+            console.error("Error creating event:", error);
+          });
+      }
+
       const formatTraineeDate = (dateStr) => {
         const [day, month, year] = dateStr.split("/");
         const d = new Date(`${year}-${month}-${day}`);
@@ -971,7 +1165,6 @@ const ComponentsDatatablesTrainee = () => {
           trainee.name,
           trainee.phoneno,
           formatTraineeDate(trainee.date),
-          trainee.image,
         ];
       });
 
@@ -984,6 +1177,7 @@ const ComponentsDatatablesTrainee = () => {
       doc.save("selected_trainees.pdf");
     };
   };
+
   const handleDeleteAllClick = () => {
     MySwal.fire({
       title: "Do you want to delete the selected Trainees?",
@@ -1001,13 +1195,90 @@ const ComponentsDatatablesTrainee = () => {
 
   const handleDeleteSelectedTrainees = async () => {
     try {
+      function convertToYYYYMMDD(dateString) {
+        if (!dateString || typeof dateString !== "string") {
+          console.error("Invalid dateString:", dateString);
+          return null;
+        }
+
+        const [day, month, year] = dateString.split("/");
+
+        if (!day || !month || !year) {
+          console.error("Date format is invalid:", dateString);
+          return null;
+        }
+
+        return `${year}-${month}-${day}`; // Return as YYYY-MM-DD
+      }
+
       for (let id of selectedTrainees) {
-        const res = await fetch(`/api/studentform/${id}`, {
-          method: "DELETE",
+        const traineeResponse = await fetch(`/api/studentform/${id}`, {
+          method: "GET",
         });
 
-        if (!res.ok) {
-          throw new Error(`Failed to delete trainee with ID: ${id}`);
+        if (!traineeResponse.ok) {
+          throw new Error("Failed to fetch trainee data");
+        }
+
+        const traineeData = await traineeResponse.json();
+        const { entrydate, sportstype } = traineeData.student;
+
+        const formattedEntryDate = convertToYYYYMMDD(entrydate);
+
+        if (sportstype === "Cricket" && entrydate) {
+          const reportData = {
+            date: formattedEntryDate,
+            noOfNewTraineeCricket: -1, // Decrease cricket trainee count by 1
+          };
+
+          const reportResponse = await fetch("/api/reports", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(reportData),
+          });
+
+          if (!reportResponse.ok) {
+            throw new Error("Failed to update the reports");
+          }
+          const deleteResponse = await fetch(`/api/studentform/${id}`, {
+            method: "DELETE",
+          });
+
+          if (!deleteResponse.ok) {
+            throw new Error("Failed to delete trainee");
+          }
+
+          console.log("Cricket report updated successfully");
+        }
+
+        if (sportstype === "Football" && entrydate) {
+          const reportData = {
+            date: formattedEntryDate,
+            noOfNewTraineeFootball: -1, // Decrease football trainee count by 1
+          };
+
+          const reportResponse = await fetch("/api/reports", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(reportData),
+          });
+
+          if (!reportResponse.ok) {
+            throw new Error("Failed to update the reports");
+          }
+          const deleteResponse = await fetch(`/api/studentform/${id}`, {
+            method: "DELETE",
+          });
+
+          if (!deleteResponse.ok) {
+            throw new Error("Failed to delete trainee");
+          }
+
+          console.log("Football report updated successfully");
         }
       }
 
@@ -1331,7 +1602,6 @@ const ComponentsDatatablesTrainee = () => {
                                   className="form-select"
                                   onChange={handleChange}
                                   value={formData.bloodgroup}
-                                  required
                                 >
                                   <option value="">Select Blood Group</option>
                                   {Bloods.map((type) => (
@@ -1471,6 +1741,29 @@ const ComponentsDatatablesTrainee = () => {
                                     />
                                   </div>
                                 )}
+                              </div>
+                              <div>
+                                <label htmlFor="traineeType">
+                                  Trainee Type
+                                </label>
+                                <select
+                                  id="traineeType"
+                                  name="traineeType"
+                                  className="form-select"
+                                  onChange={handleChange}
+                                  value={formData.traineeType} // Bind value to formData.traineeType
+                                >
+                                  <option value="">Select Trainee Type</option>
+                                  {traineeTypes.map((trainee) => (
+                                    <option
+                                      key={trainee._id}
+                                      value={trainee.type}
+                                    >
+                                      {trainee.type} - {trainee.payment}-{" "}
+                                      {trainee.extraPracticePayment}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
 
                               <button
@@ -2005,6 +2298,8 @@ const ComponentsDatatablesTrainee = () => {
                       >
                         <option value="Tournament">Tournament</option>
                         <option value="Camp">Camp</option>
+                        <option value="Notice">Notice</option>{" "}
+                        {/* Corrected value */}
                       </select>
                     </div>
 
@@ -2034,13 +2329,17 @@ const ComponentsDatatablesTrainee = () => {
                           />
                         </div>
                         <div className="mb-4">
-                          <label htmlFor="tournamentlocation">Tournament Location</label>
+                          <label htmlFor="tournamentlocation">
+                            Tournament Location
+                          </label>
                           <input
                             id="tournamentlocation"
                             type="text"
                             className="form-input"
                             value={tournamentlocation}
-                            onChange={(e) => setTournamentLocation(e.target.value)}
+                            onChange={(e) =>
+                              setTournamentLocation(e.target.value)
+                            }
                           />
                         </div>
                         <div className="mb-4">
@@ -2065,6 +2364,15 @@ const ComponentsDatatablesTrainee = () => {
                             onChange={(e) => setTime(e.target.value)}
                           />
                         </div>
+                        <div className="mb-4">
+                          <label htmlFor="note">Note</label>
+                          <textarea
+                            id="note"
+                            className="form-input"
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                          />
+                        </div>
                       </>
                     )}
 
@@ -2080,20 +2388,6 @@ const ComponentsDatatablesTrainee = () => {
                             onChange={(e) => setCampName(e.target.value)}
                           />
                         </div>
-                        <div className="mb-4">
-                          <label htmlFor="campType">Camp Type</label>
-                          <select
-                            id="campType"
-                            className="form-select"
-                            value={campType}
-                            onChange={(e) => setCampType(e.target.value)}
-                          >
-                            <option value="18Trial">18 Trial</option>
-                            <option value="15Trial">15 Trial</option>
-                            <option value="Division">Division</option>
-                            <option value="District">District</option>
-                          </select>
-                        </div>
 
                         <div className="mb-4">
                           <label htmlFor="camplocation">Camp Location</label>
@@ -2105,7 +2399,6 @@ const ComponentsDatatablesTrainee = () => {
                             onChange={(e) => setCampLocation(e.target.value)}
                           />
                         </div>
-
 
                         <div className="mb-4">
                           <label htmlFor="campDate">Camp Date</label>
@@ -2127,18 +2420,82 @@ const ComponentsDatatablesTrainee = () => {
                             onChange={(e) => setTime(e.target.value)}
                           />
                         </div>
+                        <div className="mb-4">
+                          <label htmlFor="note">Note</label>
+                          <textarea
+                            id="note"
+                            className="form-input"
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                          />
+                        </div>
                       </>
                     )}
+                    {eventType === "Notice" && (
+                      <>
+                        <div className="mb-4">
+                          <label htmlFor="noticeTitle">Notice Title</label>
+                          <input
+                            id="noticeTitle"
+                            type="text"
+                            className="form-input"
+                            value={noticeTitle}
+                            onChange={(e) => setNoticeTitle(e.target.value)}
+                          />
+                        </div>
 
-                    <div className="mb-4">
-                      <label htmlFor="note">Note</label>
-                      <textarea
-                        id="note"
-                        className="form-input"
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                      />
-                    </div>
+                        <div className="mb-4">
+                          <label htmlFor="noticeDate">Notice Date</label>
+                          <DatePicker
+                            id="noticeDate"
+                            selected={noticeDate}
+                            onChange={(date) => setNoticeDate(date)}
+                            dateFormat="dd/MM/yyyy"
+                            className="form-input"
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="time">Time</label>
+                          <input
+                            id="time"
+                            type="time"
+                            className="form-input"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="noticeDescription">
+                            Notice Description
+                          </label>
+                          <textarea
+                            id="noticeDescription"
+                            className="form-input"
+                            value={noticeDescription}
+                            onChange={(e) =>
+                              setNoticeDescription(e.target.value)
+                            }
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label htmlFor="assignBy">Assign By</label>
+                          <select
+                            id="assignBy"
+                            name="assignBy"
+                            className="form-select"
+                            value={assignBy}
+                            onChange={(e) => setAssignBy(e.target.value)}
+                          >
+                            <option value="">Select Coach</option>
+                            {assignByOptions.map((coach) => (
+                              <option key={coach.id} value={coach.name}>
+                                {coach.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
 
                     {/* New section to display selected trainees */}
                     <div className="mb-4">
@@ -2154,11 +2511,16 @@ const ComponentsDatatablesTrainee = () => {
                               key={trainee.id}
                               className="flex items-center space-x-4"
                             >
-                              <img
-                                src={`https://pallisree.blr1.cdn.digitaloceanspaces.com/${trainee.image}`}
-                                alt={trainee.name}
-                                className="h-12 w-12 rounded-full"
-                              />
+                              {trainee.image ? (
+                                <img
+                                  src={`https://pallisree.blr1.cdn.digitaloceanspaces.com/${trainee.image}`}
+                                  alt={trainee.name}
+                                  className="h-12 w-12 rounded-full"
+                                />
+                              ) : (
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300"></div>
+                              )}
+
                               <div>
                                 <div className="font-medium">
                                   {trainee.name}
@@ -2178,7 +2540,7 @@ const ComponentsDatatablesTrainee = () => {
                         className="btn btn-primary"
                         onClick={handleGeneratePDF}
                       >
-                        Generate PDF
+                        Submit{" "}
                       </button>
                     </div>
                   </div>
