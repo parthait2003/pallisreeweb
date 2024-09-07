@@ -76,13 +76,7 @@ export async function PUT(
       traineeType, // Ensure traineeType is received in the request body
     } = await request.json();
 
-    // Check if traineeType is provided in the update request
-    if (!traineeType) {
-      return NextResponse.json(
-        { message: "Missing traineeType field" },
-        { status: 400 }
-      );
-    }
+
 
     await connectDB();
 
