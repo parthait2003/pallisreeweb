@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 const s3 = new S3Client({
@@ -10,7 +10,7 @@ const s3 = new S3Client({
   },
 });
 
-export async function POST(req: NextRequest) {
+export async function POST(req) {
   if (!req.headers.get('content-type')?.startsWith('multipart/form-data')) {
     return NextResponse.json({ error: 'Invalid content type' }, { status: 400 });
   }
@@ -18,24 +18,16 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
 
-    // Logging to ensure FormData contains the expected files
-    console.log('Received FormData:', formData);
+    const file = formData.get('file');
+    const documentfile = formData.get('documentfile');
+    const adharfile = formData.get('adharfile');
 
-    const file = formData.get('file') as File | null;
-    const documentfile = formData.get('documentfile') as File | null;
-    const adharfile = formData.get('adharfile') as File | null;
-
-    const imageName = formData.get('imageName') as string | null;
-    const documentfilename = formData.get('documentfilename') as string | null;
-    const adharfilename = formData.get('adharname') as string | null;
-
-    // Logging to verify file names and contents
-    console.log('Received files:', { file, documentfile, adharfile });
-    console.log('File names:', { imageName, documentfilename, adharfilename });
+    const imageName = formData.get('imageName');
+    const documentfilename = formData.get('documentfilename');
+    const adharfilename = formData.get('adharname');
 
     const fileUploads = [];
 
-    // Upload file to S3
     if (file && imageName) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -48,10 +40,8 @@ export async function POST(req: NextRequest) {
       };
       const command = new PutObjectCommand(params);
       fileUploads.push(s3.send(command));
-      console.log(`File saved as ${imageName}`);
     }
 
-    // Upload document file to S3
     if (documentfile && documentfilename) {
       const arrayBuffer = await documentfile.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -64,10 +54,8 @@ export async function POST(req: NextRequest) {
       };
       const command = new PutObjectCommand(params);
       fileUploads.push(s3.send(command));
-      console.log(`Document saved as ${documentfilename}`);
     }
 
-    // Upload Aadhaar file to S3
     if (adharfile && adharfilename) {
       const arrayBuffer = await adharfile.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -80,11 +68,10 @@ export async function POST(req: NextRequest) {
       };
       const command = new PutObjectCommand(params);
       fileUploads.push(s3.send(command));
-      console.log(`Aadhaar saved as ${adharfilename}`);
     }
 
     await Promise.all(fileUploads);
-    console.log('Files uploaded successfully');
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error uploading files:', error);
