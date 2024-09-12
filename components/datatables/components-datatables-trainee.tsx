@@ -1040,24 +1040,18 @@ const ComponentsDatatablesTrainee = () => {
     }));
   };
 
+  const formatToYYYYMMDD = (date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${year}-${month}-${day}`; // YYYY-MM-DD format
+  };
+
   const handleGeneratePDF = async () => {
     const doc = new jsPDF();
     const startY = 90;
 
-    const formatDate = (date) => {
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    };
 
-    const formatTime = (time) => {
-      const [hour, minute] = time.split(":");
-      const hourInt = parseInt(hour, 10);
-      const ampm = hourInt >= 12 ? "pm" : "am";
-      const formattedHour = hourInt % 12 || 12; // Convert to 12-hour format
-      return `${formattedHour}:${minute} ${ampm}`;
-    };
 
     const logoUrl = "/assets/images/logo.png";
     const logoImg = new Image();
@@ -1086,53 +1080,53 @@ const ComponentsDatatablesTrainee = () => {
       if (eventType === "Tournament") {
         doc.text("Tournament: " + tournamentName, 15, 70);
         doc.text("Ground: " + groundName, 15, 75);
-        doc.text("Date: " + formatDate(tournamentDate), 15, 80);
-        doc.text("Reporting Time: " + formatTime(time), 15, 85);
+        doc.text("Date: " + formatToYYYYMMDD(tournamentDate), 15, 80);
+        doc.text("Reporting Time: " + time, 15, 85);
         doc.text("Note: " + note, 15, 90);
 
         eventData = {
           eventType: "Tournament",
-          date: formatDate(tournamentDate),
-          time: formatTime(time),
+          date: formatToYYYYMMDD(tournamentDate),
+          time: time,
           traineeIds,
           tournamentName,
           tournamentLocation: groundName,
           tournamentNote: note,
-          createdAt: formatDate(new Date()),
+          createdAt: new Date().toISOString(),
         };
       } else if (eventType === "Camp") {
         doc.text("Camp: " + campName, 15, 70);
         doc.text("Camp Type: " + campType, 15, 75);
         doc.text("Date: " + formatDate(campDate), 15, 80);
-        doc.text("Reporting Time: " + formatTime(time), 15, 85);
+        doc.text("Reporting Time: " + time, 15, 85);
         doc.text("Note: " + note, 15, 90);
 
         eventData = {
           eventType: "Camp",
-          date: formatDate(campDate),
-          time: formatTime(time),
+          date: formatToYYYYMMDD(campDate),
+          time: time,
           traineeIds,
           campName,
           campLocation: camplocation,
           campNote: note,
-          createdAt: formatDate(new Date()),
+          createdAt: new Date().toISOString(),
         };
       } else if (eventType === "Notice") {
         doc.text("Notice Title: " + noticeTitle, 15, 70);
-        doc.text("Date: " + formatDate(noticeDate), 15, 75);
-        doc.text("Time: " + formatTime(time), 15, 80);
+        doc.text("Date: " + formatToYYYYMMDD(noticeDate), 15, 75);
+        doc.text("Time: " + time, 15, 80);
         doc.text("Description: " + noticeDescription, 15, 85);
         doc.text("Assigned By: " + assignBy, 15, 90);
 
         eventData = {
           eventType: "Notice",
-          date: formatDate(noticeDate),
-          time: formatTime(time),
+          date: formatToYYYYMMDD(noticeDate),
+          time: time,
           traineeIds,
           noticeTitle,
           noticeDesc: noticeDescription,
           assignedBy: assignBy,
-          createdAt: formatDate(new Date()),
+          createdAt: formatToYYYYMMDD(new Date()),
         };
       }
 
@@ -1995,7 +1989,7 @@ const ComponentsDatatablesTrainee = () => {
             { accessor: "nameoftheschool", title: "School", sortable: true },
             { accessor: "bloodgroup", title: "Blood", sortable: true },
             { accessor: "joiningdate", title: "Joining date", sortable: true },
-              {
+            {
               accessor: "Certificate",
               title: "Certificate",
               sortable: true,
@@ -2061,6 +2055,7 @@ const ComponentsDatatablesTrainee = () => {
                 </div>
               ),
             },
+            
             {
               accessor: "action",
               title: "Action",
