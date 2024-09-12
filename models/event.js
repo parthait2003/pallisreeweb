@@ -7,11 +7,11 @@ const eventSchema = new mongoose.Schema({
     enum: ['Camp', 'Tournament', 'Notice'], // Restrict to known event types
   },
   date: {
-    type: Date,
+    type: String,
     required: true,
   },
   time: {
-    type: Date,
+    type: String,
     required: true,
   },
   traineeIds: [
