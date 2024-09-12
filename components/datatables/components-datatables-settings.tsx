@@ -446,7 +446,7 @@ const ComponentsDatatablesSettings = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor={`traineePayment-${index}`}>Payment</label>
+                  <label htmlFor={`traineePayment-${index}`}>Regular Practice Payment</label>
                   <input
                     id={`traineePayment-${index}`}
                     name="payment"
