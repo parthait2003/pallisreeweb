@@ -1995,8 +1995,9 @@ const ComponentsDatatablesTrainee = () => {
             { accessor: "nameoftheschool", title: "School", sortable: true },
             { accessor: "bloodgroup", title: "Blood", sortable: true },
             { accessor: "joiningdate", title: "Joining date", sortable: true },
-            {
+              {
               accessor: "Certificate",
+              title: "Certificate",
               sortable: true,
               render: (row) => (
                 <div className="mx-auto flex w-max items-center gap-4">
@@ -2004,14 +2005,24 @@ const ComponentsDatatablesTrainee = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        window.open(
-                          `https://pallisree.blr1.cdn.digitaloceanspaces.com/${row.document}`,
-                          "_blank"
-                        );
+                        row.document
+                          ? window.open(
+                              `https://pallisree.blr1.cdn.digitaloceanspaces.com/${row.document}`,
+                              "_blank"
+                            )
+                          : null;
                       }}
                       className="btn"
                     >
-                      <IconDOB />
+                      {row.document ? (
+                        <IconDOB />
+                      ) : (
+                        <img
+                          src="/assets/images/cross.png"
+                          alt="No Document"
+                          style={{ height: "24px", width: "24px" }}
+                        />
+                      )}
                     </button>
                   </Tippy>
                 </div>
@@ -2027,14 +2038,24 @@ const ComponentsDatatablesTrainee = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        window.open(
-                          `https://pallisree.blr1.cdn.digitaloceanspaces.com/${row.adhar}`,
-                          "_blank"
-                        );
+                        row.adhar
+                          ? window.open(
+                              `https://pallisree.blr1.cdn.digitaloceanspaces.com/${row.adhar}`,
+                              "_blank"
+                            )
+                          : null;
                       }}
                       className="btn"
                     >
-                      <IconAadhaar />
+                      {row.adhar ? (
+                        <IconAadhaar />
+                      ) : (
+                        <img
+                          src="/assets/images/cross.png"
+                          alt="No Aadhaar"
+                          style={{ height: "24px", width: "24px" }}
+                        />
+                      )}
                     </button>
                   </Tippy>
                 </div>
