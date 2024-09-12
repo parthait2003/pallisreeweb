@@ -88,10 +88,16 @@ const ViewTrainee = () => {
           (month) => !paidMonths.includes(month.value)
         );
 
-        setTraineeDetails({
-          ...trainee,
-          imageUrl: `https://pallisree.blr1.cdn.digitaloceanspaces.com/${trainee.image}`,
-        });
+        const imageUrl = trainee.image
+        ? `https://pallisree.blr1.cdn.digitaloceanspaces.com/${trainee.image}`
+        : trainee.gender.toLowerCase() === "female"
+        ? "/assets/images/trainee_female.png" // Update with actual path
+        : "/assets/images/trainee_male.png"; // Update with actual path
+
+      setTraineeDetails({
+        ...trainee,
+        imageUrl,
+      });
 
         setFeesDetails(traineeSubscriptions);
         setPendingMonths(pending);
