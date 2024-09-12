@@ -736,11 +736,12 @@ const ComponentsDatatablesTrainee = () => {
         : "",
     };
 
-    let imageName = "";
+    let imageName = formData.image;
     let docname = "";
     let adhname = "";
 
     // Handle file upload
+    
     if (file) {
       const filename = file.name;
       imageName = formData.phoneno + "-" + filename;
@@ -861,9 +862,12 @@ const ComponentsDatatablesTrainee = () => {
       }
       const data = await res.json();
       if (data && data.student) {
+        
+        setFile(null); 
+  
         setFormData({
           id: data.student._id || "",
-          image: data.student.image || "",
+          image: data.student.image || "", // Set the correct image for the trainee
           sportstype: data.student.sportstype || "",
           name: data.student.name || "",
           fathersname: data.student.fathersname || "",
